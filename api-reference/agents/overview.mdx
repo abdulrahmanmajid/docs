@@ -1,0 +1,114 @@
+---
+title: "Agents"
+description: "Overview of AI voice agents in Kallabot"
+icon: "robot"
+---
+
+# AI Voice Agents
+
+AI voice agents are the core of Kallabot's platform. They handle conversations with customers, following customized scripts and using natural language processing to provide human-like interactions.
+
+## Key Features
+
+### Voice Configuration
+- Customizable voices and languages
+- Natural speech patterns
+- Adjustable speaking rates and tones
+- Support for multiple accents
+
+### Conversation Handling
+- Dynamic response generation
+- Context awareness
+- Variable interpolation
+- Real-time adaptation
+
+### Call Management
+- Inbound and outbound call support
+- Call recording capabilities
+- Real-time transcription
+- Sentiment analysis
+
+## Agent Types
+
+| Type | Description |
+|------|-------------|
+| Sales | Specialized in product sales and lead qualification |
+| Support | Handles customer support and issue resolution |
+| Appointment | Manages scheduling and appointment confirmation |
+| Survey | Conducts surveys and collects feedback |
+| Custom | Customized for specific use cases |
+
+## Agent States
+
+| State | Description |
+|-------|-------------|
+| created | Agent has been created but not fully configured |
+| configuring | Agent is being configured with prompts and settings |
+| ready | Agent is ready to handle calls |
+| busy | Agent is currently handling a call |
+| error | Agent encountered an error and needs attention |
+
+## Available Endpoints
+
+<Card title="Create Agent" icon="plus" href="/api-reference/agents/create">
+  Create a new AI voice agent
+</Card>
+
+<Card title="List Agents" icon="list" href="/api-reference/agents/list">
+  Get a list of all your agents
+</Card>
+
+<Card title="Get Agent" icon="circle-info" href="/api-reference/agents/get">
+  Get details of a specific agent
+</Card>
+
+<Card title="Update Agent" icon="pen" href="/api-reference/agents/update">
+  Update an existing agent
+</Card>
+
+<Card title="Delete Agent" icon="trash" href="/api-reference/agents/delete">
+  Delete an agent
+</Card>
+
+## Best Practices
+
+### Configuration
+- Test agent voices before deployment
+- Keep prompts clear and concise
+- Use variables for personalization
+- Set appropriate fallback responses
+
+### Performance
+- Monitor call success rates
+- Review conversation transcripts
+- Analyze customer sentiment
+- Track completion rates
+
+### Optimization
+- Refine prompts based on feedback
+- Adjust voice parameters as needed
+- Update scripts for better engagement
+- Fine-tune response timing
+
+## Rate Limits
+
+| Operation | Limit |
+|-----------|-------|
+| Agent Creation | 10 per hour |
+| Active Agents | 20 per account |
+| Concurrent Calls | 5 per agent |
+| API Requests | 100 per minute |
+
+## Related Resources
+
+<Card title="Campaigns" icon="bullhorn" href="/api-reference/campaigns/overview">
+  Learn about outbound calling campaigns
+</Card>
+
+<Card title="Calls" icon="phone" href="/api-reference/calls/overview">
+  Understand call handling
+</Card>
+
+<Card title="Analytics" icon="chart-line" href="/api-reference/analytics/overview">
+  Access performance analytics
+</Card> 

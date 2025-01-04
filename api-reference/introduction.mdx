@@ -5,8 +5,86 @@ description: 'Complete reference for the Kallabot API'
 
 # Kallabot API Reference
 
-Welcome to the Kallabot API reference documentation. Our API enables you to programmatically create and manage AI voice agents, handle calls, and integrate voice capabilities into your applications.
+Welcome to the Kallabot API reference documentation. Our API enables you to programmatically create and manage AI voice agents for both inbound and outbound calling scenarios, providing a powerful platform for building automated voice interactions.
+
+## Overview
+
+Kallabot's API allows you to:
+- Create and manage AI voice agents
+- Handle inbound calls with intelligent routing
+- Initiate outbound calls with customized scripts
+- Monitor call analytics and performance
+- Manage voice agent configurations
+- Access call recordings and transcriptions
+- Set up webhooks for real-time notifications
+
+## Base URL
+
+All API requests should be made to:
+
+```bash
+https://api.kallabot.com/v1
+```
 
 ## Authentication
 
-All API endpoints require authentication using an API key. You can get your API key from the [dashboard settings](https://app.kallabot.com/settings/api).
+All API endpoints require authentication using an API key. You can obtain your API key from the [dashboard settings](https://app.kallabot.com/settings/api).
+
+To authenticate your requests, include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer your_api_key
+```
+
+## Rate Limiting
+
+The API implements rate limiting to ensure fair usage:
+- 100 requests per minute for standard accounts
+- 1000 requests per minute for enterprise accounts
+
+Rate limit information is included in the response headers:
+- `X-RateLimit-Limit`: Total requests allowed per window
+- `X-RateLimit-Remaining`: Remaining requests in current window
+- `X-RateLimit-Reset`: Time when the rate limit resets
+
+## Response Format
+
+All responses are returned in JSON format. Successful responses will have a 2xx status code and follow this structure:
+
+```json
+{
+  "success": true,
+  "data": {
+    // Response data
+  }
+}
+```
+
+## Error Handling
+
+Error responses include HTTP status codes in the 4xx or 5xx range and follow this format:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "error_code",
+    "message": "Human-readable error message",
+    "details": {} // Additional error details when available
+  }
+}
+```
+
+## Versioning
+
+The API uses semantic versioning. The current version is v1. We maintain backward compatibility within major versions.
+
+## Getting Started
+
+To start using the Kallabot API:
+1. Sign up for a Kallabot account
+2. Get your API key from the dashboard
+3. Make your first API call to create a voice agent
+4. Set up webhooks to receive real-time call events
+
+For detailed examples and use cases, refer to our [quickstart guide](/quickstart).

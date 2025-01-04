@@ -7,14 +7,19 @@
   },
   "favicon": "/favicon.png",
   "colors": {
-    "primary": "#cf66dd",
-    "light": "#e7e7e7",
+    "primary": "#64748b",
+    "light": "#64748b",
     "dark": "#262626",
+    "background": {
+      "light": "#f8f9fc",
+      "dark": "#0c0c0c"
+    },
     "anchors": {
-      "from": "#cf66dd",
-      "to": "#7B93CC"
+      "from": "#64748b",
+      "to": "#94a3b8"
     }
   },
+  "backgroundImage": "linear-gradient(to bottom right, rgba(255, 107, 107, 0.1), rgba(78, 205, 196, 0.1))",
   "topbarLinks": [
     {
       "name": "Support",
@@ -23,29 +28,41 @@
   ],
   "topbarCtaButton": {
     "name": "Dashboard",
-    "url": "https://dashboard.kallabot.com"
+    "url": "https://dashboard.kallabot.com",
+    "style": "pill"
   },
   "tabs": [
     {
+      "name": "Documentation",
+      "url": "/"
+    },
+    {
       "name": "API Reference",
       "url": "api-reference"
+    },
+    {
+      "name": "Changelog",
+      "url": "change-log"
     }
   ],
   "anchors": [
     {
       "name": "Documentation",
       "icon": "book-open-cover",
-      "url": "https://mintlify.com/docs"
+      "url": "https://mintlify.com/docs",
+      "color": "#FF6B6B"
     },
     {
       "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
+      "icon": "users-medical",
+      "url": "https://mintlify.com/community",
+      "color": "#4ECDC4"
     },
     {
       "name": "Blog",
       "icon": "newspaper",
-      "url": "https://mintlify.com/blog"
+      "url": "https://mintlify.com/blog",
+      "color": "#FFE66D"
     }
   ],
   "navigation": [
@@ -58,34 +75,84 @@
       ]
     },
     {
-      "group": "Essentials",
+      "group": "Changelog",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "change-log/index"
       ]
     },
     {
-      "group": "API Documentation",
+      "group": "API Reference",
       "pages": [
-        "api-reference/introduction"
-      ]
-    },
-    {
-      "group": "Endpoint Examples",
-      "pages": [
-        "api-reference/endpoint/get",
-        "api-reference/endpoint/create",
-        "api-reference/endpoint/delete"
+        "api-reference/introduction",
+        {
+          "group": "🤖 Agents",
+          "pages": [
+            "api-reference/agents/overview",
+            "api-reference/agents/create",
+            "api-reference/agents/delete",
+            "api-reference/agents/get",
+            "api-reference/agents/list",
+            "api-reference/agents/update"
+          ]
+        },
+        {
+          "group": "📞 Calls",
+          "pages": [
+            "api-reference/calls/overview",
+            "api-reference/calls/create",
+            "api-reference/calls/end"
+          ]
+        },
+        {
+          "group": "📢 Campaigns",
+          "pages": [
+            "api-reference/campaigns/overview",
+            "api-reference/campaigns/create",
+            "api-reference/campaigns/getall",
+            "api-reference/campaigns/get",
+            "api-reference/campaigns/edit",
+            "api-reference/campaigns/pause",
+            "api-reference/campaigns/resume",
+            "api-reference/campaigns/delete"
+          ]
+        }
       ]
     }
   ],
   "footerSocials": {
-    "x": "https://x.com/mintlify",
-    "github": "https://github.com/mintlify",
-    "linkedin": "https://linkedin.com/company/mintlify"
+    "x": "https://x.com/kallabot",
+    "github": "https://github.com/kallabot",
+    "linkedin": "https://linkedin.com/company/kallabot"
+  },
+  "feedback": {
+    "thumbsRating": true,
+    "suggestEdit": true,
+    "raiseIssue": true
+  },
+  "search": {
+    "prompt": "Search the Kallabot docs..."
+  },
+  "modeToggle": {
+    "default": "dark"
+  },
+  "sidebar": {
+    "items": "card"
+  },
+  "topbar": {
+    "style": "gradient"
+  },
+  "font": {
+    "headings": {
+      "family": "Unbounded",
+      "weight": 600
+    },
+    "body": {
+      "family": "Poppins",
+      "weight": 400
+    }
+  },
+  "theme": "prism",
+  "background": {
+    "style": "windows"
   }
 }

@@ -1,0 +1,129 @@
+---
+title: "Campaigns"
+description: "Overview of campaign management in Kallabot"
+icon: "bullhorn"
+---
+
+# Campaigns
+
+Campaigns allow you to automate outbound calls to a list of contacts using your configured AI voice agents. They provide a scalable way to reach multiple contacts while maintaining control over timing and execution.
+
+## Key Features
+
+### Scheduled Execution
+- Schedule campaigns to start at specific times
+- Support for different timezones
+- Automatic handling of overdue campaigns
+
+### Contact Management
+- Call multiple contacts sequentially
+- Configurable delay between calls
+- Automatic tracking of call results
+
+### Campaign Control
+- Pause and resume capabilities
+- Real-time status monitoring
+- Detailed call statistics
+
+## Campaign States
+
+| State | Description |
+|-------|-------------|
+| pending | Campaign is scheduled but not yet started |
+| overdue | Campaign's scheduled time has passed but it hasn't started |
+| running | Campaign is actively making calls |
+| completed | All calls in the campaign have been completed |
+| failed | Campaign encountered an error during execution |
+| paused | Campaign has been manually paused |
+
+## Campaign Lifecycle
+
+1. **Creation**
+   - Campaign is created with a schedule and contact list
+   - System validates agent and contact list
+   - Campaign is set to "pending" state
+
+2. **Execution**
+   - At scheduled time, campaign moves to "running" state
+   - System begins making calls to contacts
+   - Each call result is recorded
+
+3. **Completion**
+   - Campaign moves to "completed" when all calls are done
+   - Final statistics are calculated
+   - Results are available for review
+
+## Available Endpoints
+
+<Card title="Create Campaign" icon="plus" href="/api-reference/campaigns/create">
+  Create a new outbound calling campaign
+</Card>
+
+<Card title="List Campaigns" icon="list" href="/api-reference/campaigns/list">
+  Get a list of all your campaigns
+</Card>
+
+<Card title="Get Campaign" icon="circle-info" href="/api-reference/campaigns/get">
+  Get details of a specific campaign
+</Card>
+
+<Card title="Update Campaign" icon="pen" href="/api-reference/campaigns/update">
+  Update an existing campaign
+</Card>
+
+<Card title="Delete Campaign" icon="trash" href="/api-reference/campaigns/delete">
+  Delete a campaign
+</Card>
+
+<Card title="Pause Campaign" icon="pause" href="/api-reference/campaigns/pause">
+  Pause an active campaign
+</Card>
+
+<Card title="Resume Campaign" icon="play" href="/api-reference/campaigns/resume">
+  Resume a paused campaign
+</Card>
+
+## Best Practices
+
+### Scheduling
+- Schedule campaigns during business hours in the target timezone
+- Allow sufficient delay between calls (recommended: 10-30 seconds)
+- Consider time zones when scheduling international campaigns
+
+### Contact Lists
+- Ensure phone numbers are in E.164 format
+- Validate contact data before creating campaign
+- Include relevant template variables for personalization
+
+### Monitoring
+- Regularly check campaign status
+- Monitor call success rates
+- Review call recordings and transcripts
+
+### Error Handling
+- Set up webhooks for real-time status updates
+- Have fallback procedures for failed calls
+- Monitor campaign error rates
+
+## Rate Limits
+
+| Operation | Limit |
+|-----------|-------|
+| Campaign Creation | 10 per hour |
+| Active Campaigns | 5 per account |
+| Contacts per Campaign | 1000 |
+| Calls per Minute | 60 |
+
+## Related Resources
+
+<Card title="Agents" icon="robot" href="/api-reference/agents/overview">
+  Learn about AI voice agents
+</Card>
+
+<Card title="Calls" icon="phone" href="/api-reference/calls/overview">
+  Understand call handling
+</Card>
+
+<Card title="Contact Lists" icon="address-book" href="/api-reference/contacts/overview">
+  Manage contact lists
+</Card> 

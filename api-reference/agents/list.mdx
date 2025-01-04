@@ -1,0 +1,199 @@
+---
+title: "List Agents"
+description: "Retrieve a list of all AI voice agents"
+api: "GET https://api.kallabot.com/v1/agents"
+icon: "list"
+---
+
+# List Agents
+
+Retrieve a list of all active AI voice agents for your account. This endpoint returns detailed information about each agent, including their configuration, usage statistics, and performance metrics.
+
+## Authentication
+
+Include your API key in the request headers:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+### Example Request
+
+```bash
+curl --request GET \
+  --url https://api.kallabot.com/v1/agents \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+## Response
+
+<ResponseField name="agents" type="array" required>
+  Array of agent objects
+
+  <Expandable title="Agent properties">
+    <ResponseField name="agent_id" type="string" required>
+      Unique identifier for the agent
+    </ResponseField>
+
+    <ResponseField name="name" type="string" required>
+      Name of the agent
+    </ResponseField>
+
+    <ResponseField name="agent_type" type="string" required>
+      Type of the agent (sales, support, appointment, survey, custom)
+    </ResponseField>
+
+    <ResponseField name="call_direction" type="string" required>
+      Direction of calls the agent handles (inbound, outbound)
+    </ResponseField>
+
+    <ResponseField name="inbound_phone_number" type="string">
+      Phone number assigned to the agent for inbound calls (if applicable)
+    </ResponseField>
+
+    <ResponseField name="total_calls" type="integer" required>
+      Total number of calls handled by the agent
+    </ResponseField>
+
+    <ResponseField name="total_duration" type="integer" required>
+      Total duration of all calls in seconds
+    </ResponseField>
+
+    <ResponseField name="total_cost" type="number" required>
+      Total cost incurred by the agent's calls
+    </ResponseField>
+
+    <ResponseField name="created_at" type="string" required>
+      Timestamp when the agent was created (ISO 8601 format)
+    </ResponseField>
+
+    <ResponseField name="timezone" type="string" required>
+      Agent's configured timezone
+    </ResponseField>
+
+    <ResponseField name="country" type="string" required>
+      Agent's configured country code
+    </ResponseField>
+
+    <ResponseField name="agent_config" type="object" required>
+      Complete configuration object for the agent
+    </ResponseField>
+
+    <ResponseField name="agent_prompts" type="object" required>
+      Complete prompts configuration for the agent
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "agents": [
+    {
+      "agent_id": "ag_01H1V1J3K4M5N6P7Q8R9S0T1U2",
+      "name": "Sales Representative",
+      "agent_type": "sales",
+      "call_direction": "outbound",
+      "inbound_phone_number": null,
+      "total_calls": 150,
+      "total_duration": 18900,
+      "total_cost": 95.50,
+      "created_at": "2024-01-15T08:30:00.000Z",
+      "timezone": "America/Los_Angeles",
+      "country": "US",
+      "agent_config": {
+        "agent_name": "Sales Representative",
+        "agent_type": "sales",
+        "call_direction": "outbound",
+        "timezone": "America/Los_Angeles",
+        "country": "US",
+        "agent_welcome_message": "Hello, this is Sarah from Acme Corp"
+      },
+      "agent_prompts": {
+        "task_1": {
+          "system_prompt": "You are a sales agent for \{\{company.name\}\}"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Query Parameters
+
+The response is paginated and sorted by creation date in descending order (newest first).
+
+<ParamField query="limit" type="integer" default="20">
+  Number of agents to return per page (max: 100)
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of agents to skip
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter agents by type (sales, support, appointment, survey, custom)
+</ParamField>
+
+<ParamField query="direction" type="string">
+  Filter agents by call direction (inbound, outbound)
+</ParamField>
+
+## Filtering
+
+You can combine query parameters to filter the results:
+
+```bash
+# Get first 10 sales agents
+curl https://api.kallabot.com/v1/agents?limit=10&type=sales
+
+# Get outbound agents starting from the 20th record
+curl https://api.kallabot.com/v1/agents?offset=20&direction=outbound
+```
+
+## Data Retention
+
+- Active agents are always included
+- Deleted agents are excluded
+- Historical data is maintained for billing and analytics
+
+## Performance
+
+The endpoint is optimized for:
+- Fast retrieval of large agent lists
+- Efficient filtering and pagination
+- Minimal memory usage
+- Quick response times
+
+## Errors
+
+| Status | Description |
+|--------|-------------|
+| 401    | Invalid or missing API key |
+| 403    | Insufficient permissions |
+| 429    | Rate limit exceeded |
+| 500    | Internal server error |
+
+## Best Practices
+
+1. Use pagination for large agent lists
+2. Cache responses when appropriate
+3. Implement proper error handling
+4. Monitor rate limits
+5. Filter results server-side
+6. Handle timezone conversions properly
+
+## Related Operations
+
+<Card title="Create Agent" icon="plus" href="/api-reference/agents/create">
+  Create a new agent
+</Card>
+
+<Card title="Update Agent" icon="pen" href="/api-reference/agents/update">
+  Update an existing agent
+</Card>
+
+<Card title="Get Agent" icon="circle-info" href="/api-reference/agents/get">
+  Get details of a specific agent
+</Card>
