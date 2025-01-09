@@ -61,7 +61,7 @@
     {
       "name": "Blog",
       "icon": "newspaper",
-      "url": "https://mintlify.com/blog",
+      "url": "https://kallabot.com/blogs",
       "color": "#FFE66D"
     }
   ],
@@ -70,8 +70,23 @@
       "group": "Get Started",
       "pages": [
         "introduction",
-        "quickstart",
-        "development"
+        "concepts",
+        "tips-and-tricks"
+      ]
+    },
+    {
+      "group": "Features",
+      "pages": [
+        "features/variables",
+        "features/knowledge-base",
+        "features/contacts",
+        "features/inbound-calls",
+        "features/outbound-calls",
+        "features/workflow-builder",
+        "features/tools-integrations",
+        "features/analytics",
+        "features/recordings-transcripts",
+        "features/campaigns"
       ]
     },
     {
@@ -114,6 +129,15 @@
             "api-reference/campaigns/pause",
             "api-reference/campaigns/resume",
             "api-reference/campaigns/delete"
+          ]
+        },
+        {
+          "group": "🧠 Knowledgebases",
+          "pages": [
+            "api-reference/knowledgebases/overview",
+            "api-reference/knowledgebases/create",
+            "api-reference/knowledgebases/delete",
+            "api-reference/knowledgebases/list"
           ]
         }
       ]

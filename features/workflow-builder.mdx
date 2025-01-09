@@ -1,0 +1,281 @@
+---
+title: 'Workflow Builder'
+description: 'Create custom call flows and automation with our visual workflow builder'
+icon: 'diagram-project'
+---
+
+# Workflow Builder
+
+Design complex call flows with our drag-and-drop workflow builder. Create personalized customer experiences without coding.
+
+## Getting Started
+
+<Note>
+The workflow builder lets you:
+- Design call flows visually
+- Add decision points
+- Handle different scenarios
+- Connect to external systems
+</Note>
+
+## Visual Interface
+
+<Frame>
+  <img src="/images/workflow-builder.png" alt="Workflow Builder Interface" />
+</Frame>
+
+## Basic Components
+
+<CardGroup cols={3}>
+  <Card title="Triggers" icon="play">
+    Start your workflow:
+    - Incoming call
+    - Scheduled time
+    - API webhook
+    - Custom event
+  </Card>
+  
+  <Card title="Actions" icon="gear">
+    Things to do:
+    - Play message
+    - Collect input
+    - Make decision
+    - Transfer call
+  </Card>
+  
+  <Card title="Conditions" icon="code-branch">
+    Control the flow:
+    - If/else logic
+    - Switch cases
+    - Time checks
+    - Data validation
+  </Card>
+</CardGroup>
+
+## Building Blocks
+
+<AccordionGroup>
+  <Accordion title="Voice Blocks" icon="microphone">
+    ```typescript
+    Available Voice Actions:
+    - Speak Text
+    - Play Audio
+    - Get Input
+    - Record Message
+    - Voice Recognition
+    ```
+  </Accordion>
+  
+  <Accordion title="Logic Blocks" icon="diagram-project">
+    ```typescript
+    Flow Control:
+    - If/Else
+    - Switch
+    - Loop
+    - Wait
+    - Goto
+    ```
+  </Accordion>
+  
+  <Accordion title="Integration Blocks" icon="puzzle-piece">
+    ```typescript
+    External Systems:
+    - API Calls
+    - Database Query
+    - CRM Update
+    - Webhook
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Creating Workflows
+
+<Steps>
+  <Step title="Start New Workflow">
+    Begin with a trigger:
+    ```typescript
+    Trigger Types:
+    - Inbound Call
+    - Outbound Campaign
+    - Schedule
+    - API Event
+    ```
+  </Step>
+  
+  <Step title="Add Steps">
+    Drag and drop components:
+    - Voice interactions
+    - Decision points
+    - Actions
+    - Integrations
+  </Step>
+  
+  <Step title="Configure Logic">
+    Set up conditions:
+    ```typescript
+    if (userInput === "sales") {
+      route.to("sales-department")
+    } else if (timeOfDay > "17:00") {
+      playMessage("after-hours")
+    }
+    ```
+  </Step>
+  
+  <Step title="Test and Deploy">
+    - Preview flow
+    - Test scenarios
+    - Debug issues
+    - Go live
+  </Step>
+</Steps>
+
+## Advanced Features
+
+<CardGroup cols={2}>
+  <Card title="Variables & Context" icon="database">
+    Store and use data:
+    ```typescript
+    - User inputs
+    - Call details
+    - System variables
+    - Custom data
+    ```
+  </Card>
+  
+  <Card title="Error Handling" icon="shield">
+    Handle exceptions:
+    ```typescript
+    - Timeout handling
+    - Fallback options
+    - Retry logic
+    - Error messages
+    ```
+  </Card>
+</CardGroup>
+
+## Templates
+
+<CardGroup cols={2}>
+  <Card title="Customer Service" icon="headset">
+    Pre-built flows for:
+    - Support routing
+    - FAQ handling
+    - Issue escalation
+    - Feedback collection
+  </Card>
+  
+  <Card title="Appointment Management" icon="calendar">
+    Ready-to-use flows:
+    - Booking
+    - Rescheduling
+    - Cancellation
+    - Reminders
+  </Card>
+</CardGroup>
+
+## Testing & Debugging
+
+<AccordionGroup>
+  <Accordion title="Test Mode" icon="vial">
+    Simulate your workflow:
+    - Test different paths
+    - Try various inputs
+    - Check conditions
+    - Verify integrations
+  </Accordion>
+  
+  <Accordion title="Debug Tools" icon="bug">
+    Troubleshooting features:
+    - Flow visualization
+    - Variable inspector
+    - Execution logs
+    - Breakpoints
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Design" icon="paintbrush">
+    - Keep it simple
+    - Use clear names
+    - Add comments
+    - Document logic
+  </Card>
+  
+  <Card title="Testing" icon="flask">
+    - Test all paths
+    - Verify conditions
+    - Check timeouts
+    - Validate inputs
+  </Card>
+  
+  <Card title="Maintenance" icon="wrench">
+    - Regular reviews
+    - Update flows
+    - Monitor usage
+    - Optimize paths
+  </Card>
+</CardGroup>
+
+## Example Workflows
+
+<AccordionGroup>
+  <Accordion title="Support Router" icon="phone">
+    ```mermaid
+    graph TD
+      A[Incoming Call] --> B{Business Hours?}
+      B -->|Yes| C[Greeting]
+      B -->|No| D[After Hours Message]
+      C --> E{Service Type}
+      E -->|Support| F[Tech Queue]
+      E -->|Sales| G[Sales Team]
+      E -->|Billing| H[Billing Dept]
+    ```
+  </Accordion>
+  
+  <Accordion title="Appointment Flow" icon="calendar-check">
+    ```mermaid
+    graph TD
+      A[Start] --> B[Check Schedule]
+      B --> C{Available?}
+      C -->|Yes| D[Book Time]
+      C -->|No| E[Offer Alternatives]
+      D --> F[Send Confirmation]
+      E --> G[Reschedule]
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Integration Examples
+
+<CodeGroup>
+  <Code title="CRM Update">
+  ```typescript
+  // Update CRM after call
+  onCallEnd: async (callData) => {
+    await crm.update({
+      customerId: callData.customer.id,
+      interaction: {
+        type: 'call',
+        duration: callData.duration,
+        outcome: callData.resolution
+      }
+    })
+  }
+  ```
+  </Code>
+  
+  <Code title="API Webhook">
+  ```typescript
+  // Send webhook on specific event
+  onTransfer: async (callInfo) => {
+    await webhook.send({
+      event: 'call_transfer',
+      department: callInfo.targetDept,
+      reason: callInfo.transferReason
+    })
+  }
+  ```
+  </Code>
+</CodeGroup> 

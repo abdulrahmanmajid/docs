@@ -1,34 +1,75 @@
 ---
 title: 'Welcome to Kallabot'
-description: 'Learn how to build your next-gen AI call center with Kallabot'
+description: 'Build intelligent AI-powered voice agents for seamless customer interactions'
 ---
+Kallabot helps you create sophisticated AI voice agents that can engage in natural conversations with your customers. Whether you're handling customer service, sales, or support calls, our platform makes it easy to deploy intelligent voice automation at scale.
 
-# Welcome to Kallabot
+## What are AI Voice Agents?
 
-Kallabot is an AI-powered communication platform that helps businesses automate their phone calls and workflows. Our platform combines cutting-edge AI technology with enterprise-grade reliability to deliver exceptional customer experiences.
+AI voice agents are intelligent virtual assistants that can:
+- Conduct natural conversations using advanced language models
+- Handle both inbound and outbound calls
+- Process and understand customer requests
+- Access knowledge bases to provide accurate information
+- Execute actions like bookings, updates, and data collection
+
+<Frame>
+  <img
+    className="block dark:hidden"
+    src="/images/hero-light.svg"
+    alt="Kallabot Platform Overview"
+  />
+  <img
+    className="hidden dark:block"
+    src="/images/hero-dark.svg"
+    alt="Kallabot Platform Overview"
+  />
+</Frame>
+
+## Getting Started
+
+<Steps>
+  <Step title="Create Your Agent">
+    Design your voice agent's personality, configure its knowledge base, and set up conversation flows.
+  </Step>
+  
+  <Step title="Configure Settings">
+    ```javascript
+    const agent = new KallabotAgent({
+      name: 'Customer Service Assistant',
+      language: 'en-US',
+      voice: 'emma'
+    });
+    ```
+  </Step>
+  
+  <Step title="Deploy">
+    Launch your agent on our cloud platform or self-host on your infrastructure. Monitor performance and scale as needed.
+  </Step>
+</Steps>
 
 ## Key Features
 
-<CardGroup>
-  <Card title="Voice Calls" icon="phone">
-    AI-powered inbound and outbound calls with natural language understanding
+<CardGroup cols={2}>
+  <Card title="Natural Conversations" icon="comments">
+    Leverage advanced language models for human-like interactions
   </Card>
-  <Card title="Workflows" icon="flow-chart">
-    Visual workflow builder for creating complex communication flows
+  
+  <Card title="Knowledge Integration" icon="brain">
+    Connect agents to your documentation and databases
   </Card>
-  <Card title="Analytics" icon="chart-mixed">
-    Real-time analytics and insights into your communication patterns
+  
+  <Card title="Custom Voices" icon="microphone">
+    Choose from multiple voices or create custom ones
   </Card>
-  <Card title="Integrations" icon="plug">
-    Connect with 150+ tools including CRM, helpdesk, and communication platforms
+  
+  <Card title="Analytics & Monitoring" icon="chart-line">
+    Track performance and optimize conversations
   </Card>
 </CardGroup>
 
-## Platform Overview
-
-Kallabot provides a comprehensive solution for:
-
-- **Inbound Support**: 24/7 customer support with AI agents
-- **Outbound Campaigns**: Automated calls for sales, marketing, and support
-- **Custom Workflows**: Visual builder for creating communication flows
-- **Analytics & Reporting**: Detailed insights into your operations
+<div className="mt-8">
+  <Card title="Ready to dive deeper?" icon="book-open" href="/concepts">
+    Learn about core concepts and best practices for building effective voice agents
+  </Card>
+</div>

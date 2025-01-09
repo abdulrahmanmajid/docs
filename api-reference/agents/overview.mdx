@@ -1,114 +1,349 @@
 ---
-title: "Agents"
-description: "Overview of AI voice agents in Kallabot"
+title: "Agents API"
+description: "Comprehensive guide to Kallabot's AI Voice Agents capabilities"
 icon: "robot"
 ---
 
-# AI Voice Agents
+<Note>
+  The Agents API enables you to create, manage, and customize AI-powered voice agents that can engage in natural conversations with your customers, leveraging advanced language models and voice synthesis.
+</Note>
 
-AI voice agents are the core of Kallabot's platform. They handle conversations with customers, following customized scripts and using natural language processing to provide human-like interactions.
+# Agents Overview
+
+<Frame>
+  <div className="flex flex-col gap-4 p-6 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg">
+    <div className="text-xl font-semibold text-slate-800">
+      Create intelligent voice agents that understand and engage naturally
+    </div>
+    <div className="text-slate-600">
+      Kallabot's Agents combine state-of-the-art language models, voice synthesis, and conversation management to deliver human-like interactions that adapt to your business needs.
+    </div>
+  </div>
+</Frame>
 
 ## Key Features
 
-### Voice Configuration
-- Customizable voices and languages
-- Natural speech patterns
-- Adjustable speaking rates and tones
-- Support for multiple accents
-
-### Conversation Handling
-- Dynamic response generation
-- Context awareness
-- Variable interpolation
-- Real-time adaptation
-
-### Call Management
-- Inbound and outbound call support
-- Call recording capabilities
-- Real-time transcription
-- Sentiment analysis
+<CardGroup cols={3}>
+  <Card title="Natural Conversations" icon="comments">
+    Context-aware dialogue with natural language understanding
+  </Card>
+  <Card title="Voice Synthesis" icon="waveform">
+    High-quality, natural-sounding voice output
+  </Card>
+  <Card title="Custom Behaviors" icon="sliders">
+    Configurable personality and conversation styles
+  </Card>
+  <Card title="Multi-lingual" icon="language">
+    Support for multiple languages and accents
+  </Card>
+  <Card title="Knowledge Integration" icon="brain-circuit">
+    Connect to custom knowledge bases
+  </Card>
+  <Card title="Analytics" icon="chart-mixed">
+    Detailed conversation and performance metrics
+  </Card>
+</CardGroup>
 
 ## Agent Types
 
-| Type | Description |
-|------|-------------|
-| Sales | Specialized in product sales and lead qualification |
-| Support | Handles customer support and issue resolution |
-| Appointment | Manages scheduling and appointment confirmation |
-| Survey | Conducts surveys and collects feedback |
-| Custom | Customized for specific use cases |
+<Tabs>
+  <Tab title="Inbound">
+    <div className="mt-4">
+      <CardGroup cols={2}>
+        <Card title="Customer Service" icon="headset">
+          Handle customer inquiries and support requests
+        </Card>
+        <Card title="Appointment Scheduling" icon="calendar">
+          Manage bookings and appointments
+        </Card>
+      </CardGroup>
+    </div>
+  </Tab>
+  <Tab title="Outbound">
+    <div className="mt-4">
+      <CardGroup cols={2}>
+        <Card title="Sales" icon="shopping-cart">
+          Product presentations and sales calls
+        </Card>
+        <Card title="Surveys" icon="clipboard-question">
+          Conduct market research and feedback collection
+        </Card>
+      </CardGroup>
+    </div>
+  </Tab>
+</Tabs>
 
-## Agent States
+## Agent Architecture
 
-| State | Description |
-|-------|-------------|
-| created | Agent has been created but not fully configured |
-| configuring | Agent is being configured with prompts and settings |
-| ready | Agent is ready to handle calls |
-| busy | Agent is currently handling a call |
-| error | Agent encountered an error and needs attention |
+```mermaid
+graph TD
+    subgraph Input
+        A[User Voice] --> B[Speech Recognition]
+        B --> C[Intent Analysis]
+    end
+    
+    subgraph Processing
+        C --> D[Context Manager]
+        D --> E[Language Model]
+        F[Knowledge Base] --> E
+        E --> G[Response Generator]
+    end
+    
+    subgraph Output
+        G --> H[Voice Synthesis]
+        H --> I[Voice Response]
+    end
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style F fill:#bfb,stroke:#333,stroke-width:2px
+    style G fill:#fbf,stroke:#333,stroke-width:2px
+    style I fill:#fbb,stroke:#333,stroke-width:2px
+```
 
 ## Available Endpoints
 
-<Card title="Create Agent" icon="plus" href="/api-reference/agents/create">
-  Create a new AI voice agent
-</Card>
+<CardGroup cols={2}>
+  <Card title="Create Agent" icon="plus" href="/api-reference/agents/create">
+    <div className="text-sm text-slate-600">
+      Create new AI voice agents
+      <Tabs>
+        <Tab title="Method">POST /v1/agent</Tab>
+        <Tab title="Features">
+          - Personality configuration
+          - Voice selection
+          - Knowledge integration
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+  <Card title="List Agents" icon="list" href="/api-reference/agents/list">
+    <div className="text-sm text-slate-600">
+      Retrieve all available agents
+      <Tabs>
+        <Tab title="Method">GET /v1/agents</Tab>
+        <Tab title="Features">
+          - Filter by type
+          - Status monitoring
+          - Usage statistics
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+  <Card title="Update Agent" icon="pen" href="/api-reference/agents/update">
+    <div className="text-sm text-slate-600">
+      Modify existing agent configuration
+      <Tabs>
+        <Tab title="Method">PUT /v1/agent/{"{agent_id}"}</Tab>
+        <Tab title="Features">
+          - Behavior updates
+          - Voice changes
+          - Knowledge updates
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+  <Card title="Delete Agent" icon="trash" href="/api-reference/agents/delete">
+    <div className="text-sm text-slate-600">
+      Remove agents and associated resources
+      <Tabs>
+        <Tab title="Method">DELETE /v1/agent/{"{agent_id}"}</Tab>
+        <Tab title="Features">
+          - Safe deletion
+          - Resource cleanup
+          - Usage history
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+</CardGroup>
 
-<Card title="List Agents" icon="list" href="/api-reference/agents/list">
-  Get a list of all your agents
-</Card>
+## Configuration Options
 
-<Card title="Get Agent" icon="circle-info" href="/api-reference/agents/get">
-  Get details of a specific agent
-</Card>
-
-<Card title="Update Agent" icon="pen" href="/api-reference/agents/update">
-  Update an existing agent
-</Card>
-
-<Card title="Delete Agent" icon="trash" href="/api-reference/agents/delete">
-  Delete an agent
-</Card>
+<Tabs>
+  <Tab title="Personality">
+    <ParamField body="agent_prompts" type="object">
+      Personality and behavior configuration
+      <Accordion title="Components">
+        | Parameter | Description | Example |
+        |-----------|-------------|---------|
+        | tone | Communication style | Professional, Friendly, Casual |
+        | language | Primary language | English, Spanish, French |
+        | expertise | Domain knowledge | Technical, Customer Service, Sales |
+      </Accordion>
+    </ParamField>
+  </Tab>
+  <Tab title="Voice">
+    <ParamField body="voice_config" type="object">
+      Voice synthesis settings
+      <Accordion title="Options">
+        - Voice ID selection
+        - Speech rate
+        - Pitch adjustment
+        - Regional accent
+      </Accordion>
+    </ParamField>
+  </Tab>
+  <Tab title="Behavior">
+    <ParamField body="behavior_params" type="object">
+      Interaction behavior settings
+      <Accordion title="Parameters">
+        - Response time
+        - Interruption handling
+        - Turn-taking strategy
+        - Error recovery
+      </Accordion>
+    </ParamField>
+  </Tab>
+</Tabs>
 
 ## Best Practices
 
-### Configuration
-- Test agent voices before deployment
-- Keep prompts clear and concise
-- Use variables for personalization
-- Set appropriate fallback responses
+<AccordionGroup>
+  <Accordion title="Agent Design" icon="paintbrush">
+    - Define clear conversation goals
+    - Create consistent personality
+    - Set appropriate tone
+    - Design natural dialogue flows
+    - Plan error handling
+  </Accordion>
 
-### Performance
-- Monitor call success rates
-- Review conversation transcripts
-- Analyze customer sentiment
-- Track completion rates
+  <Accordion title="Voice Configuration" icon="waveform-lines">
+    - Choose appropriate voice
+    - Test in target environment
+    - Optimize speech parameters
+    - Consider audience preferences
+    - Plan multilingual support
+  </Accordion>
 
-### Optimization
-- Refine prompts based on feedback
-- Adjust voice parameters as needed
-- Update scripts for better engagement
-- Fine-tune response timing
+  <Accordion title="Performance Optimization" icon="gauge">
+    - Monitor response times
+    - Track success rates
+    - Analyze conversation flows
+    - Optimize prompts
+    - Regular testing
+  </Accordion>
 
-## Rate Limits
+  <Accordion title="Integration Tips" icon="puzzle-piece">
+    - Test thoroughly
+    - Monitor interactions
+    - Collect feedback
+    - Iterate improvements
+    - Document customizations
+  </Accordion>
+</AccordionGroup>
 
-| Operation | Limit |
-|-----------|-------|
-| Agent Creation | 10 per hour |
-| Active Agents | 20 per account |
-| Concurrent Calls | 5 per agent |
-| API Requests | 100 per minute |
+## Limits and Quotas
+
+<CardGroup cols={3}>
+  <Card title="Agents" icon="robot">
+    <div className="text-sm">
+      - Max active: 100
+      - Concurrent calls: 50
+      - Languages: 10
+    </div>
+  </Card>
+  <Card title="Configuration" icon="sliders">
+    <div className="text-sm">
+      - Prompt length: 2000
+      - Voice options: 20
+      - Custom data: 100MB
+    </div>
+  </Card>
+  <Card title="Usage" icon="chart-line">
+    <div className="text-sm">
+      - Calls/day: 10000
+      - Duration: 30min
+      - Concurrent: 50
+    </div>
+  </Card>
+</CardGroup>
+
+## Analytics and Monitoring
+
+<Tabs>
+  <Tab title="Performance">
+    <CardGroup cols={2}>
+      <Card title="Response Time" icon="stopwatch">
+        Track agent response latency
+      </Card>
+      <Card title="Success Rate" icon="check">
+        Monitor conversation completion
+      </Card>
+    </CardGroup>
+  </Tab>
+  <Tab title="Usage">
+    <CardGroup cols={2}>
+      <Card title="Call Volume" icon="phone">
+        Track total calls handled
+      </Card>
+      <Card title="Duration" icon="clock">
+        Monitor conversation length
+      </Card>
+    </CardGroup>
+  </Tab>
+</Tabs>
+
+## Error Handling
+
+<ResponseField name="Common Errors" type="object">
+  <Expandable title="Error Categories">
+    <ResponseField name="configuration" type="object">
+      Setup and configuration errors
+      <Accordion title="Examples">
+        - Invalid prompts
+        - Voice not available
+        - Invalid parameters
+      </Accordion>
+    </ResponseField>
+
+    <ResponseField name="runtime" type="object">
+      Execution and processing errors
+      <Accordion title="Examples">
+        - Connection lost
+        - Response timeout
+        - Resource exhausted
+      </Accordion>
+    </ResponseField>
+
+    <ResponseField name="integration" type="object">
+      Integration and system errors
+      <Accordion title="Examples">
+        - API errors
+        - Service unavailable
+        - Rate limited
+      </Accordion>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Related Resources
 
-<Card title="Campaigns" icon="bullhorn" href="/api-reference/campaigns/overview">
-  Learn about outbound calling campaigns
-</Card>
+<CardGroup cols={2}>
+  <Card title="Voice Configuration" icon="microphone" href="/guides/voice-config">
+    Voice synthesis setup guide
+  </Card>
+  <Card title="Prompt Engineering" icon="wand-magic-sparkles" href="/guides/prompts">
+    Creating effective agent prompts
+  </Card>
+  <Card title="Integration Guide" icon="plug" href="/guides/integration">
+    System integration patterns
+  </Card>
+  <Card title="Best Practices" icon="star" href="/guides/agent-best-practices">
+    Optimization and management
+  </Card>
+</CardGroup>
 
-<Card title="Calls" icon="phone" href="/api-reference/calls/overview">
-  Understand call handling
-</Card>
+## Support
 
-<Card title="Analytics" icon="chart-line" href="/api-reference/analytics/overview">
-  Access performance analytics
-</Card> 
+<CardGroup cols={3}>
+  <Card title="Documentation" icon="book">
+    Comprehensive guides
+  </Card>
+  <Card title="API Status" icon="signal" href="https://status.kallabot.com">
+    Real-time monitoring
+  </Card>
+  <Card title="Help Center" icon="headset" href="https://help.kallabot.com">
+    24/7 technical support
+  </Card>
+</CardGroup> 

@@ -1,0 +1,189 @@
+---
+title: 'Outbound Calls'
+description: 'Learn how to set up and manage outbound calling campaigns'
+icon: 'phone'
+---
+
+# Outbound Calling Campaigns
+
+Create and manage automated outbound calling campaigns that scale with your business needs.
+
+## Getting Started
+
+<Note>
+Before starting an outbound campaign, make sure you have:
+- A verified caller ID
+- Your contact list ready
+- Agent prompt configured
+- Required variables defined
+</Note>
+
+## Campaign Types
+
+<CardGroup cols={2}>
+  <Card title="Batch Campaigns" icon="layer-group">
+    - Upload contacts in bulk
+    - Schedule calls
+    - Set daily call limits
+    - Define retry rules
+  </Card>
+  
+  <Card title="Triggered Campaigns" icon="bolt">
+    - Event-based calls
+    - Real-time triggers
+    - API integration
+    - Instant notifications
+  </Card>
+</CardGroup>
+
+## Setting Up a Campaign
+
+<Steps>
+  <Step title="Create Campaign">
+    Set your campaign basics:
+    ```typescript
+    Campaign Name: "January Appointment Reminders"
+    Type: Batch Campaign
+    Timezone: UTC-5 (Eastern)
+    Daily Call Window: 9 AM - 5 PM
+    ```
+  </Step>
+  
+  <Step title="Configure Agent">
+    Set up your AI agent's behavior:
+    ```typescript
+    Agent Name: "Sarah"
+    Language: English (US)
+    Voice Type: Female, Natural
+    Speaking Rate: 1.0x
+    ```
+  </Step>
+  
+  <Step title="Upload Contacts">
+    Prepare your contact list CSV:
+    ```csv
+    phone,first_name,appointment_date,service_type
+    +1234567890,John,2024-01-15,Dental Cleaning
+    +0987654321,Sarah,2024-01-16,Check-up
+    ```
+  </Step>
+  
+  <Step title="Set Call Rules">
+    Define your calling rules:
+    - Max attempts: 3
+    - Retry interval: 30 minutes
+    - Call timeout: 60 seconds
+    - Concurrent calls: 10
+  </Step>
+</Steps>
+
+## Campaign Features
+
+<AccordionGroup>
+  <Accordion title="Smart Scheduling" icon="calendar-check">
+    - Respect time zones
+    - Honor quiet hours
+    - Optimize call times
+    - Handle holidays
+  </Accordion>
+  
+  <Accordion title="Dynamic Routing" icon="route">
+    - Call transfer options
+    - Fallback numbers
+    - Priority queuing
+    - Load balancing
+  </Accordion>
+  
+  <Accordion title="Real-time Monitoring" icon="chart-line">
+    - Live call status
+    - Success rates
+    - Call duration
+    - Response tracking
+  </Accordion>
+</AccordionGroup>
+
+## Campaign Analytics
+
+<CardGroup cols={2}>
+  <Card title="Performance Metrics" icon="chart-pie">
+    - Connection rates
+    - Conversation duration
+    - Success rates
+    - Transfer rates
+  </Card>
+  
+  <Card title="Quality Metrics" icon="star">
+    - Voice clarity
+    - Customer satisfaction
+    - Response accuracy
+    - Issue resolution
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Timing" icon="clock">
+    - Call during business hours
+    - Respect time zones
+    - Avoid holidays
+  </Card>
+  
+  <Card title="Volume" icon="phone">
+    - Start small
+    - Gradually increase
+    - Monitor quality
+  </Card>
+  
+  <Card title="Testing" icon="vial">
+    - Test small batches
+    - Verify scripts
+    - Check variables
+  </Card>
+</CardGroup>
+
+## Compliance & Safety
+
+<Warning>
+Important compliance requirements:
+- Honor Do-Not-Call lists
+- Maintain call records
+- Follow local regulations
+- Respect quiet hours
+</Warning>
+
+## Advanced Features
+
+<CardGroup cols={2}>
+  <Card title="Custom Integrations" icon="puzzle-piece">
+    Connect with your:
+    - CRM systems
+    - Booking platforms
+    - Payment processors
+  </Card>
+  
+  <Card title="Automated Workflows" icon="gears">
+    Create workflows for:
+    - Follow-up calls
+    - Status updates
+    - Data synchronization
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Common Issues" icon="triangle-exclamation">
+    - Call not connecting
+    - Audio quality issues
+    - Variable errors
+    - Scheduling conflicts
+  </Accordion>
+  
+  <Accordion title="Quick Fixes" icon="wrench">
+    - Verify phone numbers
+    - Check network connection
+    - Validate contact data
+    - Review call rules
+  </Accordion>
+</AccordionGroup> 

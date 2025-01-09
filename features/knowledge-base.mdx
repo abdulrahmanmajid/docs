@@ -1,0 +1,271 @@
+---
+title: 'Knowledge Base'
+description: 'Train your AI agents with custom knowledge and responses'
+icon: 'brain'
+---
+
+# Knowledge Base Management
+
+Empower your AI agents with custom knowledge. Create, organize, and manage information that your agents can use during calls.
+
+## Overview
+
+<Note>
+Your knowledge base is what makes your AI agent smart about your:
+- Products & Services
+- Company Policies
+- Common Questions
+- Troubleshooting Steps
+</Note>
+
+## Adding Knowledge
+
+<CardGroup cols={2}>
+  <Card title="Direct Input" icon="keyboard">
+    Add information directly:
+    - Text documents
+    - Q&A pairs
+    - Scripts
+    - Procedures
+  </Card>
+  
+  <Card title="Bulk Import" icon="file-import">
+    Import existing content:
+    - PDF documents
+    - Word files
+    - Web pages
+    - FAQs
+  </Card>
+</CardGroup>
+
+## Content Types
+
+<AccordionGroup>
+  <Accordion title="General Knowledge" icon="book">
+    Company information:
+    ```typescript
+    - Company history
+    - Product details
+    - Service descriptions
+    - Pricing information
+    ```
+  </Accordion>
+  
+  <Accordion title="Q&A Pairs" icon="messages-question">
+    Common interactions:
+    ```typescript
+    Q: "What are your business hours?"
+    A: "We're open Monday to Friday, 9 AM to 6 PM EST."
+
+    Q: "How do I reset my password?"
+    A: "I can guide you through our password reset process..."
+    ```
+  </Accordion>
+  
+  <Accordion title="Procedures" icon="list-check">
+    Step-by-step guides:
+    ```typescript
+    Procedure: "Account Setup"
+    Steps:
+    1. Verify customer information
+    2. Choose account type
+    3. Set security questions
+    4. Confirm details
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Organization
+
+<Steps>
+  <Step title="Categories">
+    Organize by topics:
+    - Products
+    - Services
+    - Support
+    - Policies
+  </Step>
+  
+  <Step title="Tags">
+    Add searchable tags:
+    ```typescript
+    tags: [
+      "technical-support",
+      "billing",
+      "product-features",
+      "troubleshooting"
+    ]
+    ```
+  </Step>
+  
+  <Step title="Priority Levels">
+    Set importance:
+    - Critical information
+    - Common knowledge
+    - Supplementary details
+    - Background info
+  </Step>
+</Steps>
+
+## Smart Features
+
+<CardGroup cols={2}>
+  <Card title="Auto-Learning" icon="brain">
+    System learns from:
+    - Call transcripts
+    - Customer interactions
+    - Resolution patterns
+    - Common queries
+  </Card>
+  
+  <Card title="Context Awareness" icon="sitemap">
+    Understands:
+    - Conversation flow
+    - Previous responses
+    - Customer history
+    - Current context
+  </Card>
+</CardGroup>
+
+## Training Your Agent
+
+<Steps>
+  <Step title="Add Base Knowledge">
+    Start with essentials:
+    ```typescript
+    baseKnowledge: {
+      company: "Basic company info",
+      products: "Product catalog",
+      services: "Service details",
+      policies: "Company policies"
+    }
+    ```
+  </Step>
+  
+  <Step title="Define Responses">
+    Create response templates:
+    ```typescript
+    responses: {
+      greeting: "Welcome to {{company.name}}",
+      productInfo: "{{product.name}} costs {{product.price}}",
+      support: "Let me help you with {{issue.type}}"
+    }
+    ```
+  </Step>
+  
+  <Step title="Test Understanding">
+    Verify agent comprehension:
+    - Test questions
+    - Role-play scenarios
+    - Edge cases
+    - Complex queries
+  </Step>
+</Steps>
+
+## Version Control
+
+<CardGroup cols={2}>
+  <Card title="Content Versioning" icon="code-branch">
+    Track changes:
+    - Version history
+    - Change logs
+    - Rollback options
+    - Audit trail
+  </Card>
+  
+  <Card title="Deployment" icon="rocket">
+    Control updates:
+    - Staged rollout
+    - A/B testing
+    - Performance monitoring
+    - Impact analysis
+  </Card>
+</CardGroup>
+
+## Analytics & Insights
+
+<AccordionGroup>
+  <Accordion title="Usage Analytics" icon="chart-line">
+    Track utilization:
+    - Most used knowledge
+    - Common questions
+    - Success rates
+    - Gap analysis
+  </Accordion>
+  
+  <Accordion title="Quality Metrics" icon="gauge">
+    Measure effectiveness:
+    - Response accuracy
+    - Customer satisfaction
+    - Resolution rates
+    - Learning curve
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Content Quality" icon="star">
+    - Keep it accurate
+    - Regular updates
+    - Clear language
+    - Consistent tone
+  </Card>
+  
+  <Card title="Organization" icon="folder-tree">
+    - Logical structure
+    - Clear categories
+    - Easy navigation
+    - Smart tagging
+  </Card>
+  
+  <Card title="Maintenance" icon="screwdriver-wrench">
+    - Regular reviews
+    - Update outdated info
+    - Remove duplicates
+    - Add new content
+  </Card>
+</CardGroup>
+
+## Integration Options
+
+<CodeGroup>
+  <Code title="API Integration">
+  ```typescript
+  // Fetch knowledge dynamically
+  async function getKnowledge(query) {
+    const response = await kb.search({
+      query: query,
+      context: currentCall.context,
+      confidence: 0.8
+    });
+    return response.bestMatch;
+  }
+  ```
+  </Code>
+  
+  <Code title="Real-time Updates">
+  ```typescript
+  // Update knowledge during call
+  onNewInformation: async (info) => {
+    await kb.update({
+      category: info.category,
+      content: info.content,
+      priority: "high",
+      source: "call-learning"
+    });
+  }
+  ```
+  </Code>
+</CodeGroup>
+
+## Security & Compliance
+
+<Warning>
+Important considerations:
+- Data privacy
+- Access controls
+- Audit logging
+- Compliance rules
+- Sensitive information handling
+</Warning> 
