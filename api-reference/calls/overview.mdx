@@ -1,129 +1,383 @@
 ---
-title: "Calls"
-description: "Overview of call management in Kallabot"
+title: "Calls API"
+description: "Comprehensive guide to Kallabot's Voice Call Management capabilities"
 icon: "phone"
 ---
 
-# Calls
+<Note>
+  The Calls API enables you to initiate, manage, and monitor voice calls between AI agents and users, providing real-time control and detailed analytics for every interaction.
+</Note>
 
-The Calls API enables real-time management of voice calls between AI agents and customers, supporting both inbound and outbound communications with advanced control and monitoring capabilities.
+# Calls Overview
+
+<Frame>
+  <div className="flex flex-col gap-4 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+    <div className="text-xl font-semibold text-slate-800">
+      Manage intelligent voice conversations at scale
+    </div>
+    <div className="text-slate-600">
+      Kallabot's Calls API provides enterprise-grade voice call management with real-time controls, detailed analytics, and seamless integration with AI agents.
+    </div>
+  </div>
+</Frame>
 
 ## Key Features
 
-### Call Control
-- Real-time call initiation and termination
-- Dynamic routing and transfer
-- Call recording and monitoring
-- Quality assurance controls
+<CardGroup cols={3}>
+  <Card title="Real-time Control" icon="sliders">
+    Live call monitoring and management
+  </Card>
+  <Card title="Call Recording" icon="microphone">
+    High-quality audio capture and storage
+  </Card>
+  <Card title="Analytics" icon="chart-line">
+    Detailed metrics and insights
+  </Card>
+  <Card title="Transcription" icon="file-lines">
+    Real-time speech-to-text conversion
+  </Card>
+  <Card title="Call Routing" icon="route">
+    Intelligent call distribution
+  </Card>
+  <Card title="Quality Monitoring" icon="wave-pulse">
+    Voice quality and latency tracking
+  </Card>
+</CardGroup>
 
-### Conversation Features
-- Real-time transcription
-- Sentiment analysis
-- Variable injection
-- Context preservation
+## Call Types
 
-### Analytics
-- Call duration tracking
-- Success rate monitoring
-- Quality metrics
-- Performance analytics
+<Tabs>
+  <Tab title="Inbound">
+    <div className="mt-4">
+      <CardGroup cols={2}>
+        <Card title="Direct Calls" icon="phone-arrow-down-left">
+          Handle incoming customer calls
+          <Accordion title="Features">
+            - Queue management
+            - Priority routing
+            - Fallback handling
+          </Accordion>
+        </Card>
+        <Card title="Transferred Calls" icon="arrow-right-arrow-left">
+          Process call transfers
+          <Accordion title="Features">
+            - Context preservation
+            - Warm transfer
+            - Queue priority
+          </Accordion>
+        </Card>
+      </CardGroup>
+    </div>
+  </Tab>
+  <Tab title="Outbound">
+    <div className="mt-4">
+      <CardGroup cols={2}>
+        <Card title="Campaign Calls" icon="bullhorn">
+          Automated outreach campaigns
+          <Accordion title="Features">
+            - Schedule management
+            - Rate limiting
+            - Progress tracking
+          </Accordion>
+        </Card>
+        <Card title="Direct Calls" icon="phone-arrow-up-right">
+          One-off outbound calls
+          <Accordion title="Features">
+            - Immediate initiation
+            - Custom parameters
+            - Direct monitoring
+          </Accordion>
+        </Card>
+      </CardGroup>
+    </div>
+  </Tab>
+</Tabs>
 
-## Call States
+## Call Flow Architecture
 
-| State | Description |
-|-------|-------------|
-| queued | Call is waiting to be initiated |
-| ringing | Call is being connected |
-| in-progress | Call is actively in conversation |
-| completed | Call has finished successfully |
-| failed | Call encountered an error |
-| no-answer | Call was not answered |
-| busy | Recipient was busy |
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant T as Twilio
+    participant AG as AI Agent
+    participant R as Recording
+    
+    C->>A: Initiate Call
+    A->>T: Create Call
+    T-->>A: Call Created
+    A-->>C: Call ID
+    
+    T->>AG: Connect Call
+    AG->>R: Start Recording
+    
+    loop Conversation
+        AG->>T: Process Audio
+        T->>AG: User Response
+    end
+    
+    AG->>R: Stop Recording
+    T->>A: Call Ended
+    A->>C: Call Summary
+
+    Note over C,R: All steps include real-time monitoring
+```
 
 ## Available Endpoints
 
-<Card title="Create Call" icon="plus" href="/api-reference/calls/create">
-  Initiate a new outbound call
-</Card>
+<CardGroup cols={2}>
+  <Card title="Create Call" icon="plus" href="/api-reference/calls/create">
+    <div className="text-sm text-slate-600">
+      Initiate new voice calls
+      <Tabs>
+        <Tab title="Method">POST /v1/call</Tab>
+        <Tab title="Features">
+          - Agent selection
+          - Parameter setting
+          - Recording options
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+  <Card title="End Call" icon="phone-slash" href="/api-reference/calls/end">
+    <div className="text-sm text-slate-600">
+      Terminate active calls
+      <Tabs>
+        <Tab title="Method">POST /v1/call/{"{call_id}"}/end</Tab>
+        <Tab title="Features">
+          - Graceful termination
+          - Recording finalization
+          - Summary generation
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+  <Card title="Get Call" icon="circle-info" href="/api-reference/calls/get">
+    <div className="text-sm text-slate-600">
+      Retrieve call details
+      <Tabs>
+        <Tab title="Method">GET /v1/call/{"{call_id}"}</Tab>
+        <Tab title="Features">
+          - Real-time status
+          - Duration tracking
+          - Quality metrics
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+  <Card title="List Calls" icon="list" href="/api-reference/calls/list">
+    <div className="text-sm text-slate-600">
+      Get all call records
+      <Tabs>
+        <Tab title="Method">GET /v1/calls</Tab>
+        <Tab title="Features">
+          - Filtering options
+          - Pagination
+          - Sorting
+        </Tab>
+      </Tabs>
+    </div>
+  </Card>
+</CardGroup>
 
-<Card title="List Calls" icon="list" href="/api-reference/calls/list">
-  Get a list of all calls
-</Card>
+## Call States
 
-<Card title="Get Call" icon="circle-info" href="/api-reference/calls/get">
-  Get details of a specific call
-</Card>
+<Steps>
+  <Step title="Initiating">
+    Call request received and being processed
+    <Accordion title="Details">
+      - Parameter validation
+      - Resource allocation
+      - Agent preparation
+    </Accordion>
+  </Step>
+  <Step title="Ringing">
+    Attempting to connect with recipient
+    <Accordion title="Details">
+      - Timeout monitoring
+      - Retry logic
+      - Status updates
+    </Accordion>
+  </Step>
+  <Step title="Connected">
+    Active conversation in progress
+    <Accordion title="Details">
+      - Audio streaming
+      - Recording
+      - Real-time monitoring
+    </Accordion>
+  </Step>
+  <Step title="Completed">
+    Call finished and processed
+    <Accordion title="Details">
+      - Recording finalization
+      - Analytics generation
+      - Summary creation
+    </Accordion>
+  </Step>
+</Steps>
 
-<Card title="End Call" icon="phone-slash" href="/api-reference/calls/end">
-  End an active call
-</Card>
+## Configuration Options
 
-## Call Flow
-
-```mermaid
-graph TD
-    A[Initiate Call] --> B{Call Type}
-    B -->|Outbound| C[Dial Number]
-    B -->|Inbound| D[Accept Call]
-    C --> E[Connect Agent]
-    D --> E
-    E --> F[Conversation]
-    F --> G{Outcome}
-    G -->|Complete| H[End Call]
-    G -->|Transfer| I[New Agent]
-    I --> F
-    G -->|Failed| J[Error Handler]
-```
+<Tabs>
+  <Tab title="Call Setup">
+    <ParamField body="call_params" type="object">
+      Basic call configuration
+      <Accordion title="Parameters">
+        | Parameter | Description | Example |
+        |-----------|-------------|---------|
+        | agent_id | AI agent identifier | ag_123456 |
+        | phone_number | Target number | +1234567890 |
+        | record | Enable recording | true/false |
+      </Accordion>
+    </ParamField>
+  </Tab>
+  <Tab title="Recording">
+    <ParamField body="recording_config" type="object">
+      Recording settings
+      <Accordion title="Options">
+        - Audio quality
+        - Format selection
+        - Storage duration
+        - Dual channel
+      </Accordion>
+    </ParamField>
+  </Tab>
+  <Tab title="Monitoring">
+    <ParamField body="monitor_params" type="object">
+      Monitoring configuration
+      <Accordion title="Features">
+        - Quality metrics
+        - Alert thresholds
+        - Webhook notifications
+        - Live streaming
+      </Accordion>
+    </ParamField>
+  </Tab>
+</Tabs>
 
 ## Best Practices
 
-### Call Management
-- Set appropriate timeouts
-- Handle all possible call states
-- Implement proper error handling
-- Monitor call quality
+<AccordionGroup>
+  <Accordion title="Call Quality" icon="signal">
+    - Test network conditions
+    - Monitor latency
+    - Check audio quality
+    - Validate numbers
+    - Set up fallbacks
+  </Accordion>
 
-### Recording
-- Obtain consent before recording
-- Store recordings securely
-- Implement retention policies
-- Enable easy retrieval
+  <Accordion title="Recording Management" icon="tape">
+    - Set retention policies
+    - Monitor storage usage
+    - Implement backup
+    - Handle consent
+    - Manage access
+  </Accordion>
 
-### Performance
-- Monitor network conditions
-- Track call metrics
-- Analyze conversation quality
-- Optimize response times
+  <Accordion title="Error Handling" icon="triangle-exclamation">
+    - Implement retry logic
+    - Set timeouts
+    - Handle disconnects
+    - Log issues
+    - Monitor failures
+  </Accordion>
 
-## Rate Limits
+  <Accordion title="Performance" icon="gauge">
+    - Track metrics
+    - Optimize routing
+    - Monitor resources
+    - Balance load
+    - Set alerts
+  </Accordion>
+</AccordionGroup>
 
-| Operation | Limit |
-|-----------|-------|
-| Concurrent Calls | 50 per account |
-| Call Initiations | 60 per minute |
-| API Requests | 100 per minute |
-| Recording Storage | 10GB per account |
+## Limits and Quotas
 
-## Webhooks
+<CardGroup cols={3}>
+  <Card title="Concurrent" icon="phone">
+    <div className="text-sm">
+      - Active calls: 100
+      - Per agent: 1
+      - Per campaign: 50
+    </div>
+  </Card>
+  <Card title="Duration" icon="clock">
+    <div className="text-sm">
+      - Max length: 60min
+      - Recording: 30min
+      - Storage: 90 days
+    </div>
+  </Card>
+  <Card title="Rate Limits" icon="gauge">
+    <div className="text-sm">
+      - Requests/min: 60
+      - New calls/min: 30
+      - API calls/min: 100
+    </div>
+  </Card>
+</CardGroup>
 
-Kallabot can send real-time updates about call events to your server:
+## Error Handling
 
-- Call initiated
-- Call answered
-- Call completed
-- Recording available
-- Error occurred
+<ResponseField name="Common Errors" type="object">
+  <Expandable title="Error Categories">
+    <ResponseField name="connection" type="object">
+      Connection-related errors
+      <Accordion title="Examples">
+        - Invalid number
+        - Network issues
+        - Busy line
+      </Accordion>
+    </ResponseField>
+
+    <ResponseField name="system" type="object">
+      System-level errors
+      <Accordion title="Examples">
+        - Resource exhausted
+        - Service unavailable
+        - Rate limited
+      </Accordion>
+    </ResponseField>
+
+    <ResponseField name="media" type="object">
+      Media handling errors
+      <Accordion title="Examples">
+        - Recording failed
+        - Audio quality
+        - Codec issues
+      </Accordion>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Related Resources
 
-<Card title="Agents" icon="robot" href="/api-reference/agents/overview">
-  Learn about AI voice agents
-</Card>
+<CardGroup cols={2}>
+  <Card title="Campaigns" icon="bullhorn" href="/api-reference/campaigns/overview">
+    Campaign management guide
+  </Card>
+  <Card title="Agents" icon="robot" href="/api-reference/agents/overview">
+    AI agent configuration
+  </Card>
+  <Card title="Analytics" icon="chart-mixed" href="/api-reference/analytics/overview">
+    Call analytics guide
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api-reference/webhooks/overview">
+    Event notifications
+  </Card>
+</CardGroup>
 
-<Card title="Campaigns" icon="bullhorn" href="/api-reference/campaigns/overview">
-  Manage outbound campaigns
-</Card>
+## Support
 
-<Card title="Analytics" icon="chart-line" href="/api-reference/analytics/overview">
-  Access call analytics
-</Card> 
+<CardGroup cols={3}>
+  <Card title="Documentation" icon="book">
+    Comprehensive guides
+  </Card>
+  <Card title="API Status" icon="signal" href="https://status.kallabot.com">
+    Real-time monitoring
+  </Card>
+  <Card title="Help Center" icon="headset" href="https://help.kallabot.com">
+    24/7 technical support
+  </Card>
+</CardGroup> 

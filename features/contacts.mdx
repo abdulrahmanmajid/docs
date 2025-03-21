@@ -1,0 +1,267 @@
+---
+title: 'Contact Management'
+description: 'Manage your contacts with an easy-to-use spreadsheet interface'
+icon: 'user'
+---
+
+# Contact Management
+
+Manage your contacts easily with our spreadsheet-style interface. Add, edit, and organize contact information just like you would in Excel.
+
+## Quick Actions
+
+<CardGroup cols={3}>
+  <Card title="Import" icon="file-import">
+    - Drag & drop CSV/Excel
+    - Bulk upload contacts
+    - Map custom fields
+    - Preview before import
+  </Card>
+  
+  <Card title="Export" icon="file-export">
+    - Download as CSV/Excel
+    - Select columns
+    - Filter data
+    - Choose format
+  </Card>
+  
+  <Card title="Manage" icon="table-cells">
+    - Edit like spreadsheet
+    - Sort and filter
+    - Quick search
+    - Bulk actions
+  </Card>
+</CardGroup>
+
+## Spreadsheet Interface
+
+<Frame>
+  <img src="/images/contacts-table.png" alt="Contacts Table Interface" />
+</Frame>
+
+<Steps>
+  <Step title="Basic Navigation">
+    Just like Excel:
+    - Click to edit cells
+    - Tab to move right
+    - Enter to move down
+    - Copy/paste supported
+  </Step>
+  
+  <Step title="Quick Editing">
+    ```typescript
+    Shortcuts:
+    Ctrl + C: Copy
+    Ctrl + V: Paste
+    Ctrl + Z: Undo
+    Ctrl + F: Find
+    ```
+  </Step>
+  
+  <Step title="Bulk Actions">
+    Select multiple rows to:
+    - Delete contacts
+    - Update fields
+    - Add to campaign
+    - Export selection
+  </Step>
+</Steps>
+
+## Contact Fields
+
+<AccordionGroup>
+  <Accordion title="Standard Fields" icon="list">
+    ```typescript
+    Required Fields:
+    - First Name
+    - Last Name
+    - Phone Number
+    - Email
+    - Status
+    ```
+  </Accordion>
+  
+  <Accordion title="Custom Fields" icon="puzzle-piece">
+    Add your own fields:
+    - Text fields
+    - Date fields
+    - Number fields
+    - Dropdown lists
+  </Accordion>
+  
+  <Accordion title="System Fields" icon="gear">
+    Automatically tracked:
+    - Created Date
+    - Last Modified
+    - Last Called
+    - Call History
+  </Accordion>
+</AccordionGroup>
+
+## Data Management
+
+<CardGroup cols={2}>
+  <Card title="Filtering" icon="filter">
+    Filter contacts by:
+    - Any field value
+    - Date ranges
+    - Call status
+    - Custom conditions
+  </Card>
+  
+  <Card title="Sorting" icon="arrow-up-wide-short">
+    Sort by:
+    - Multiple columns
+    - Custom order
+    - Priority
+    - Last contact
+  </Card>
+</CardGroup>
+
+## Bulk Operations
+
+<Steps>
+  <Step title="Select Contacts">
+    ```typescript
+    Selection Options:
+    - Click and drag
+    - Shift + Click range
+    - Ctrl + Click multiple
+    - Select all checkbox
+    ```
+  </Step>
+  
+  <Step title="Choose Action">
+    Available actions:
+    - Update fields
+    - Delete contacts
+    - Add to campaign
+    - Export data
+  </Step>
+  
+  <Step title="Apply Changes">
+    - Preview changes
+    - Confirm action
+    - View results
+    - Undo if needed
+  </Step>
+</Steps>
+
+## Import/Export
+
+<CardGroup cols={2}>
+  <Card title="Import Options" icon="file-import">
+    Supported formats:
+    - CSV files
+    - Excel sheets
+    - Google Contacts
+    - vCard files
+  </Card>
+  
+  <Card title="Export Options" icon="file-export">
+    Export as:
+    - CSV format
+    - Excel workbook
+    - Contact cards
+    - Custom format
+  </Card>
+</CardGroup>
+
+## Data Validation
+
+<Warning>
+Automatic checks for:
+- Valid phone numbers
+- Email format
+- Required fields
+- Duplicate entries
+</Warning>
+
+## Search & Filter
+
+<AccordionGroup>
+  <Accordion title="Quick Search" icon="magnifying-glass">
+    - Search any field
+    - Real-time results
+    - Highlight matches
+    - Recent searches
+  </Accordion>
+  
+  <Accordion title="Advanced Filters" icon="sliders">
+    Combine multiple conditions:
+    ```typescript
+    {
+      firstName: "contains: John",
+      lastCall: "before: 2024-01-01",
+      status: "equals: Active"
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Contact Lists
+
+<CardGroup cols={2}>
+  <Card title="Smart Lists" icon="brain">
+    Auto-updated based on:
+    - Contact properties
+    - Call history
+    - Custom rules
+    - Activity patterns
+  </Card>
+  
+  <Card title="Static Lists" icon="list-check">
+    Manually managed:
+    - Campaign groups
+    - VIP contacts
+    - Custom segments
+    - Special handling
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Organization" icon="folder-tree">
+    - Use clear naming
+    - Create groups
+    - Tag contacts
+    - Keep updated
+  </Card>
+  
+  <Card title="Data Quality" icon="check-double">
+    - Regular cleanup
+    - Remove duplicates
+    - Verify numbers
+    - Update status
+  </Card>
+  
+  <Card title="Backup" icon="cloud-arrow-up">
+    - Regular exports
+    - Version history
+    - Change logs
+    - Data recovery
+  </Card>
+</CardGroup>
+
+## Keyboard Shortcuts
+
+<CardGroup cols={2}>
+  <Card title="Navigation" icon="arrow-pointer">
+    ```typescript
+    Arrow keys: Move between cells
+    Tab: Next cell
+    Enter: Edit cell
+    Esc: Cancel edit
+    ```
+  </Card>
+  
+  <Card title="Actions" icon="keyboard">
+    ```typescript
+    Ctrl + S: Save changes
+    Ctrl + N: New contact
+    Ctrl + D: Duplicate
+    Delete: Remove
+    ```
+  </Card>
+</CardGroup> 

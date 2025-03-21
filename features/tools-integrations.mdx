@@ -1,0 +1,308 @@
+---
+title: 'Tools & Integrations'
+description: 'Connect your AI agents with external services and custom functions'
+icon: 'plug'
+---
+
+# Tools & Integrations
+
+Extend your AI agents' capabilities by connecting them to external services, APIs, and custom functions.
+
+## Available Tools
+
+<CardGroup cols={3}>
+  <Card title="Call Controls" icon="phone">
+    Built-in actions:
+    - Transfer calls
+    - End calls
+    - Hold/Resume
+    - Conference
+  </Card>
+  
+  <Card title="Calendar" icon="calendar">
+    Scheduling tools:
+    - Check availability
+    - Book appointments
+    - Send invites
+    - Manage events
+  </Card>
+  
+  <Card title="Custom APIs" icon="code">
+    External connections:
+    - REST APIs
+    - Webhooks
+    - Database queries
+    - Custom functions
+  </Card>
+</CardGroup>
+
+## Setting Up Tools
+
+<Steps>
+  <Step title="Tool Configuration">
+    Define your tool:
+    ```typescript
+    tool: {
+      name: "calendar_check",
+      type: "function",
+      description: "Check calendar availability",
+      parameters: {
+        date: "string",
+        duration: "number",
+        timezone: "string"
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Authentication">
+    Set up access:
+    ```typescript
+    auth: {
+      type: "oauth2",
+      credentials: {
+        clientId: "YOUR_CLIENT_ID",
+        clientSecret: "YOUR_CLIENT_SECRET",
+        scopes: ["calendar.read", "calendar.write"]
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Implementation">
+    Connect the logic:
+    ```typescript
+    async function checkAvailability(params) {
+      const { date, duration, timezone } = params;
+      // Your implementation logic
+      return availableSlots;
+    }
+    ```
+  </Step>
+</Steps>
+
+## Common Integrations
+
+<AccordionGroup>
+  <Accordion title="Call Transfer" icon="phone-arrow-right">
+    ```typescript
+    // Transfer call to department or agent
+    transfer: {
+      action: "transfer_call",
+      parameters: {
+        target: "sales_department",
+        reason: "sales inquiry",
+        metadata: {
+          customer_id: "12345",
+          priority: "high"
+        }
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Calendar Integration" icon="calendar-check">
+    ```typescript
+    // Check and book appointments
+    calendar: {
+      checkAvailability: async (date) => {},
+      bookAppointment: async (details) => {},
+      sendInvite: async (attendees) => {},
+      reschedule: async (appointmentId) => {}
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="CRM Actions" icon="database">
+    ```typescript
+    // Update customer records
+    crm: {
+      updateContact: async (data) => {},
+      createTicket: async (issue) => {},
+      logInteraction: async (details) => {},
+      getHistory: async (customerId) => {}
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Custom Functions
+
+<CodeGroup>
+  <Code title="Function Definition">
+  ```typescript
+  // Define custom function
+  const customFunction = {
+    name: "check_order_status",
+    description: "Check status of customer order",
+    parameters: {
+      orderId: {
+        type: "string",
+        description: "Order ID to check"
+      }
+    },
+    handler: async (params) => {
+      // Implementation
+      return orderStatus;
+    }
+  }
+  ```
+  </Code>
+  
+  <Code title="Webhook Integration">
+  ```typescript
+  // Set up webhook handler
+  const webhookHandler = {
+    endpoint: "/api/webhook",
+    method: "POST",
+    headers: {
+      "x-api-key": "your-secret-key"
+    },
+    handler: async (payload) => {
+      // Process webhook data
+      return response;
+    }
+  }
+  ```
+  </Code>
+</CodeGroup>
+
+## Tool Types
+
+<CardGroup cols={2}>
+  <Card title="Built-in Tools" icon="toolbox">
+    Ready to use:
+    - Call controls
+    - Basic integrations
+    - Common functions
+    - Standard protocols
+  </Card>
+  
+  <Card title="Custom Tools" icon="screwdriver-wrench">
+    Build your own:
+    - API connections
+    - Business logic
+    - Data processing
+    - Custom actions
+  </Card>
+</CardGroup>
+
+## Authentication Methods
+
+<AccordionGroup>
+  <Accordion title="API Keys" icon="key">
+    Simple auth:
+    ```typescript
+    auth: {
+      type: "api_key",
+      header: "x-api-key",
+      value: "your-api-key"
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="OAuth 2.0" icon="lock">
+    Secure auth:
+    ```typescript
+    auth: {
+      type: "oauth2",
+      flow: "authorization_code",
+      authUrl: "https://api.service.com/oauth/authorize",
+      tokenUrl: "https://api.service.com/oauth/token"
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Error Handling
+
+<Steps>
+  <Step title="Define Errors">
+    Handle common issues:
+    ```typescript
+    errors: {
+      API_ERROR: "External API error",
+      AUTH_ERROR: "Authentication failed",
+      TIMEOUT: "Request timeout",
+      VALIDATION: "Invalid parameters"
+    }
+    ```
+  </Step>
+  
+  <Step title="Error Responses">
+    Graceful handling:
+    ```typescript
+    try {
+      // Tool execution
+    } catch (error) {
+      return {
+        success: false,
+        error: error.code,
+        message: "User-friendly message",
+        fallback: alternativeAction
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Testing Tools
+
+<CardGroup cols={2}>
+  <Card title="Test Mode" icon="vial">
+    Verify integration:
+    - Test credentials
+    - Mock responses
+    - Validate logic
+    - Check errors
+  </Card>
+  
+  <Card title="Monitoring" icon="gauge">
+    Track performance:
+    - Success rates
+    - Response times
+    - Error rates
+    - Usage patterns
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<Warning>
+Important guidelines:
+- Secure credentials
+- Handle timeouts
+- Validate inputs
+- Log activities
+- Monitor usage
+</Warning>
+
+## Example Implementations
+
+<AccordionGroup>
+  <Accordion title="Payment Processing" icon="credit-card">
+    ```typescript
+    // Process payment
+    const processPayment = {
+      name: "process_payment",
+      handler: async ({ amount, currency, customerId }) => {
+        // Payment logic
+        return transactionResult;
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Order Management" icon="box">
+    ```typescript
+    // Check inventory
+    const checkInventory = {
+      name: "check_inventory",
+      handler: async ({ productId, quantity }) => {
+        // Inventory check
+        return availability;
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup> 

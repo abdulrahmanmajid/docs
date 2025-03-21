@@ -1,0 +1,191 @@
+---
+title: 'Tips & Tricks'
+description: 'Best practices for creating effective AI voice agents'
+---
+
+# Tips for Creating Effective Voice Agents
+
+## Agent Design Principles
+
+<CardGroup cols={2}>
+  <Card title="Clear Purpose" icon="bullseye">
+    - Define specific use cases
+    - Set measurable goals
+    - Establish success metrics
+    - Focus on core functionality first
+  </Card>
+  
+  <Card title="Natural Conversation" icon="comments">
+    - Design human-like dialogues
+    - Handle interruptions gracefully
+    - Use appropriate tone and pace
+    - Include conversation repairs
+  </Card>
+</CardGroup>
+
+## Technical Best Practices
+
+<Steps>
+  <Step title="Voice Configuration">
+    ```typescript
+    const voiceConfig = {
+      language: 'en-US',
+      voice: 'neural-voice-1',
+      speed: 1.0,
+      pitch: 1.0,
+      emphasis: true
+    }
+    ```
+    Choose appropriate voice parameters for your use case
+  </Step>
+  
+  <Step title="Error Handling">
+    ```typescript
+    try {
+      // Voice processing
+    } catch (error) {
+      // Graceful fallback responses
+      // User-friendly error messages
+      // Logging for debugging
+    }
+    ```
+  </Step>
+  
+  <Step title="Context Management">
+    ```typescript
+    const contextManager = {
+      history: [],
+      variables: new Map(),
+      maxTurns: 10,
+      timeoutMs: 30000
+    }
+    ```
+  </Step>
+</Steps>
+
+## Conversation Design
+
+<AccordionGroup>
+  <Accordion title="Opening Sequences">
+    - Start with clear introduction
+    - Establish agent capabilities
+    - Set user expectations
+    - Provide help options
+  </Accordion>
+  
+  <Accordion title="Turn Management">
+    - Use clear turn-taking signals
+    - Handle overlapping speech
+    - Implement appropriate pauses
+    - Confirm understanding
+  </Accordion>
+  
+  <Accordion title="Error Recovery">
+    - Implement fallback responses
+    - Use clarification requests
+    - Provide alternative paths
+    - Maintain conversation flow
+  </Accordion>
+</AccordionGroup>
+
+## Performance Optimization
+
+<CardGroup cols={2}>
+  <Card title="Latency" icon="bolt">
+    - Optimize ASR processing
+    - Cache common responses
+    - Use streaming when possible
+    - Monitor response times
+  </Card>
+  
+  <Card title="Resource Usage" icon="microchip">
+    - Implement efficient context management
+    - Clean up resources properly
+    - Use appropriate model sizes
+    - Monitor memory usage
+  </Card>
+</CardGroup>
+
+## Testing & Monitoring
+
+<Tabs>
+  <Tab title="Unit Tests">
+    ```typescript
+    describe('Voice Agent', () => {
+      test('handles basic conversation', async () => {
+        // Test basic flows
+      })
+      test('recovers from errors', async () => {
+        // Test error scenarios
+      })
+    })
+    ```
+  </Tab>
+  
+  <Tab title="Integration Tests">
+    ```typescript
+    test('end-to-end call flow', async () => {
+      // Test complete call scenarios
+      // Verify audio processing
+      // Check response generation
+    })
+    ```
+  </Tab>
+</Tabs>
+
+## Security Considerations
+
+<Warning>
+Always implement:
+- Input validation
+- Rate limiting
+- Authentication
+- Secure audio storage
+- PII handling compliance
+</Warning>
+
+## Common Pitfalls to Avoid
+
+<CardGroup cols={2}>
+  <Card title="Design Issues" icon="triangle-exclamation">
+    - Over-complicated flows
+    - Unclear user options
+    - Poor error messages
+    - Inconsistent responses
+  </Card>
+  
+  <Card title="Technical Issues" icon="bug">
+    - Memory leaks
+    - Unhandled exceptions
+    - Poor timeout handling
+    - Missing logging
+  </Card>
+</CardGroup>
+
+## Development Workflow
+
+<Steps>
+  <Step title="Local Development">
+    Use environment variables for configuration:
+    ```bash
+    NEXT_PUBLIC_API_URL=http://localhost:3000
+    TWILIO_ACCOUNT_SID=your_sid
+    TWILIO_AUTH_TOKEN=your_token
+    ```
+  </Step>
+  
+  <Step title="Testing">
+    Regular testing of:
+    - Voice quality
+    - Response accuracy
+    - Error scenarios
+    - Performance metrics
+  </Step>
+  
+  <Step title="Deployment">
+    - Use CI/CD pipelines
+    - Implement monitoring
+    - Set up alerts
+    - Version control
+  </Step>
+</Steps>

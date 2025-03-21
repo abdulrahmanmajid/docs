@@ -1,0 +1,282 @@
+---
+title: 'Recordings & Transcripts'
+description: 'Manage and analyze your call recordings and transcriptions'
+icon: 'microphone'
+---
+
+# Call Recordings & Transcripts
+
+Access, manage, and analyze your call recordings and transcripts. Get insights from every conversation.
+
+## Overview
+
+<Note>
+Every call is automatically:
+- Recorded securely
+- Transcribed in real-time
+- Analyzed for insights
+- Stored for easy access
+</Note>
+
+## Recordings Library
+
+<CardGroup cols={2}>
+  <Card title="Quick Access" icon="folder">
+    Find recordings by:
+    - Date and time
+    - Phone number
+    - Campaign name
+    - Call outcome
+  </Card>
+  
+  <Card title="Batch Actions" icon="layer-group">
+    Manage multiple recordings:
+    - Bulk download
+    - Mass delete
+    - Export data
+    - Share securely
+  </Card>
+</CardGroup>
+
+## Playback Features
+
+<Steps>
+  <Step title="Audio Controls">
+    Enhanced playback options:
+    ```typescript
+    controls: {
+      speed: "0.5x to 2x",
+      skip: "15s forward/back",
+      noise: "reduction enabled",
+      volume: "normalized"
+    }
+    ```
+  </Step>
+  
+  <Step title="Interactive Timeline">
+    Navigate easily with:
+    - Visual waveform
+    - Speaker segments
+    - Key moments
+    - Bookmarks
+  </Step>
+  
+  <Step title="Smart Features">
+    AI-powered assistance:
+    - Auto-highlights
+    - Important moments
+    - Emotion markers
+    - Action items
+  </Step>
+</Steps>
+
+## Transcription Features
+
+<AccordionGroup>
+  <Accordion title="Real-time Transcription" icon="bolt">
+    ```typescript
+    transcription: {
+      language: "auto-detect",
+      accuracy: "high",
+      speakers: "identified",
+      punctuation: "smart"
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Advanced Processing" icon="wand-magic-sparkles">
+    Enhanced features:
+    - Speaker diarization
+    - Accent handling
+    - Industry terms
+    - Custom vocabulary
+  </Accordion>
+  
+  <Accordion title="Export Options" icon="file-export">
+    Available formats:
+    - Plain text
+    - Word document
+    - SRT/VTT
+    - JSON data
+  </Accordion>
+</AccordionGroup>
+
+## Search & Analysis
+
+<CardGroup cols={2}>
+  <Card title="Smart Search" icon="magnifying-glass">
+    Find specific content:
+    ```typescript
+    search: {
+      keywords: true,
+      phrases: true,
+      speakers: true,
+      sentiment: true
+    }
+    ```
+  </Card>
+  
+  <Card title="Analytics" icon="chart-mixed">
+    Automatic analysis:
+    - Talk ratio
+    - Keywords used
+    - Sentiment trends
+    - Common topics
+  </Card>
+</CardGroup>
+
+## Conversation Intelligence
+
+<Steps>
+  <Step title="Automatic Analysis">
+    AI-powered insights:
+    - Key topics discussed
+    - Customer sentiment
+    - Action items
+    - Follow-up needs
+  </Step>
+  
+  <Step title="Pattern Recognition">
+    Identify trends:
+    ```typescript
+    patterns: {
+      commonQuestions: [],
+      objections: [],
+      successFactors: [],
+      painPoints: []
+    }
+    ```
+  </Step>
+  
+  <Step title="Quality Scoring">
+    Evaluate calls based on:
+    - Script adherence
+    - Customer satisfaction
+    - Resolution rate
+    - Handling efficiency
+  </Step>
+</Steps>
+
+## Storage & Retention
+
+<Warning>
+Important policies:
+- Secure encryption
+- Retention periods
+- Access controls
+- Compliance rules
+</Warning>
+
+## Sharing & Collaboration
+
+<CardGroup cols={3}>
+  <Card title="Share Options" icon="share">
+    - Secure links
+    - Team access
+    - Time-limited
+    - Access logs
+  </Card>
+  
+  <Card title="Annotations" icon="comment">
+    - Add notes
+    - Mark moments
+    - Tag colleagues
+    - Share feedback
+  </Card>
+  
+  <Card title="Reports" icon="file-lines">
+    - Call summaries
+    - Team metrics
+    - Quality scores
+    - Trend analysis
+  </Card>
+</CardGroup>
+
+## Integration Features
+
+<CodeGroup>
+  <Code title="CRM Integration">
+  ```typescript
+  // Automatically attach to CRM
+  onCallComplete: async (call) => {
+    await crm.attachRecording({
+      customerId: call.customerId,
+      recordingUrl: call.recording,
+      transcript: call.transcript,
+      summary: call.aiSummary
+    });
+  }
+  ```
+  </Code>
+  
+  <Code title="Analytics Export">
+  ```typescript
+  // Export call analytics
+  exportAnalytics: async (dateRange) => {
+    const report = await analytics.generate({
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+      metrics: ['sentiment', 'keywords', 'outcomes'],
+      format: 'detailed'
+    });
+    return report;
+  }
+  ```
+  </Code>
+</CodeGroup>
+
+## Privacy & Compliance
+
+<AccordionGroup>
+  <Accordion title="Security Features" icon="shield">
+    - End-to-end encryption
+    - Access controls
+    - Audit trails
+    - Data protection
+  </Accordion>
+  
+  <Accordion title="Compliance Tools" icon="gavel">
+    - Consent management
+    - PCI compliance
+    - GDPR tools
+    - Data retention
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Recording Quality" icon="microphone">
+    Ensure best quality:
+    - Clear audio
+    - Minimal background noise
+    - Both parties audible
+    - Proper volume levels
+  </Card>
+  
+  <Card title="Organization" icon="folders">
+    Keep organized:
+    - Consistent naming
+    - Proper tagging
+    - Regular cleanup
+    - Systematic archiving
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Common Issues" icon="triangle-exclamation">
+    - Recording gaps
+    - Transcription errors
+    - Storage problems
+    - Playback issues
+  </Accordion>
+  
+  <Accordion title="Quick Solutions" icon="screwdriver-wrench">
+    - Check settings
+    - Verify permissions
+    - Update browser
+    - Clear cache
+  </Accordion>
+</AccordionGroup> 

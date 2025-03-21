@@ -1,0 +1,165 @@
+---
+title: 'Using Variables in Campaigns'
+description: 'Learn how to personalize your outbound calls using variables'
+icon: 'hashtag'
+---
+
+
+Make your outbound calls personal by using variables! Variables are like placeholders that automatically fill in with your customer's information when the call starts.
+
+## What Are Variables?
+
+Think of variables as blank spaces in your message that get filled in with real information for each customer. It's like a template that becomes personalized for every call.
+
+<Note>
+Instead of saying "Hello customer", you can say "Hello {first_name}"! The agent will automatically use the customer's actual name.
+</Note>
+
+## Built-in Variables
+
+These variables are always available - you don't need to set them up:
+
+<CardGroup cols={2}>
+  <Card title="call_id" icon="phone">
+    The unique ID for each call
+    ```text
+    {call_id} → "C123456789"
+    ```
+  </Card>
+  
+  <Card title="agent_id" icon="user">
+    Your AI agent's unique ID
+    ```text
+    {agent_id} → "A987654321"
+    ```
+  </Card>
+</CardGroup>
+
+## Creating Custom Variables
+
+You can create your own variables when uploading your contact list. Here's how:
+
+<Steps>
+  <Step title="Prepare Your Contact List">
+    Create a CSV file with your customer data. Include any information you want to use in calls:
+    
+    ```csv
+    phone,first_name,appointment_time,service_type
+    +1234567890,John,2pm tomorrow,haircut
+    +0987654321,Sarah,3pm Friday,massage
+    ```
+  </Step>
+  
+  <Step title="Use Variables in Your Messages">
+    When setting up your agent, use curly braces {} to insert variables:
+    
+    ```text
+    "Hello {first_name}! I'm calling to remind you about your {service_type} 
+    appointment scheduled for {appointment_time}."
+    ```
+  </Step>
+  
+  <Step title="Preview How It Works">
+    For John's call, the agent will say:
+    ```text
+    "Hello John! I'm calling to remind you about your haircut 
+    appointment scheduled for 2pm tomorrow."
+    ```
+  </Step>
+</Steps>
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Appointment Reminders" icon="calendar">
+    ```text
+    "Hi {first_name}, just reminding you about your {service_type} tomorrow at {time}"
+    ```
+  </Card>
+  
+  <Card title="Order Updates" icon="box">
+    ```text
+    "Hello {first_name}, your order #{order_id} will arrive on {delivery_date}"
+    ```
+  </Card>
+  
+  <Card title="Payment Reminders" icon="credit-card">
+    ```text
+    "Hi {first_name}, your payment of ${amount} is due on {due_date}"
+    ```
+  </Card>
+  
+  <Card title="Follow-ups" icon="reply">
+    ```text
+    "Hello {first_name}, following up on your recent {service_type} visit"
+    ```
+  </Card>
+</CardGroup>
+
+## Tips for Using Variables
+
+<AccordionGroup>
+  <Accordion title="Keep It Natural" icon="comment">
+    Write your messages how you would normally speak. Variables should fit naturally in the conversation:
+    ```text
+    Good: "Hello {first_name}, how are you today?"
+    Bad: "CUSTOMER NAME: {first_name} - APPOINTMENT TIME: {time}"
+    ```
+  </Accordion>
+  
+  <Accordion title="Test Before Launching" icon="vial">
+    Always test your campaign with a few sample contacts first:
+    - Make sure all variables are working
+    - Check if the message sounds natural
+    - Verify the information is correct
+  </Accordion>
+  
+  <Accordion title="Have Backups Ready" icon="shield">
+    Sometimes information might be missing. Use friendly alternatives:
+    ```text
+    "Hello {first_name || 'there'}"
+    // Will say "Hello there" if first_name is missing
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## What You Can Include in Variables
+
+<CardGroup cols={3}>
+  <Card title="Names" icon="user">
+    - First name
+    - Last name
+    - Full name
+  </Card>
+  
+  <Card title="Dates & Times" icon="clock">
+    - Appointment times
+    - Due dates
+    - Follow-up dates
+  </Card>
+  
+  <Card title="Numbers" icon="hashtag">
+    - Order numbers
+    - Amounts
+    - Reference IDs
+  </Card>
+</CardGroup>
+
+## Important Notes
+
+<Warning>
+Remember:
+- Don't include sensitive information in variables
+- Keep your contact list up to date
+- Test your campaign with a small group first
+- Check all variables are spelled correctly
+</Warning>
+
+## Need Help?
+
+<Info>
+If you're stuck or need help:
+- Check our example templates
+- Test your campaign with the preview feature
+- Contact support if you have questions
+</Info> 

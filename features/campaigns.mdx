@@ -1,0 +1,281 @@
+---
+title: 'Campaigns'
+description: 'Create and manage your outbound calling campaigns'
+icon: 'bullhorn'
+---
+
+# Campaign Management
+
+Create, schedule, and monitor your outbound calling campaigns. Reach thousands of customers with personalized AI conversations.
+
+## Creating a Campaign
+
+<Steps>
+  <Step title="Basic Setup">
+    Start with campaign essentials:
+    ```typescript
+    Campaign Details:
+    - Name: "Holiday Special"
+    - Type: Outbound
+    - Priority: High
+    - Description: "Holiday promotion calls"
+    ```
+  </Step>
+  
+  <Step title="Target Audience">
+    Select your contacts:
+    - Upload contact list
+    - Choose existing list
+    - Filter contacts
+    - Set priority order
+  </Step>
+  
+  <Step title="Schedule">
+    Set your campaign timing:
+    ```typescript
+    Schedule:
+    - Start Date: "2024-01-15"
+    - End Date: "2024-01-30"
+    - Call Window: "9 AM - 6 PM"
+    - Time Zone: "Customer Local"
+    ```
+  </Step>
+</Steps>
+
+## Campaign Types
+
+<CardGroup cols={2}>
+  <Card title="One-Time Campaigns" icon="calendar-day">
+    Single execution:
+    - Limited time offers
+    - Event announcements
+    - Important updates
+    - Special promotions
+  </Card>
+  
+  <Card title="Recurring Campaigns" icon="rotate">
+    Regular schedules:
+    - Payment reminders
+    - Appointment follow-ups
+    - Subscription renewals
+    - Regular check-ins
+  </Card>
+</CardGroup>
+
+## Call Settings
+
+<AccordionGroup>
+  <Accordion title="Dialing Rules" icon="phone">
+    ```typescript
+    rules: {
+      maxAttempts: 3,
+      retryInterval: "30 minutes",
+      concurrentCalls: 10,
+      callTimeout: "45 seconds"
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Time Windows" icon="clock">
+    ```typescript
+    timeWindows: {
+      weekdays: "9:00-18:00",
+      weekends: "10:00-16:00",
+      holidays: "disabled",
+      timezone: "respect_local"
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Agent Configuration
+
+<Steps>
+  <Step title="Voice Settings">
+    Customize your agent's voice:
+    ```typescript
+    voice: {
+      type: "female",
+      accent: "neutral",
+      speed: 1.0,
+      pitch: "natural"
+    }
+    ```
+  </Step>
+  
+  <Step title="Script Setup">
+    Define conversation flow:
+    ```typescript
+    script: {
+      greeting: "Hello {first_name}, this is {agent_name}...",
+      mainMessage: "I'm calling about {campaign.purpose}...",
+      closing: "Thank you for your time..."
+    }
+    ```
+  </Step>
+  
+  <Step title="Response Handling">
+    Configure how your agent handles:
+    - Customer questions
+    - Objections
+    - Call backs
+    - Do not call requests
+  </Step>
+</Steps>
+
+## Campaign Features
+
+<CardGroup cols={3}>
+  <Card title="Smart Pacing" icon="gauge-high">
+    - Auto call rate
+    - Queue management
+    - Load balancing
+    - Peak optimization
+  </Card>
+  
+  <Card title="Dynamic Scripts" icon="file-lines">
+    - Personalization
+    - A/B testing
+    - Multi-language
+    - Context aware
+  </Card>
+  
+  <Card title="Real-time Control" icon="sliders">
+    - Pause/Resume
+    - Adjust settings
+    - Priority changes
+    - Volume control
+  </Card>
+</CardGroup>
+
+## Monitoring & Analytics
+
+<AccordionGroup>
+  <Accordion title="Real-time Metrics" icon="chart-line">
+    Monitor live:
+    - Active calls
+    - Success rate
+    - Queue status
+    - Agent performance
+  </Accordion>
+  
+  <Accordion title="Campaign Reports" icon="file-chart-column">
+    Track results:
+    - Call outcomes
+    - Conversion rates
+    - Cost per contact
+    - ROI metrics
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Features
+
+<CardGroup cols={2}>
+  <Card title="Smart Routing" icon="route">
+    Intelligent call distribution:
+    ```typescript
+    routing: {
+      priority: "high_value_first",
+      fallback: "voicemail",
+      overflow: "queue"
+    }
+    ```
+  </Card>
+  
+  <Card title="Dynamic Lists" icon="list-check">
+    Auto-updating contact lists:
+    ```typescript
+    listUpdates: {
+      source: "CRM",
+      frequency: "daily",
+      filters: ["active", "qualified"]
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Compliance Settings
+
+<Warning>
+Required compliance features:
+- Do-Not-Call checking
+- Time window enforcement
+- Recording management
+- Consent tracking
+- Opt-out handling
+</Warning>
+
+## Integration Options
+
+<CodeGroup>
+  <Code title="CRM Integration">
+  ```typescript
+  // Update CRM after each call
+  onCallComplete: async (result) => {
+    await crm.update({
+      contactId: result.contactId,
+      status: result.outcome,
+      notes: result.summary,
+      nextAction: result.followUp
+    });
+  }
+  ```
+  </Code>
+  
+  <Code title="Webhook Notifications">
+  ```typescript
+  // Send webhook for important events
+  onCampaignEvent: async (event) => {
+    await webhook.send({
+      type: event.type,
+      campaign: event.campaignId,
+      data: event.details,
+      timestamp: event.time
+    });
+  }
+  ```
+  </Code>
+</CodeGroup>
+
+## Best Practices
+
+<CardGroup cols={3}>
+  <Card title="Planning" icon="clipboard-check">
+    - Set clear goals
+    - Define metrics
+    - Test thoroughly
+    - Start small
+  </Card>
+  
+  <Card title="Execution" icon="play">
+    - Monitor closely
+    - Adjust as needed
+    - Track feedback
+    - Optimize scripts
+  </Card>
+  
+  <Card title="Analysis" icon="magnifying-glass-chart">
+    - Review results
+    - Learn patterns
+    - Improve scripts
+    - Share insights
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Common Issues" icon="triangle-exclamation">
+    - Low connection rates
+    - Script problems
+    - Scheduling conflicts
+    - Integration errors
+  </Accordion>
+  
+  <Accordion title="Quick Fixes" icon="wrench">
+    - Check numbers
+    - Verify timing
+    - Test integrations
+    - Adjust pacing
+  </Accordion>
+</AccordionGroup> 
