@@ -1,0 +1,3435 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Kallabot API",
+    "version": "1.0.0",
+    "description": "Production OpenAPI for Kallabot — Create Voice AI Agent API"
+  },
+  "servers": [
+    { "url": "https://api.kallabot.com", "description": "Production server" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer" }
+    },
+    "schemas": {
+      "AgentRequest": {
+        "type": "object",
+        "properties": {
+          "agent_config": { "$ref": "#/components/schemas/AgentConfig" },
+          "agent_prompts": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/AgentPrompt" } }
+        },
+        "required": ["agent_config", "agent_prompts"],
+        "description": "Request payload for creating an agent"
+      },
+      "PollyConfig": {
+        "title": "Amazon Polly",
+        "type": "object",
+        "properties": {
+          "voice": { "type": "string" },
+          "engine": { "type": "string" },
+          "language": { "type": "string" }
+        },
+        "required": ["voice","engine","language"]
+      },
+      "ElevenLabsConfig": {
+        "title": "ElevenLabs",
+        "type": "object",
+        "properties": {
+          "voice": { "type": "string" },
+          "voice_id": { "type": "string" },
+          "model": { "type": "string" },
+          "temperature": { "type": "number" },
+          "similarity_boost": { "type": "number" }
+        },
+        "required": ["voice","voice_id","model"]
+      },
+      "OpenAIConfig": {
+        "title": "OpenAI",
+        "type": "object",
+        "properties": {
+          "voice": { "type": "string" },
+          "model": { "type": "string" }
+        },
+        "required": ["voice","model"]
+      },
+      "DeepgramConfig": {
+        "title": "Deepgram",
+        "type": "object",
+        "properties": { "voice_id": { "type": "string" }, "voice": { "type": "string" }, "model": { "type": "string" } },
+        "required": ["voice_id","voice","model"]
+      },
+        "AzureConfig": { "title": "Azure TTS", "type": "object", "properties": { "voice": { "type": "string" }, "locale": { "type": "string" } }, "required": ["voice","locale"] },
+        "CartesiaConfig": { "title": "Cartesia", "type": "object", "properties": { "voice_id": { "type": "string" }, "voice": { "type": "string" }, "model": { "type": "string" } }, "required": ["voice_id","voice","model"] },
+        "RimeConfig": { "title": "Rime", "type": "object", "properties": { "voice_id": { "type": "string" }, "language": { "type": "string" }, "voice": { "type": "string" }, "model": { "type": "string" } }, "required": ["voice_id","language","voice","model"] },
+        "SmallestConfig": { "title": "Smallest", "type": "object", "properties": { "voice_id": { "type": "string" }, "language": { "type": "string" }, "voice": { "type": "string" }, "model": { "type": "string" } }, "required": ["voice_id","language","voice","model"] },
+        "SarvamConfig": { "title": "Sarvam", "type": "object", "properties": { "voice_id": { "type": "string" }, "language": { "type": "string" }, "voice": { "type": "string" }, "model": { "type": "string" } }, "required": ["voice_id","language","voice","model"] },
+      "AgentPrompt": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "system_prompt": { "type": "string", "example": "You are a proactive helpfull AI Voice Agent which has access to [input your tools] and can help the customer with information/by doing tasks for them within your capacity. If there is anything you cannot help the customer with then decline or suggest a call transfer to a human agent." }
+          },
+          "required": ["system_prompt"]
+        }
+      },
+      "AgentConfig": {
+        "type": "object",
+        "required": ["agent_name", "tasks", "call_direction"],
+        "properties": {
+          "agent_name": { "type": "string", "example": "Alfred", "description": "The name of the agent" },
+          "agent_welcome_message": { "type": "string", "example": "How are you doing Bruce?" },
+          "webhook_url": { "type": "string", "nullable": true, "description": "Webhook called for events" },
+          "agent_type": { "type": "string", "example": "other" },
+          "tasks": { "type": "array", "items": { "$ref": "#/components/schemas/TasksConfig" } },
+          "timezone": { "type": "string", "example": "America/Los_Angeles" },
+          "country": { "type": "string", "example": "US" },
+          "call_direction": { "type": "string", "enum": ["inbound","outbound"] },
+          "inbound_phone_number": { "type": "string", "nullable": true },
+          "agent_image": { "type": "string", "nullable": true },
+          "is_compliant": { "type": "boolean", "default": false }
+        }
+      },
+      
+      "TasksConfig": {
+        "type": "object",
+        "properties": {
+          "task_type": { "type": "string", "enum": ["conversation","extraction","summarization","webhook"] },
+          "tools_config": { "$ref": "#/components/schemas/ToolsConfig" },
+          "toolchain": { "$ref": "#/components/schemas/Toolchain" },
+          "task_config": { "$ref": "#/components/schemas/ConversationConfig" }
+        }
+      },
+    "ToolsConfig": {
+  "title": "Tools Configuration",
+  "type": "object",
+        "properties": {
+          "llm_agent": { "$ref": "#/components/schemas/LlmAgent" },
+          "synthesizer": { "$ref": "#/components/schemas/Synthesizer" },
+      "transcriber": { "$ref": "#/components/schemas/Transcriber" },
+          "input": { "$ref": "#/components/schemas/InputOutput" },
+          "output": { "$ref": "#/components/schemas/InputOutput" },
+      "api_tools": { "$ref": "#/components/schemas/ToolModel", "nullable": true }
+        }
+      },
+      "LlmAgent": {
+        "type": "object",
+        "properties": {
+          "agent_type": { "type": "string", "enum": ["simple_llm_agent","knowledgebase_agent"], "default": "simple_llm_agent" },
+          "agent_flow_type": { "type": "string", "enum": ["streaming"], "default": "streaming" },
+          "routes": { "$ref": "#/components/schemas/Routes" },
+          "llm_config": { "$ref": "#/components/schemas/Llm" }
+        }
+      },
+      "Llm": {
+        "title": "LLM",
+        "oneOf": [
+          { "$ref": "#/components/schemas/OpenAiOnlyLlm" },
+          { "$ref": "#/components/schemas/LiteLlmOptions" }
+        ],
+        "description": "LLM configuration: choose either the OpenAI-only option or the LiteLLM/multi-provider option."
+      },
+      "OpenAiOnlyLlm": {
+        "title": "OpenAI",
+        "type": "object",
+        "required": ["provider", "model"],
+        "properties": {
+          "provider": { "type": "string", "enum": ["openai"], "description": "Must be 'openai' when using the OpenAiLLM implementation." },
+          "model": { "type": "string", "example": "gpt-4.1-mini", "description": "OpenAI model name." },
+          "max_tokens": { "type": "integer", "example": 100 },
+          "temperature": { "type": "number", "example": 0.5 },
+          "request_json": { "type": "boolean" },
+          "stop": { "type": "array", "items": { "type": "string" } },
+          "top_k": { "type": "integer" },
+          "top_p": { "type": "number" },
+          "frequency_penalty": { "type": "number" },
+          "presence_penalty": { "type": "number" },
+          "base_url": { "type": "string", "description": "Optional base URL for custom OpenAI-compatible endpoints." },
+          "routes": { "$ref": "#/components/schemas/Routes" }
+        },
+        "description": "Use this schema when you want to lock the LLM provider to OpenAI only. The playground and generated docs will show only the 'openai' provider option for this schema."
+      },
+      "LiteLlmOptions": {
+        "title": "LiteLLM",
+        "type": "object",
+        "required": ["provider", "model"],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "cohere",
+              "ollama",
+              "deepinfra",
+              "together",
+              "fireworks",
+              "azure-openai",
+              "perplexity",
+              "vllm",
+              "anyscale",
+              "custom",
+              "ola",
+              "groq",
+              "anthropic",
+              "deepseek",
+              "openrouter",
+              "azure"
+            ],
+            "description": "Provider selection for LiteLLM. This option exposes many providers (including 'custom') that map to the LiteLLM implementation in the backend."
+          },
+          "model": { "type": "string", "example": "gpt-4.1-mini", "description": "Model identifier for the chosen provider." },
+          "max_tokens": { "type": "integer", "example": 100 },
+          "family": { "type": "string", "example": "openai" },
+          "temperature": { "type": "number", "example": 0.5 },
+          "request_json": { "type": "boolean" },
+          "stop": { "type": "array", "items": { "type": "string" } },
+          "top_k": { "type": "integer" },
+          "top_p": { "type": "number" },
+          "min_p": { "type": "number" },
+          "frequency_penalty": { "type": "number" },
+          "presence_penalty": { "type": "number" },
+          "base_url": { "type": "string" },
+          "routes": { "$ref": "#/components/schemas/Routes" }
+        }
+      },
+      "SimpleLlmAgent": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Llm" },
+          {
+            "type": "object",
+            "properties": {
+              "agent_flow_type": { "type": "string", "example": "streaming" },
+              "routes": { "$ref": "#/components/schemas/Routes" },
+              "extraction_details": { "type": "string" },
+              "summarization_details": { "type": "string" }
+            }
+          }
+        ]
+      },
+      "KnowledgebaseAgent": { "allOf": [ { "$ref": "#/components/schemas/SimpleLlmAgent" } ] },
+      "Routes": {
+        "type": "object",
+        "properties": {
+          "embedding_model": { "type": "string", "example": "snowflake/snowflake-arctic-embed-m" },
+          "routes": { "type": "array", "items": { "$ref": "#/components/schemas/Route" } }
+        }
+      },
+      "Route": {
+        "type": "object",
+        "properties": {
+          "route_name": { "type": "string" },
+          "utterances": { "type": "array", "items": { "type": "string" } },
+          "response": { "anyOf": [ { "$ref": "#/components/schemas/RouteResponseArray" }, { "$ref": "#/components/schemas/RouteResponseString" } ] },
+          "score_threshold": { "type": "number", "example": 0.9 }
+        }
+      },
+      "Synthesizer": {
+        "type": "object",
+        "description": "Text-to-speech synthesizer settings. Configure provider and runtime behavior for generating audio from agent responses.",
+        "x-mint": {
+          "content": "Synthesizer fields (micro docs):\n\n• provider — Select TTS provider.\n• provider_config — Provider-specific options (voice, model, locale, etc.).\n• stream — boolean, default true: enable streaming audio output (lower latency).\n• buffer_size — integer: streaming buffer size (recommended ms: 100–500).\n• audio_format — string: 'wav', 'mp3', 'ogg', 'opus', etc.\n• caching — boolean: enable caching for deterministic outputs."
+        },
+        "properties": {
+          "provider": { "type": "string", "enum": ["azure","elevenlabs","deepgram","polly","cartesia","smallest","sarvam","rime","openai"], "description": "Select the synthesizer provider. The chosen provider determines which keys are valid in provider_config and which features (streaming, sample rate, voice control) are available.", "example": "polly" },
+          "provider_config": { "$ref": "#/components/schemas/SynthesizerProviderConfig", "description": "Provider-specific configuration object. Use the matching provider schema from the oneOf list (e.g., PollyConfig, ElevenLabsConfig). These fields map directly to the TTS provider's API and may accept provider-specific keys such as voice_id, model, or locale." },
+          "stream": { "type": "boolean", "default": true, "description": "When true, synthesizer audio is produced in a streaming fashion (chunked RTP/HTTP streaming) rather than waiting for the full utterance to be generated. Streaming reduces perceived latency and allows early audio playback. If your chosen provider does not support streaming, the backend will fall back to non-streaming behavior.", "example": true },
+          "buffer_size": { "type": "integer", "description": "Size of the audio buffer used during streaming or when assembling audio frames. Interpretation is provider-dependent; commonly this is a duration in milliseconds (ms) for streaming buffers, or a number of bytes/frames for some SDKs. Use conservative values to avoid choppiness (e.g., 100–500 ms). Always verify provider docs for exact unit semantics.", "example": 250 },
+          "audio_format": { "type": "string", "description": "Requested output audio format or container. Common values: 'wav' (PCM), 'mp3', 'ogg', 'opus'. Choose a format compatible with downstream telephony/clients. The backend may transcode if the provider does not natively emit the requested format.", "example": "wav" },
+          "caching": { "type": "boolean", "description": "Enable caching of generated audio for identical input (same voice, model, and TTS parameters). When true, repeated identical responses can be served from cache to reduce cost and latency. Be aware of storage costs and cache invalidation rules; caching is typically safe for deterministic TTS outputs but not for truly dynamic responses.", "example": false }
+        }
+      },
+    "Transcriber": {
+        "type": "object",
+        "description": "Transcriber configuration. Supported providers: deepgram, whisper, azure, bodhi",
+        "x-mint": {
+          "content": "Transcriber micro docs:\n\n• provider — ASR engine.\n• provider_config — Provider-specific config (model, settings).\n• language — BCP-47 language tag (e.g., en-US).\n• stream — boolean: enable streaming ASR.\n• sampling_rate — expected audio sample rate in Hz.\n• encoding — audio encoding type (linear16, opus, etc.).\n• endpointing — silence endpointing window in ms.\n• keywords — optional keywords to boost.\n• task — ASR task hint (transcribe/translate)."
+        },
+        "properties": {
+      "provider": { "type": "string", "enum": ["deepgram","whisper","azure","bodhi"], "description": "Select the ASR/transcription provider. Each provider may support different languages, models, and streaming capabilities.", "example": "deepgram" },
+          "provider_config": { "$ref": "#/components/schemas/TranscriberProviderConfig", "description": "Provider-specific configuration for the chosen transcriber. See each provider schema (DeepgramTranscriberConfig, AzureTranscriberConfig, BodhiTranscriberConfig) for supported keys such as model and settings." },
+          "language": { "type": "string", "description": "BCP-47 language tag (e.g., 'en-US'). Used to bias recognition models and improve accuracy for the call's language.", "example": "en-US" },
+          "stream": { "type": "boolean", "default": false, "description": "If true, perform streaming transcription (partial intermediate transcripts delivered in real-time). Streaming mode lowers end-to-end latency but may incur more compute and different pricing on some providers.", "example": false },
+          "sampling_rate": { "type": "integer", "example": 16000, "description": "Audio sampling rate expected by the transcriber in Hz. Common telephony/VoIP rates: 8000, 16000. Use provider-supported rates to avoid resampling overhead." },
+          "encoding": { "type": "string", "example": "linear16", "description": "Audio encoding/codec of the input audio (e.g., 'linear16' for PCM16). The backend may transcode if the input is different, but matching the provider's native encoding yields best performance." },
+          "endpointing": { "type": "integer", "example": 500, "description": "Endpointing window or silence detection threshold in milliseconds. Used to decide when an utterance is finished. Smaller values detect short pauses; larger values tolerate ambient noise." },
+          "keywords": { "type": "string", "description": "Optional comma-separated keywords to boost recognition or to trigger events when detected. Provider support varies." },
+          "task": { "type": "string", "example": "transcribe", "description": "ASR task hint for providers that support specialized modes (e.g., 'transcribe', 'translate', 'diarize')." }
+        }
+      },
+
+      "DeepgramTranscriberConfig": {
+        "title": "Deepgram",
+        "type": "object",
+        "properties": {
+          "voice_id": { "type": "string" },
+          "voice": { "type": "string" },
+          "model": { "type": "string", "enum": ["nova-2","nova-3"], "example": "nova-2" }
+        },
+        "required": ["model"]
+      },
+
+      "AzureTranscriberConfig": {
+        "title": "Azure",
+        "type": "object",
+        "properties": {
+          "region": { "type": "string" },
+          "model": { "type": "string" }
+        }
+      },
+
+      "BodhiTranscriberConfig": {
+        "title": "Bodhi",
+        "type": "object",
+        "properties": {
+          "model": { "type": "string", "example": "bodhi-large" },
+          "settings": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "TranscriberProviderConfig": {
+        "title": "Transcriber Provider Config",
+        "oneOf": [
+          { "$ref": "#/components/schemas/DeepgramTranscriberConfig" },
+          { "$ref": "#/components/schemas/AzureTranscriberConfig" },
+          { "$ref": "#/components/schemas/BodhiTranscriberConfig" }
+        ]
+      },
+      "InputOutput": {
+        "title": "Telephony Input/Output",
+        "type": "object",
+        "description": "Configure the telephony channel used for call audio (input or output). Commonly used with Twilio.\nNote: provider is required.",
+        "x-mint": {
+          "content": "Input/Output (quick reference):\n\n• provider (required) — Telephony provider. Currently supported: 'twilio'.\n• format — Preferred audio format (wav, mp3, pcm). Use 'wav' for best compatibility with ASR."
+        },
+        "properties": {
+          "provider": { "type": "string", "enum": ["twilio"], "description": "Telephony provider handling call media and signaling. Currently only 'twilio' is supported. This field is required.", "example": "twilio" },
+          "format": { "type": "string", "description": "Requested audio container/encoding. Common values: 'wav' (PCM), 'mp3', 'mulaw'. The backend may transcode when needed.", "example": "wav" }
+        },
+        "required": ["provider"]
+      },
+      "Toolchain": {
+        "type": "object",
+        "properties": {
+          "execution": { "type": "string" },
+          "pipelines": { "type": "array", "items": { "type": "array" } }
+        }
+      },
+      "ConversationConfig": {
+        "title": "Task Configuration (conversation)",
+        "type": "object",
+        "description": "High level call and LLM behaviour controls used per-task. Time values are in seconds unless noted otherwise.",
+        "x-mint": {
+          "content": "Field reference (units in parentheses):\n\n• optimize_latency (boolean) — default true — If true, prefer lower-latency responses.\n• hangup_after_silence (seconds, integer) — Example: 120 — Seconds of continuous silence before auto-hangup.\n• incremental_delay (milliseconds, integer) — Example: 100 — Buffering delay used during streaming responses.\n• number_of_words_for_interruption (integer) — Example: 1 — Words needed to count as interruption.\n• interruption_backoff_period (milliseconds, integer) — Example: 100 — Time window after interruption before resuming.\n• hangup_after_LLMCall (boolean) — Example: false — Hang up immediately after LLM completes.\n• call_cancellation_prompt (string) — Prompt to play when cancelling call.\n• backchanneling (boolean) — Example: false — Enable short ack/backchannel messages to LLM.\n• backchanneling_message_gap (seconds, integer) — Example: 5 — Seconds between backchannel messages.\n• backchanneling_start_delay (seconds, integer) — Example: 2 — Delay before sending first backchannel message.\n• ambient_noise (boolean) — Example: false — Enable ambient noise handling.\n• ambient_noise_track (string) — Example: \"call-center\" — Name of ambient noise profile to use.\n• call_terminate (seconds, integer) — Example: 90 — Max call duration after which system may end call.\n• use_fillers (boolean) — Example: false — Allow agent to use filler words for naturalness.\n• trigger_user_online_message_after (seconds, integer) — Example: 60 — When to check if user is online.\n• check_user_online_message (string) — Example: \"Hey, are you still there\" — Message when checking presence.\n• check_if_user_online (boolean) — Example: true — Enable presence checking.\n• generate_precise_transcript (boolean) — Example: true — Request higher-fidelity transcripts (may affect cost).\n\nTips: Use seconds for high-level timeouts (hangup_after_silence, call_terminate). Use milliseconds for low-level streaming tuning (incremental_delay, interruption_backoff_period)."
+        },
+        "properties": {
+          "optimize_latency": { "type": "boolean", "default": true, "description": "If true, system will favor lower latency responses over completeness (may shorten LLM responses)." },
+          "hangup_after_silence": { "type": "integer", "example": 120, "description": "Number of seconds of continuous silence before the system automatically hangs up the call." },
+          "incremental_delay": { "type": "integer", "example": 100, "description": "Delay (milliseconds) used for incremental audio buffering/processing during streaming LLM responses." },
+          "number_of_words_for_interruption": { "type": "integer", "example": 1, "description": "How many words a caller must say to be considered an interruption to the agent's speech." },
+          "interruption_backoff_period": { "type": "integer", "example": 100, "description": "Backoff period (milliseconds) after an interruption before resuming normal processing." },
+          "hangup_after_LLMCall": { "type": "boolean", "example": false, "description": "If true, hang up immediately after an LLM-originated call completion (useful for single-turn bots)." },
+          "call_cancellation_prompt": { "type": "string", "description": "A prompt played to the user when a call is cancelled or terminated by the system." },
+          "backchanneling": { "type": "boolean", "example": false, "description": "Enable backchanneling: short ack/breathe signals sent to the LLM to improve turn-taking." },
+          "backchanneling_message_gap": { "type": "integer", "example": 5, "description": "Seconds between backchanneling messages." },
+          "backchanneling_start_delay": { "type": "integer", "example": 2, "description": "Seconds to wait before sending the first backchanneling message after LLM starts speaking." },
+          "ambient_noise": { "type": "boolean", "example": false, "description": "If true, the system will apply ambient-noise handling strategies (e.g., voice activity tuning)." },
+          "ambient_noise_track": { "type": "string", "example": "call-center", "description": "Name of ambient noise profile to use (affects VAD, thresholds)." },
+          "call_terminate": { "type": "integer", "example": 90, "description": "Total call duration in seconds after which system may force-terminate the call." },
+          "use_fillers": { "type": "boolean", "example": false, "description": "If true, the agent may inject short filler words (e.g., 'uh', 'hmm') to sound more natural." },
+          "trigger_user_online_message_after": { "type": "integer", "example": 60, "description": "Seconds of no agent activity after which the system checks if the user is still online." },
+          "check_user_online_message": { "type": "string", "example": "Hey, are you still there", "description": "Message to play when checking if the user is still connected." },
+          "check_if_user_online": { "type": "boolean", "example": true, "description": "If true, the system will periodically verify user presence and optionally end the call." },
+          "generate_precise_transcript": { "type": "boolean", "example": true, "description": "If true the system requests a higher-fidelity transcript (may increase cost)." }
+        }
+      },
+      "ToolFunction": {
+        "type": "object",
+        "description": "Function-style API tool declaration. Use when exposing external APIs as callable functions to LLMs.",
+        "x-mint": { "content": "ToolFunction guidance:\n\n• name — unique function name.\n• description — human-readable summary used in prompts.\n• parameters — JSON Schema for function arguments (follow JSON-function patterns).\n• strict — when true, validate inputs strictly." },
+        "properties": {
+          "name": { "type": "string", "description": "Unique function name used when the LLM selects this tool.", "example": "get_customer_orders" },
+          "description": { "type": "string", "description": "Human-readable description of what the API tool does. Used in playgrounds and prompts to help the LLM choose the correct tool.", "example": "Fetch recent orders for a customer by ID." },
+          "parameters": { "type": "object", "description": "JSON Schema describing the function parameters. This should follow OpenAI/JSON-function style parameter specifications if using LLM function calling, including property names, types, required fields and descriptions.", "additionalProperties": true },
+          "strict": { "type": "boolean", "default": true, "description": "When true, the backend will enforce parameter validation and refuse calls that don't match the declared schema. When false, the tool may accept flexible or loosely-typed inputs (behavior is implementation-dependent)." }
+        },
+        "required": ["name","description","parameters"]
+      },
+      "ToolDescription": {
+        "title": "API Tool (function)",
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "example": "function" },
+          "function": { "$ref": "#/components/schemas/ToolFunction" }
+        }
+      },
+      "RouteResponseArray": {
+        "title": "Multiple Responses",
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "RouteResponseString": {
+        "title": "Single Response",
+        "type": "string"
+      },
+      "SynthesizerProviderConfig": {
+        "title": "Synthesizer Provider Config",
+        "oneOf": [
+          { "$ref": "#/components/schemas/PollyConfig" },
+          { "$ref": "#/components/schemas/ElevenLabsConfig" },
+          { "$ref": "#/components/schemas/AzureConfig" },
+          { "$ref": "#/components/schemas/SmallestConfig" },
+          { "$ref": "#/components/schemas/RimeConfig" },
+          { "$ref": "#/components/schemas/SarvamConfig" },
+          { "$ref": "#/components/schemas/CartesiaConfig" },
+          { "$ref": "#/components/schemas/DeepgramConfig" },
+          { "$ref": "#/components/schemas/OpenAIConfig" }
+        ]
+      },
+      "APIParams": {
+        "type": "object",
+        "description": "Parameters for configuring external API tool calls. Prefer secure storage for sensitive tokens and keys.",
+        "x-mint": {
+          "content": "API Params quick reference:\n\n• url — Full HTTPS endpoint to call (example provided).\n• method — HTTP verb to use (GET/POST).\n• param — Request payload: string for raw bodies or object for structured JSON."
+        },
+        "properties": {
+          "url": { "type": "string", "description": "Target URL for the API call. Use HTTPS whenever possible.", "example": "https://api.example.com/v1/do" },
+          "method": { "type": "string", "example": "POST", "description": "HTTP method used when calling the external API (GET, POST, PUT, DELETE)." },
+          "api_token": { "type": "string", "description": "Optional API token or credential used when invoking the external API. For security, prefer passing tokens via secure storage or MCP servers rather than embedding in agent config." },
+          "param": { "oneOf": [ { "$ref": "#/components/schemas/APIParamString" }, { "$ref": "#/components/schemas/APIParamObject" } ], "description": "Parameters/body to send to the API. Use a string for simple payloads or an object for structured JSON bodies. When using objects, additionalProperties are allowed for flexible mappings." }
+        }
+      },
+      "APIParamString": {
+        "title": "API Param (string)",
+        "type": "string"
+      },
+      "APIParamObject": {
+        "title": "API Param (object)",
+        "type": "object",
+        "additionalProperties": true
+      },
+      "McpServer": { "type": "object", "properties": { "url": { "type": "string" } } },
+      "ToolModel": {
+        "title": "API Tools",
+        "type": "object",
+        "description": "Register external API tools that the agent can call. Tools can be declared inline or referenced by ID. Use tools_params to configure per-tool defaults and MCP servers to keep secrets off the agent payload.",
+        "x-mint": {
+          "content": "API Tools micro docs:\n\n• tools — array of function-style API tools (name, description, parameters).\n• tools_params — map of tool name -> API call defaults (url, method, api_token, param).\n• mcp_servers — list of MCP servers for secure token/credentials storage.\n• api_tool_ids — references to pre-registered tools (string IDs).\n\nTip: prefer storing secrets in MCP servers and referencing them rather than embedding tokens in agent configs."
+        },
+        "properties": {
+          "tools": { "type": "array", "items": { "$ref": "#/components/schemas/ToolDescription" }, "description": "List of function-style tools available to the agent. Each tool should define a unique name and parameter schema." },
+          "tools_params": { "type": "object", "description": "Optional map of tool identifier to default API call parameters. Useful for configuring default URLs, methods, or tokens per tool.", "additionalProperties": { "$ref": "#/components/schemas/APIParams" } },
+          "mcp_servers": { "type": "array", "description": "Optional list of MCP servers for secure credential or connection storage. Each entry should include 'url' and server-specific routing info.", "items": { "$ref": "#/components/schemas/McpServer" } },
+          "api_tool_ids": { "type": "array", "description": "IDs referencing pre-registered API tools in external registries or platform storage. Use when the tool definitions are stored outside this agent config.", "items": { "type": "string" } },
+          "call_transfer_config": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/TransferConfig" }, "description": "Optional per-transfer configuration used when transferring calls to live agents." },
+          "call_transfer_description": { "type": "string", "description": "Human readable text describing call transfer behavior for operators." }
+        }
+      },
+      "TransferConfig": {
+        "type": "object",
+        "properties": {
+          "transfer_type": { "type": "string", "enum": ["warm","cold"], "description": "warm = consult then transfer, cold = direct transfer" },
+          "phone_number": { "type": "string" },
+          "department": { "type": "string" }
+        },
+        "required": ["phone_number"]
+      },
+      "ExtractionTaskConfig": {
+        "type": "object",
+        "properties": {
+          "extraction_json": { "type": "object", "description": "JSON schema or mapping used by extractor" },
+          "request_json": { "type": "boolean", "description": "If true, pass raw request JSON to extractor" }
+        }
+      },
+      "SummarizationTaskConfig": {
+        "type": "object",
+        "properties": {
+          "summary_length": { "type": "string", "enum": ["short","medium","long"], "default": "short" },
+          "summarization_details": { "type": "string" }
+        }
+      },
+      "WebhookTaskConfig": {
+        "type": "object",
+        "properties": {
+          "webhook_url": { "type": "string", "format": "uri" },
+          "method": { "type": "string", "example": "POST" },
+          "auth": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "AgentModel": {
+        "allOf": [
+          { "$ref": "#/components/schemas/AgentRequest" },
+          {
+            "type": "object",
+            "properties": {
+              "agent_id": { "type": "string", "format": "uuid" },
+              "created_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        ]
+      },
+      "AgentDetails": {
+        "title": "Agent Details",
+        "type": "object",
+        "description": "Full agent details returned by GET /agent/{agent_id}. Contains metadata, current config, prompts and optional knowledgebase linkage.",
+        "properties": {
+          "agent_id": { "type": "string", "format": "uuid", "description": "Agent UUID." },
+          "account_id": { "type": "string", "format": "uuid", "description": "Account UUID owning the agent." },
+          "name": { "type": "string", "description": "Agent display name." },
+          "agent_type": { "type": "string", "description": "Logical agent type (e.g., 'other')." },
+          "call_direction": { "type": "string", "description": "Call direction: 'inbound' or 'outbound'." },
+          "inbound_phone_number": { "type": "string", "nullable": true, "description": "Configured inbound phone number (E.164) if agent is inbound." },
+          "agent_image": { "type": "string", "nullable": true, "description": "URL to agent image or avatar." },
+          "webhook_url": { "type": "string", "format": "uri", "nullable": true, "description": "Webhook URL where events will be posted." },
+          "total_calls": { "type": "integer", "description": "Total number of calls handled by this agent." },
+          "total_duration": { "type": "integer", "description": "Aggregate call duration in seconds." },
+          "total_cost": { "type": "number", "format": "float", "description": "Aggregated cost for calls (currency depending on account)." },
+          "created_at": { "type": "string", "format": "date-time", "description": "Agent creation timestamp (ISO 8601)." },
+          "timezone": { "type": "string", "description": "Timezone of the agent (IANA zone)." },
+          "country": { "type": "string", "description": "Two-letter country code for agent defaults." },
+          "template_variables": { "type": "object", "additionalProperties": true, "description": "Template variables available to prompts and calls." },
+          "is_compliant": { "type": "boolean", "description": "Whether the agent is flagged as compliance-restricted (affects recording, etc.)." },
+          "agent_config": { "$ref": "#/components/schemas/AgentConfig", "description": "The full agent configuration object as submitted on create/update." },
+          "agent_prompts": { "type": "object", "description": "Map of prompt IDs to prompt objects.", "additionalProperties": { "$ref": "#/components/schemas/AgentPrompt" } },
+          "knowledgebase": {
+            "type": "object",
+            "nullable": true,
+            "description": "Optional knowledgebase linkage for retrieval-enabled agents.",
+            "properties": {
+              "kb_id": { "type": "string", "format": "uuid" },
+              "vector_store_id": { "type": "string" },
+              "name": { "type": "string" },
+              "status": { "type": "string" }
+            }
+          }
+        },
+        "required": ["agent_id","account_id","name","agent_config"]
+      },
+      "AgentListItem": {
+        "title": "Agent List Item",
+        "type": "object",
+        "description": "Compact agent representation used in list responses.",
+        "properties": {
+          "agent_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "agent_type": { "type": "string" },
+          "call_direction": { "type": "string" },
+          "inbound_phone_number": { "type": "string", "nullable": true },
+          "agent_image": { "type": "string", "nullable": true },
+          "webhook_url": { "type": "string", "format": "uri", "nullable": true },
+          "is_compliant": { "type": "boolean" },
+          "total_calls": { "type": "integer" },
+          "total_duration": { "type": "integer" },
+          "total_cost": { "type": "number", "format": "float" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "timezone": { "type": "string" },
+          "country": { "type": "string" },
+          "agent_config": { "$ref": "#/components/schemas/AgentConfig" },
+          "agent_prompts": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/AgentPrompt" } }
+        },
+        "required": ["agent_id","name","agent_config"]
+      },
+      "AgentsListResponse": {
+        "title": "Agents List Response",
+        "type": "object",
+        "description": "Paginated list of agents belonging to the account.",
+        "properties": {
+          "agents": { "type": "array", "items": { "$ref": "#/components/schemas/AgentListItem" } },
+          "page": { "type": "integer", "description": "Current page (1-indexed)." },
+          "per_page": { "type": "integer", "description": "Number of items per page." },
+          "total": { "type": "integer", "description": "Total number of agents available." }
+        },
+        "required": ["agents"]
+      },
+      "UpdateAgentPayload": {
+        "title": "UpdateAgentPayload",
+        "type": "object",
+        "description": "Payload for updating an existing agent. The agent_id in the body should match the {agent_id} path parameter.",
+        "required": ["agent_id","agent_config","agent_prompts"],
+        "properties": {
+          "agent_id": { "type": "string", "format": "uuid", "description": "Agent UUID (must match URL path parameter)." },
+          "agent_config": { "$ref": "#/components/schemas/AgentConfig" },
+          "agent_prompts": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/AgentPrompt" } }
+        }
+      },
+      "UpdateAgentResponse": {
+        "title": "UpdateAgentResponse",
+        "type": "object",
+        "description": "Response returned after a successful agent update.",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "message": { "type": "string", "example": "Agent updated successfully" },
+          "agent_id": { "type": "string", "format": "uuid" },
+          "callback_configured": { "type": "boolean", "nullable": true, "description": "True when inbound callback status is configured and validated." },
+          "ready_for_inbound_calls": { "type": "boolean", "nullable": true },
+          "ready_for_outbound_calls": { "type": "boolean", "example": true },
+          "warning": { "type": "string", "nullable": true }
+        },
+        "required": ["status","message","agent_id"]
+      },
+      "DeleteAgentPayload": {
+        "title": "DeleteAgentPayload",
+        "type": "object",
+        "description": "Helper payload model showing the account_id and agent_id used when deleting an agent (not required in the path-based delete request).",
+        "properties": {
+          "account_id": { "type": "string", "format": "uuid" },
+          "agent_id": { "type": "string", "format": "uuid" }
+        },
+        "required": ["account_id","agent_id"]
+      },
+      "AgentCreateStatus": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string", "format": "uuid", "example": "3c90c3cc-0d44-4b50-8888-8dd25736052a" },
+          "status": { "type": "string", "example": "created" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": { "error": { "type": "integer", "format": "int32" }, "message": { "type": "string" } },
+        "required": ["error","message"]
+      }
+      ,
+      "CallPayload": {
+        "type": "object",
+  "description": "Payload for initiating an outbound call. Provide either an existing agent_id (to use a stored agent) or an inline agent_config with optional agent_prompts (to create a temporary agent for this call). NOTE: the UI previously rendered a separate 'Option' schema because the spec used a oneOf; to avoid showing Option 1/2 in the docs we do not use oneOf here — the server still expects one of these two fields to be present.",
+        "properties": {
+          "agent_id": { "type": "string", "format": "uuid", "nullable": true, "description": "Existing agent UUID to use for the call." },
+          "agent_config": { "$ref": "#/components/schemas/AgentConfig", "nullable": true, "description": "Inline agent configuration for a temporary agent used only for this call." },
+          "agent_prompts": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/AgentPrompt" }, "nullable": true, "description": "Optional inline prompts for a temporary agent." },
+          "sender_phone_number": { "type": "string", "description": "Phone number to place the call from (E.164)." },
+          "recipient_phone_number": { "type": "string", "description": "Phone number to call (E.164)." },
+          "record": { "type": "boolean", "default": true, "description": "Whether the call should be recorded. Compliant agents may force this to false." },
+          "template_variables": { "type": "object", "additionalProperties": true, "description": "Template variables available to agent prompts." }
+        },
+  "required": ["sender_phone_number","recipient_phone_number"]
+      },
+      "CallDetails": {
+        "title": "CallDetails",
+        "type": "object",
+        "properties": {
+          "call_sid": { "type": "string" },
+          "agent_id": { "type": "string" },
+          "is_temporary_agent": { "type": "boolean" },
+          "from_number": { "type": "string" },
+          "to_number": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "webhook_url": { "type": "string", "format": "uri", "nullable": true }
+        },
+        "required": ["call_sid","agent_id","from_number","to_number","created_at"]
+      },
+      "CallInitiationResponse": {
+        "title": "CallInitiationResponse",
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "message": { "type": "string" },
+          "call_details": { "$ref": "#/components/schemas/CallDetails" }
+        },
+        "required": ["status","message","call_details"]
+      },
+      "CallQueuedResponse": {
+        "title": "CallQueuedResponse",
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "queued" },
+          "queue_id": { "type": "string" },
+          "message": { "type": "string" },
+          "queue_position": { "type": "integer" },
+          "estimated_wait_time_seconds": { "type": "integer" }
+        },
+        "required": ["status","queue_id","message","queue_position","estimated_wait_time_seconds"]
+      },
+      "EndCallPayload": {
+        "title": "EndCallPayload",
+        "type": "object",
+        "properties": {
+          "call_sid": { "type": "string", "description": "Twilio Call SID to end (e.g. CA... )." }
+        },
+        "required": ["call_sid"]
+      },
+      "CallEndResponse": {
+        "title": "CallEndResponse",
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "message": { "type": "string" },
+          "call_sid": { "type": "string" }
+        },
+        "required": ["status","message","call_sid"]
+      },
+      "CreateCampaignPayload": {
+        "title": "CreateCampaignPayload",
+        "type": "object",
+        "required": ["agent_id","list_id","name","sender_phone_numbers","scheduled_time"],
+        "properties": {
+          "agent_id": { "type": "string", "format": "uuid" },
+          "list_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "sender_phone_numbers": { "type": "array", "items": { "type": "string" } },
+          "delay_between_calls": { "type": "integer", "default": 10 },
+          "scheduled_time": { "type": "string", "format": "date-time" },
+          "timezone": { "type": "string", "default": "UTC" },
+          "rotate_numbers_after": { "type": "integer", "default": 10 }
+        }
+      },
+      "EditCampaignPayload": {
+        "title": "EditCampaignPayload",
+        "type": "object",
+        "properties": {
+          "account_id": { "type": "string", "format": "uuid" },
+          "agent_id": { "type": "string", "format": "uuid" },
+          "list_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "sender_phone_numbers": { "type": "array", "items": { "type": "string" } },
+          "delay_between_calls": { "type": "integer" },
+          "scheduled_time": { "type": "string", "format": "date-time" },
+          "timezone": { "type": "string" },
+          "rotate_numbers_after": { "type": "integer" }
+        }
+      },
+      "CampaignDetails": {
+        "title": "CampaignDetails",
+        "type": "object",
+        "properties": {
+          "campaign_id": { "type": "string", "format": "uuid" },
+          "account_id": { "type": "string", "format": "uuid" },
+          "agent_id": { "type": "string", "format": "uuid" },
+          "list_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "total_contacts": { "type": "integer" },
+          "completed_calls": { "type": "integer" },
+          "failed_calls": { "type": "integer" },
+          "sender_phone_numbers": { "type": "array", "items": { "type": "string" } },
+          "delay_between_calls": { "type": "integer" },
+          "scheduled_time": { "type": "string", "format": "date-time" },
+          "timezone": { "type": "string" },
+          "rotate_numbers_after": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "started_at": { "type": "string", "format": "date-time", "nullable": true },
+          "completed_at": { "type": "string", "format": "date-time", "nullable": true },
+          "status_changed_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "CampaignCreateResponse": {
+        "title": "CampaignCreateResponse",
+        "type": "object",
+        "properties": {
+          "campaign_id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string" },
+          "total_contacts": { "type": "integer" },
+          "scheduled_time": { "type": "string", "format": "date-time" },
+          "timezone": { "type": "string" },
+          "delay_between_calls": { "type": "integer" }
+        },
+        "required": ["campaign_id","status"]
+      },
+      "CampaignsListResponse": {
+        "title": "CampaignsListResponse",
+        "type": "object",
+        "properties": {
+          "campaigns": { "type": "array", "items": { "$ref": "#/components/schemas/CampaignDetails" } }
+        }
+      },
+      "PauseResumeResponse": {
+        "title": "PauseResumeResponse",
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "message": { "type": "string" },
+          "campaign_id": { "type": "string", "format": "uuid" }
+        },
+        "required": ["status","message","campaign_id"]
+      },
+      "DeleteCampaignResponse": {
+        "title": "DeleteCampaignResponse",
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "message": { "type": "string" },
+          "campaign_id": { "type": "string", "format": "uuid" },
+          "previous_status": { "type": "string" },
+          "contact_list_deleted": { "type": "boolean" }
+        }
+      },
+      "ContactModel": {
+        "type": "object",
+        "properties": {
+          "phone_number": { "type": "string" },
+          "template_variables": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["phone_number"]
+      },
+      "CreateContactListPayload": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "contacts": { "type": "array", "items": { "$ref": "#/components/schemas/ContactModel" } }
+        },
+        "required": ["name","contacts"]
+      },
+      "GetContactsPayload": {
+        "type": "object",
+        "properties": {
+          "account_id": { "type": "string", "format": "uuid" },
+          "list_id": { "type": "string", "format": "uuid" }
+        }
+      },
+      "EditContactListPayload": {
+        "type": "object",
+        "properties": {
+          "contacts": { "type": "array", "items": { "$ref": "#/components/schemas/ContactModel" } }
+        },
+        "required": ["contacts"]
+      },
+      "GetContactsRequest": {
+        "type": "object",
+        "properties": {
+          "list_id": { "type": "string", "format": "uuid" },
+          "account_id": { "type": "string", "format": "uuid" }
+        }
+      },
+      "AddContactsPayload": {
+        "type": "object",
+        "properties": {
+          "contacts": { "type": "array", "items": { "$ref": "#/components/schemas/ContactModel" } }
+        },
+        "required": ["contacts"]
+      },
+      "CreateToolPayload": {
+        "type": "object",
+        "properties": {
+          "tools": { "type": "array", "items": { "$ref": "#/components/schemas/ToolDescription" } },
+          "tools_params": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/APIParams" } },
+          "category": { "type": "string", "default": "custom" },
+          "tags": { "type": "array", "items": { "type": "string" }, "default": [] }
+        },
+        "required": ["tools", "tools_params"]
+      },
+      "UpdateToolPayload": {
+        "type": "object",
+        "properties": {
+          "tools": { "type": "array", "items": { "$ref": "#/components/schemas/ToolDescription" } },
+          "tools_params": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/APIParams" } },
+          "category": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["tools", "tools_params"]
+      },
+      "ToolDetails": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "tool_schema": { "$ref": "#/components/schemas/ToolModel" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "isActive": { "type": "boolean" },
+          "lastTested": { "type": "string", "format": "date-time", "nullable": true },
+          "testStatus": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ToolResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/ToolDetails" }
+        }
+      },
+      "ToolsListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/ToolDetails" } }
+        }
+      },
+      "ToolTestParams": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Parameters to test the tool with - should match the tool's expected parameters"
+      },
+      "ToolTestResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "tool_id": { "type": "string" },
+              "tool_name": { "type": "string" },
+              "test_status": { "type": "string" },
+              "http_status": { "type": "integer" },
+              "response_data": { "type": "object" },
+              "request_url": { "type": "string" },
+              "request_method": { "type": "string" },
+              "test_params": { "type": "object" },
+              "tested_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+      "ToolDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      },
+      "KnowledgebaseCreatePayload": {
+        "type": "object",
+        "properties": {
+          "friendly_name": { "type": "string", "description": "Name for the knowledgebase", "example": "Customer Support KB" },
+          "file": { "type": "string", "format": "binary", "description": "Document file to upload (PDF, Word, text, Markdown, HTML, XML, RTF, EPUB, CSV)" }
+        },
+        "required": ["friendly_name", "file"]
+      },
+      "KnowledgebaseDetails": {
+        "type": "object",
+        "properties": {
+          "kb_id": { "type": "string", "format": "uuid", "description": "Knowledgebase unique identifier" },
+          "vector_store_id": { "type": "string", "description": "Vector store identifier for search" },
+          "status": { "type": "string", "enum": ["processing", "processed", "error"], "description": "Processing status" },
+          "friendly_name": { "type": "string", "description": "Display name" },
+          "file_type": { "type": "string", "description": "MIME type of uploaded file" },
+          "supported_formats": { "type": "string", "description": "List of supported file formats" }
+        },
+        "required": ["kb_id", "vector_store_id", "status", "friendly_name"]
+      },
+      "KnowledgebaseListResponse": {
+        "type": "object",
+        "properties": {
+          "knowledgebases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kb_id": { "type": "string", "format": "uuid" },
+                "friendly_name": { "type": "string" },
+                "vector_store_id": { "type": "string" },
+                "status": { "type": "string" },
+                "created_at": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        },
+        "required": ["knowledgebases"]
+      },
+      "KnowledgebaseDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "message": { "type": "string", "example": "Knowledge base deleted successfully" },
+          "kb_id": { "type": "string", "format": "uuid" }
+        },
+        "required": ["status", "message", "kb_id"]
+      },
+      "CallAnalyticsDetails": {
+        "type": "object",
+        "properties": {
+          "call_sid": { "type": "string", "description": "Twilio Call SID" },
+          "agent_id": { "type": "string", "format": "uuid", "nullable": true },
+          "name": { "type": "string", "description": "Agent name or 'Web Call Agent'" },
+          "account_id": { "type": "string", "format": "uuid" },
+          "from_number": { "type": "string", "description": "Caller phone number" },
+          "to_number": { "type": "string", "description": "Recipient phone number" },
+          "duration": { "type": "number", "description": "Call duration in seconds" },
+          "recording_url": { "type": "string", "format": "uri", "nullable": true },
+          "transcription": { "type": "string", "nullable": true },
+          "status": { "type": "string", "description": "Call status" },
+          "cost": { "type": "number", "description": "Call cost in USD" },
+          "call_type": { "type": "string", "description": "Type of call" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CallAnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "calls": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CallAnalyticsDetails" }
+          }
+        },
+        "required": ["calls"]
+      },
+      "DetailedCallAnalytics": {
+        "type": "object",
+        "properties": {
+          "call_sid": { "type": "string" },
+          "agent_id": { "type": "string", "format": "uuid", "nullable": true },
+          "account_id": { "type": "string", "format": "uuid" },
+          "from_number": { "type": "string" },
+          "to_number": { "type": "string" },
+          "duration": { "type": "number" },
+          "recording_url": { "type": "string", "format": "uri", "nullable": true },
+          "transcription": { "type": "string", "nullable": true },
+          "status": { "type": "string" },
+          "call_type": { "type": "string" },
+          "cost": { "type": "number" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "transferred": { "type": "boolean" },
+          "transfer_info": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "department": { "type": "string" },
+              "number": { "type": "string" },
+              "time": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+      "AvailableNumber": {
+        "type": "object",
+        "properties": {
+          "friendly_name": { "type": "string", "description": "Human-readable phone number" },
+          "phone_number": { "type": "string", "description": "E.164 formatted phone number" },
+          "lata": { "type": "string", "description": "Local Access and Transport Area" },
+          "locality": { "type": "string", "description": "City or region" },
+          "rate_center": { "type": "string", "description": "Rate center for billing" },
+          "latitude": { "type": "string", "description": "Geographic latitude" },
+          "longitude": { "type": "string", "description": "Geographic longitude" },
+          "region": { "type": "string", "description": "State or province" },
+          "postal_code": { "type": "string", "description": "ZIP or postal code" },
+          "iso_country": { "type": "string", "description": "ISO country code" },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "voice": { "type": "boolean" },
+              "sms": { "type": "boolean" },
+              "mms": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "AvailableNumbersResponse": {
+        "type": "object",
+        "properties": {
+          "available_phone_numbers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AvailableNumber" }
+          }
+        },
+        "required": ["available_phone_numbers"]
+      },
+      "AccountPhoneNumber": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string", "description": "Twilio Phone Number SID" },
+          "phone_number": { "type": "string", "description": "E.164 formatted phone number" },
+          "friendly_name": { "type": "string", "description": "User-assigned name" },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "voice": { "type": "boolean" },
+              "sms": { "type": "boolean" },
+              "mms": { "type": "boolean" }
+            }
+          },
+          "status": { "type": "string", "description": "Configuration status" },
+          "cost": {
+            "type": "object",
+            "properties": {
+              "amount": { "type": "string", "example": "$4.99" },
+              "period": { "type": "string", "example": "month" },
+              "is_free": { "type": "boolean" }
+            }
+          },
+          "renewal_date": { "type": "string", "description": "Next billing date" }
+        }
+      },
+      "AccountPhoneNumbersResponse": {
+        "type": "object",
+        "properties": {
+          "phone_numbers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AccountPhoneNumber" }
+          }
+        },
+        "required": ["phone_numbers"]
+      },
+      "PurchaseNumberPayload": {
+        "type": "object",
+        "properties": {
+          "phone_number": { "type": "string", "description": "E.164 formatted phone number to purchase", "example": "+14155551234" },
+          "friendly_name": { "type": "string", "description": "Display name for the number", "example": "Main Business Line" },
+          "payment_method_id": { "type": "string", "description": "Stripe payment method ID", "example": "pm_1234567890" },
+          "is_free_number": { "type": "boolean", "default": false, "description": "Whether to use free number allocation (for eligible plans)" }
+        },
+        "required": ["phone_number", "payment_method_id"]
+      },
+      "PurchaseNumberResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "phone_number": { "type": "string" },
+          "sid": { "type": "string", "description": "Twilio Phone Number SID" },
+          "subscription_id": { "type": "string", "description": "Stripe subscription ID" },
+          "is_free_number": { "type": "boolean", "description": "Whether this was a free number allocation" },
+          "message": { "type": "string", "example": "Phone number purchased successfully!" }
+        },
+        "required": ["success", "phone_number", "sid", "message"]
+      },
+      "UpdateNumberPayload": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string", "description": "Twilio Phone Number SID", "example": "PNa1b2c3d4e5f6g7h8i9j0" },
+          "friendly_name": { "type": "string", "description": "New display name", "example": "Customer Support Line" }
+        },
+        "required": ["sid", "friendly_name"]
+      },
+      "UpdateNumberResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "phone_number": { "type": "string" },
+          "friendly_name": { "type": "string" }
+        },
+        "required": ["success", "phone_number", "friendly_name"]
+      },
+      "CancelNumberResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true }
+        },
+        "required": ["success"]
+      },
+      "SupportingDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "friendly_name": { "type": "string", "description": "Display name for the document", "example": "Business License" },
+          "type": { "type": "string", "description": "Document type", "example": "business_license", "enum": ["individual_tax_id", "business_license", "address_proof", "identity_document"] },
+          "file_path": { "type": "string", "description": "Path to file on server (optional)" },
+          "file_data": { "type": "string", "description": "Base64 encoded file data (optional)" },
+          "mime_type": { "type": "string", "description": "File MIME type", "example": "application/pdf" }
+        },
+        "required": ["friendly_name", "type"]
+      },
+      "SupportingDocumentResponse": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string", "description": "Document SID" },
+          "friendly_name": { "type": "string" },
+          "type": { "type": "string" },
+          "status": { "type": "string", "description": "Document status" },
+          "account_sid": { "type": "string" },
+          "date_created": { "type": "string", "format": "date-time" },
+          "date_updated": { "type": "string", "format": "date-time" },
+          "note": { "type": "string", "description": "Additional information" }
+        }
+      },
+      "SupportingDocumentsListResponse": {
+        "type": "object",
+        "properties": {
+          "supporting_documents": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SupportingDocumentResponse" }
+          }
+        },
+        "required": ["supporting_documents"]
+      },
+      "EndUserRequest": {
+        "type": "object",
+        "properties": {
+          "friendly_name": { "type": "string", "description": "Display name", "example": "John Doe - Individual" },
+          "type": { "type": "string", "enum": ["individual", "business"], "description": "End user type" },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "description": "Dynamic attributes based on type",
+            "example": {
+              "first_name": "John",
+              "last_name": "Doe",
+              "email": "john@example.com",
+              "phone_number": "+14155551234"
+            }
+          }
+        },
+        "required": ["friendly_name", "type", "attributes"]
+      },
+      "EndUserResponse": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string" },
+          "friendly_name": { "type": "string" },
+          "type": { "type": "string" },
+          "attributes": { "type": "object", "additionalProperties": { "type": "string" } },
+          "account_sid": { "type": "string" },
+          "date_created": { "type": "string", "format": "date-time" },
+          "date_updated": { "type": "string", "format": "date-time" }
+        }
+      },
+      "EndUsersListResponse": {
+        "type": "object",
+        "properties": {
+          "end_users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EndUserResponse" }
+          }
+        },
+        "required": ["end_users"]
+      },
+      "RegulatoryBundleRequest": {
+        "type": "object",
+        "properties": {
+          "friendly_name": { "type": "string", "description": "Bundle display name", "example": "Business Phone Number Bundle" },
+          "email": { "type": "string", "format": "email", "description": "Email for status updates", "example": "compliance@company.com" },
+          "regulation_sid": { "type": "string", "description": "Specific regulation SID (optional)", "example": "RG12345" },
+          "iso_country": { "type": "string", "description": "Country code (if not using regulation_sid)", "example": "US" },
+          "end_user_type": { "type": "string", "enum": ["individual", "business"], "description": "End user type (if not using regulation_sid)" },
+          "number_type": { "type": "string", "enum": ["local", "mobile", "tollfree"], "description": "Number type (if not using regulation_sid)" }
+        },
+        "required": ["friendly_name", "email"]
+      },
+      "RegulatoryBundleResponse": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string" },
+          "friendly_name": { "type": "string" },
+          "status": { "type": "string", "enum": ["draft", "pending-review", "in-review", "twilio-rejected", "twilio-approved", "provisionally-approved"] },
+          "regulation_sid": { "type": "string" },
+          "account_sid": { "type": "string" },
+          "email": { "type": "string" },
+          "date_created": { "type": "string", "format": "date-time" },
+          "date_updated": { "type": "string", "format": "date-time" },
+          "request_parameters": {
+            "type": "object",
+            "properties": {
+              "iso_country": { "type": "string" },
+              "end_user_type": { "type": "string" },
+              "number_type": { "type": "string" },
+              "regulation_sid": { "type": "string" }
+            }
+          },
+          "note": { "type": "string" }
+        }
+      },
+      "RegulatoryBundlesListResponse": {
+        "type": "object",
+        "properties": {
+          "bundles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sid": { "type": "string" },
+                "friendly_name": { "type": "string" },
+                "status": { "type": "string" },
+                "regulation_sid": { "type": "string" },
+                "iso_country": { "type": "string" },
+                "end_user_type": { "type": "string" },
+                "number_type": { "type": "string" },
+                "date_created": { "type": "string", "format": "date-time" },
+                "date_updated": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        },
+        "required": ["bundles"]
+      },
+      "RegulatoryBundleDetails": {
+        "type": "object",
+        "properties": {
+          "bundle": {
+            "type": "object",
+            "properties": {
+              "sid": { "type": "string" },
+              "friendly_name": { "type": "string" },
+              "status": { "type": "string" },
+              "regulation_sid": { "type": "string" },
+              "iso_country": { "type": "string" },
+              "end_user_type": { "type": "string" },
+              "number_type": { "type": "string" },
+              "email": { "type": "string" },
+              "date_created": { "type": "string", "format": "date-time" },
+              "date_updated": { "type": "string", "format": "date-time" },
+              "valid_until": { "type": "string", "format": "date-time" }
+            }
+          },
+          "item_assignments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sid": { "type": "string" },
+                "bundle_sid": { "type": "string" },
+                "object_sid": { "type": "string" },
+                "date_created": { "type": "string", "format": "date-time" }
+              }
+            }
+          },
+          "evaluations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sid": { "type": "string" },
+                "bundle_sid": { "type": "string" },
+                "status": { "type": "string" },
+                "results": { "type": "object" },
+                "date_created": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        }
+      },
+      "BundleAssignmentRequest": {
+        "type": "object",
+        "properties": {
+          "bundle_sid": { "type": "string", "description": "Bundle SID to assign to" },
+          "resource_sid": { "type": "string", "description": "End user or supporting document SID", "example": "EU123456 or RD123456" }
+        },
+        "required": ["bundle_sid", "resource_sid"]
+      },
+      "ItemAssignmentResponse": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string" },
+          "bundle_sid": { "type": "string" },
+          "object_sid": { "type": "string" },
+          "date_created": { "type": "string", "format": "date-time" }
+        }
+      },
+      "EvaluationResponse": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string" },
+          "bundle_sid": { "type": "string" },
+          "status": { "type": "string", "description": "Evaluation status" },
+          "results": { "type": "object", "description": "Evaluation results" },
+          "date_created": { "type": "string", "format": "date-time" },
+          "date_updated": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RegulatoryRequirement": {
+        "type": "object",
+        "properties": {
+          "regulation_sid": { "type": "string" },
+          "regulation_name": { "type": "string" },
+          "iso_country": { "type": "string" },
+          "number_type": { "type": "string" },
+          "end_user_type": { "type": "string" },
+          "requirements": { "type": "object", "description": "Detailed requirements object" },
+          "end_user_types": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "friendly_name": { "type": "string" },
+                "requirement_name": { "type": "string" },
+                "fields": { "type": "array", "items": { "type": "string" } },
+                "detailed_fields": { "type": "array", "items": { "type": "object" } },
+                "required": { "type": "boolean" }
+              }
+            }
+          },
+          "supporting_documents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "friendly_name": { "type": "string" },
+                "requirement_name": { "type": "string" },
+                "description": { "type": "string" },
+                "required": { "type": "boolean" },
+                "accepted_documents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string" },
+                      "friendly_name": { "type": "string" },
+                      "fields": { "type": "array", "items": { "type": "string" } },
+                      "detailed_fields": { "type": "array", "items": { "type": "object" } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "RegulatoryRequirementsResponse": {
+        "type": "object",
+        "properties": {
+          "phone_number": { "type": "string" },
+          "country": { "type": "string" },
+          "number_type": { "type": "string" },
+          "requirements": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RegulatoryRequirement" }
+          },
+          "total_regulations": { "type": "integer" },
+          "public_documentation": {
+            "type": "object",
+            "properties": {
+              "country_specific_guidelines": { "type": "string", "format": "uri" },
+              "general_regulatory_docs": { "type": "string", "format": "uri" }
+            }
+          },
+          "note": { "type": "string" }
+        }
+      },
+      "AddressRequest": {
+        "type": "object",
+        "properties": {
+          "friendly_name": { "type": "string", "description": "Display name for address", "example": "Corporate Headquarters" },
+          "customer_name": { "type": "string", "description": "Name of customer/business", "example": "Acme Corporation" },
+          "street": { "type": "string", "description": "Street address", "example": "123 Business Ave" },
+          "city": { "type": "string", "description": "City name", "example": "San Francisco" },
+          "region": { "type": "string", "description": "State or province", "example": "CA" },
+          "postal_code": { "type": "string", "description": "ZIP or postal code", "example": "94105" },
+          "iso_country": { "type": "string", "description": "ISO country code", "example": "US" },
+          "street_secondary": { "type": "string", "description": "Apartment, suite, etc. (optional)", "example": "Suite 100" }
+        },
+        "required": ["friendly_name", "customer_name", "street", "city", "region", "postal_code", "iso_country"]
+      },
+      "AddressResponse": {
+        "type": "object",
+        "properties": {
+          "sid": { "type": "string" },
+          "friendly_name": { "type": "string" },
+          "customer_name": { "type": "string" },
+          "street": { "type": "string" },
+          "street_secondary": { "type": "string" },
+          "city": { "type": "string" },
+          "region": { "type": "string" },
+          "postal_code": { "type": "string" },
+          "iso_country": { "type": "string" },
+          "emergency_enabled": { "type": "boolean" },
+          "validated": { "type": "boolean" },
+          "verified": { "type": "boolean" },
+          "date_created": { "type": "string", "format": "date-time" },
+          "date_updated": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AddressesListResponse": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AddressResponse" }
+          }
+        },
+        "required": ["addresses"]
+      },
+      "AvailableCountry": {
+        "type": "object",
+        "properties": {
+          "country_code": { "type": "string", "description": "ISO country code", "example": "US" },
+          "country": { "type": "string", "description": "Country name", "example": "United States" },
+          "beta": { "type": "boolean", "description": "Whether in beta status" },
+          "available_number_types": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["local", "national", "mobile", "toll-free"] },
+            "description": "Available number types in this country"
+          },
+          "compliance_level": { "type": "string", "enum": ["low", "medium", "high"], "description": "Regulatory compliance complexity" },
+          "availability_type": { "type": "string", "enum": ["instant", "request_only"], "description": "How numbers can be obtained" },
+          "subresource_uris": { "type": "object", "description": "Available API endpoints" },
+          "uri": { "type": "string", "description": "API endpoint URI" }
+        }
+      },
+      "AvailableCountriesResponse": {
+        "type": "object",
+        "properties": {
+          "countries": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AvailableCountry" }
+          },
+          "total_count": { "type": "integer", "description": "Total number of countries" },
+          "instant_available": { "type": "integer", "description": "Countries with instant number availability" },
+          "request_only": { "type": "integer", "description": "Countries requiring special approval" }
+        },
+        "required": ["countries", "total_count"]
+      },
+      "CountryNumberTypesResponse": {
+        "type": "object",
+        "properties": {
+          "country_code": { "type": "string" },
+          "available_types": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "available": { "type": "boolean" },
+                "name": { "type": "string" },
+                "description": { "type": "string" }
+              }
+            }
+          }
+        },
+        "required": ["country_code", "available_types"]
+      },
+      "CountryComplianceResponse": {
+        "type": "object",
+        "properties": {
+          "country_code": { "type": "string" },
+          "has_regulations": { "type": "boolean" },
+          "regulations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "regulation_sid": { "type": "string" },
+                "friendly_name": { "type": "string" },
+                "end_user_type": { "type": "string" },
+                "number_type": { "type": "string" }
+              }
+            }
+          },
+          "compliance_level": { "type": "string", "enum": ["low", "medium", "high"] }
+        },
+        "required": ["country_code", "has_regulations", "compliance_level"]
+      },
+      "RegulationsListResponse": {
+        "type": "object",
+        "properties": {
+          "country": { "type": "string" },
+          "number_type_filter": { "type": "string" },
+          "end_user_type_filter": { "type": "string" },
+          "include_constraints": { "type": "boolean" },
+          "constraints_supported": { "type": "boolean" },
+          "regulations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sid": { "type": "string" },
+                "friendly_name": { "type": "string" },
+                "iso_country": { "type": "string" },
+                "number_type": { "type": "string" },
+                "end_user_type": { "type": "string" },
+                "requirements": { "type": "object", "nullable": true }
+              }
+            }
+          }
+        }
+      },
+      "SimpleSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Operation completed successfully" }
+        },
+        "required": ["success", "message"]
+      },
+      "PurchaseNumberWithComplianceResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "phone_number": { "type": "string" },
+          "sid": { "type": "string" },
+          "friendly_name": { "type": "string" },
+          "bundle_sid": { "type": "string" },
+          "bundle_status": { "type": "string" },
+          "compliance_verified": { "type": "boolean" }
+        },
+        "required": ["success", "phone_number", "sid", "bundle_sid", "compliance_verified"]
+      }
+      
+    }
+  },
+  "security": [ { "bearerAuth": [] } ],
+  "paths": {
+    "/agent": {
+      "post": {
+        "tags": ["agents"],
+        "summary": "Create Voice AI Agent",
+        "description": "Create a new agent with configuration, prompts and task definitions. This operation supports MCP, API tools and webhook configuration.",
+        "operationId": "createAgent",
+        "security": [ { "bearerAuth": [] } ],
+        "requestBody": {
+          "description": "Agent creation payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AgentRequest" },
+              "examples": {
+                "full-example": {
+                  "summary": "Full example",
+                  "value": {
+                    "agent_config": {
+                      "agent_name": "Alfred",
+                      "agent_welcome_message": "How are you doing Bruce?",
+                      "agent_type": "other",
+                      "timezone": "America/Los_Angeles",
+                      "country": "US",
+                      "call_direction": "inbound",
+                      "inbound_phone_number": "+14155551234",
+                      "tasks": [
+                        {
+                          "task_type": "conversation",
+                          "tools_config": {
+                            "llm_agent": { "agent_type": "simple_llm_agent", "agent_flow_type": "streaming", "llm_config": { "provider": "openai", "model": "gpt-4o-mini" } },
+                            "synthesizer": { "provider": "polly", "provider_config": { "voice": "Matthew", "engine": "generative" } },
+                            "transcriber": { "provider": "deepgram", "model": "nova-2" },
+                            "input": { "provider": "twilio", "format": "wav" },
+                            "output": { "provider": "twilio", "format": "wav" },
+                            "api_tools": { "api_tool_ids": ["tool_1","tool_2"] }
+                          },
+                          "toolchain": { "execution": "parallel", "pipelines": [["transcriber","llm","synthesizer"]] },
+                          "task_config": { "hangup_after_silence": 10 }
+                        }
+                      ]
+                    },
+                    "agent_prompts": {
+                      "task_1": { "system_prompt": "What is the Ultimate Question of Life, the Universe, and Everything?" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent successfully created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AgentCreateStatus" },
+                "examples": { "created": { "value": { "agent_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a", "status": "created" } } }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "examples": { "bad": { "value": { "error": 123, "message": "Invalid agent_config" } } }
+              }
+            }
+          }
+        }
+      }
+    }
+    ,
+    "/agent/{agent_id}": {
+      "get": {
+        "tags": ["agents"],
+        "summary": "Get Agent by ID",
+        "operationId": "getAgent",
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agent details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AgentDetails" },
+                "examples": {
+                  "agent-details": {
+                    "summary": "Full agent details example",
+                    "value": {
+                      "agent_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                      "account_id": "11111111-2222-3333-4444-555555555555",
+                      "name": "Alfred",
+                      "agent_type": "other",
+                      "call_direction": "inbound",
+                      "inbound_phone_number": "+14155551234",
+                      "agent_image": "https://cdn.example.com/agents/alfred.png",
+                      "webhook_url": "https://webhooks.example.com/agents/alfred",
+                      "total_calls": 123,
+                      "total_duration": 45678,
+                      "total_cost": 12.34,
+                      "created_at": "2025-08-23T12:34:56Z",
+                      "timezone": "America/Los_Angeles",
+                      "country": "US",
+                      "template_variables": { "company_name": "Acme Corp" },
+                      "is_compliant": false,
+                      "agent_config": {
+                        "agent_name": "Alfred",
+                        "agent_welcome_message": "Hello, how can I help?",
+                        "call_direction": "inbound",
+                        "tasks": [
+                          {
+                            "task_type": "conversation",
+                            "tools_config": {
+                              "llm_agent": { "agent_type": "simple_llm_agent", "agent_flow_type": "streaming", "llm_config": { "provider": "openai", "model": "gpt-4o-mini" } },
+                              "synthesizer": { "provider": "polly", "provider_config": { "voice": "Matthew", "engine": "generative" } },
+                              "transcriber": { "provider": "deepgram", "provider_config": { "model": "nova-2" } },
+                              "input": { "provider": "twilio", "format": "wav" },
+                              "output": { "provider": "twilio", "format": "wav" }
+                            },
+                            "toolchain": { "execution": "parallel", "pipelines": [["transcriber","llm","synthesizer"]] },
+                            "task_config": { "hangup_after_silence": 10 }
+                          }
+                        ]
+                      },
+                      "agent_prompts": { "task_1": { "system_prompt": "You are a helpful voice agent." } },
+                      "knowledgebase": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "put": {
+        "tags": ["agents"],
+        "summary": "Update an existing agent",
+        "operationId": "updateAgent",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "agent_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "Agent UUID to update. Must match agent_id in request body." } ],
+        "requestBody": {
+          "description": "Updated agent payload. Include the same agent_id as in the path and the new agent_config/agent_prompts.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAgentPayload" },
+              "examples": {
+                "update-example": {
+                  "summary": "Update example",
+                  "value": {
+                    "agent_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                    "agent_config": {
+                      "agent_name": "Alfred",
+                      "agent_welcome_message": "Updated welcome",
+                      "call_direction": "inbound",
+                      "inbound_phone_number": "+14155551234",
+                      "tasks": []
+                    },
+                    "agent_prompts": { "task_1": { "system_prompt": "You are updated prompt" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UpdateAgentResponse" },
+                "examples": {
+                  "success": {
+                    "summary": "Successful update",
+                    "value": {
+                      "status": "success",
+                      "message": "Agent updated successfully",
+                      "agent_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                      "callback_configured": true,
+                      "ready_for_inbound_calls": true,
+                      "ready_for_outbound_calls": true,
+                      "warning": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["agents"],
+        "summary": "Delete an agent",
+        "operationId": "deleteAgent",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "agent_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "Agent UUID to delete." } ],
+        "responses": {
+          "200": {
+            "description": "Agent deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AgentCreateStatus" },
+                "examples": {
+                  "deleted": { "value": { "status": "success", "message": "Agent deleted successfully", "agent_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a" } }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/agents": {
+      "get": {
+        "tags": ["agents"],
+        "summary": "List agents",
+        "operationId": "listAgents",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 25 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of agents",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AgentsListResponse" },
+                "examples": {
+                  "agents-list": {
+                    "summary": "Example response with two agents",
+                    "value": {
+                      "agents": [
+                        {
+                          "agent_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                          "name": "Alfred",
+                          "agent_type": "other",
+                          "call_direction": "inbound",
+                          "inbound_phone_number": "+14155551234",
+                          "agent_image": "https://cdn.example.com/agents/alfred.png",
+                          "webhook_url": "https://webhooks.example.com/agents/alfred",
+                          "is_compliant": false,
+                          "total_calls": 123,
+                          "total_duration": 45678,
+                          "total_cost": 12.34,
+                          "created_at": "2025-08-23T12:34:56Z",
+                          "timezone": "America/Los_Angeles",
+                          "country": "US",
+                          "agent_config": { "agent_name": "Alfred", "call_direction": "inbound", "tasks": [] },
+                          "agent_prompts": { "task_1": { "system_prompt": "Hello" } }
+                        }
+                      ],
+                      "page": 1,
+                      "per_page": 25,
+                      "total": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    ,
+    "/call": {
+      "post": {
+        "tags": ["calls"],
+        "summary": "Create Call",
+        "description": "Initiate an outbound call. Either provide an existing agent_id or inline agent_config/agent_prompts for a temporary agent. The organization plan and available minutes are checked before placing the call. Calls may be queued if the system is at capacity.",
+        "operationId": "createCall",
+        "security": [ { "bearerAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CallPayload" },
+              "examples": {
+                "Agent ID": {
+                  "summary": "Call using stored agent",
+                  "value": {
+                    "agent_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+                    "sender_phone_number": "+14155551234",
+                    "recipient_phone_number": "+14155559876",
+                    "record": true,
+                    "template_variables": { "customer_name": "Bruce" }
+                  }
+                },
+                "Agent config": {
+                  "summary": "Call using inline agent config",
+                  "value": {
+                    "agent_config": {
+                      "agent_name": "TempAgent",
+                      "call_direction": "outbound",
+                      "tasks": []
+                    },
+                    "agent_prompts": { "task_1": { "system_prompt": "You are a helpful temporary agent." } },
+                    "sender_phone_number": "+14155551234",
+                    "recipient_phone_number": "+14155559876",
+                    "record": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Call initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CallInitiationResponse" },
+                "examples": {
+                  "initiated": { "value": { "status": "success", "message": "Call initiated successfully", "call_details": { "call_sid": "CA123...", "agent_id": "3c90...", "is_temporary_agent": false, "from_number": "+14155551234", "to_number": "+14155559876", "created_at": "2025-08-23T12:34:56Z" } } }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Forbidden (plan or minutes) or agent configured for inbound only", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Agent or Account not found or missing phone number", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+    ,
+    "/call/end": {
+      "post": {
+        "tags": ["calls"],
+        "summary": "End Call",
+        "description": "End an in-progress call by providing its Twilio Call SID. Requires bearer auth for the account that owns the subaccount.",
+        "operationId": "endCall",
+        "security": [ { "bearerAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EndCallPayload" },
+              "examples": {
+                "end-example": {
+                  "summary": "End call example",
+                  "value": { "call_sid": "CA1234567890abcdef" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Call ended successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CallEndResponse" },
+                "examples": {
+                  "success": { "value": { "status": "success", "message": "Call ended successfully", "call_sid": "CA1234567890abcdef" } }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Forbidden", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+    ,
+    "/campaign": {
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Create Campaign",
+        "description": "Create an outbound campaign. Validates agent, contact list and schedules processing.",
+        "operationId": "createCampaign",
+        "security": [ { "bearerAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCampaignPayload" },
+              "examples": { "create-example": { "value": { "agent_id": "3c90...", "list_id": "1111...", "name": "My Campaign", "sender_phone_numbers": ["+14155551234"], "scheduled_time": "2025-08-24T12:00:00Z" } } }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Campaign created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CampaignCreateResponse" } } } },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Forbidden", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/campaign/{campaign_id}": {
+      "get": {
+        "tags": ["campaigns"],
+        "summary": "Get Campaign Status",
+        "operationId": "getCampaignStatus",
+        "parameters": [ { "name": "campaign_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "responses": { "200": { "description": "Campaign details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CampaignDetails" } } } }, "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+      },
+      "patch": {
+        "tags": ["campaigns"],
+        "summary": "Edit Campaign",
+        "operationId": "editCampaign",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "campaign_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditCampaignPayload" } } } },
+        "responses": { "200": { "description": "Campaign updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PauseResumeResponse" } } } }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }, "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+      },
+      "delete": {
+        "tags": ["campaigns"],
+        "summary": "Delete Campaign",
+        "operationId": "deleteCampaign",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [
+          { "name": "campaign_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "delete_contact_list", "in": "query", "schema": { "type": "boolean", "default": false } }
+        ],
+        "responses": { "200": { "description": "Campaign deleted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteCampaignResponse" } } } }, "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+      }
+    },
+    "/campaign/pause/{campaign_id}": {
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Pause Campaign",
+        "operationId": "pauseCampaign",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "campaign_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "responses": { "200": { "description": "Campaign paused", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PauseResumeResponse" } } } }, "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+      }
+    },
+    "/campaign/resume/{campaign_id}": {
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Resume Campaign",
+        "operationId": "resumeCampaign",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "campaign_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "responses": { "200": { "description": "Campaign resumed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PauseResumeResponse" } } } }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }, "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+      }
+    },
+    "/campaigns": {
+      "get": {
+        "tags": ["campaigns"],
+        "summary": "List Campaigns",
+        "operationId": "listCampaigns",
+        "security": [ { "bearerAuth": [] } ],
+        "responses": { "200": { "description": "List of campaigns", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CampaignsListResponse" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+      }
+    }
+    ,
+    "/contacts": {
+      "post": {
+        "tags": ["contacts"],
+        "summary": "Create Contact List",
+        "operationId": "createContactList",
+        "security": [ { "bearerAuth": [] } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateContactListPayload" } } } },
+        "responses": {
+          "200": { "description": "Contact list created", "content": { "application/json": { "schema": { "type": "object", "properties": { "list_id": { "type": "string" }, "status": { "type": "string" }, "contact_count": { "type": "integer" } } } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["contacts"],
+        "summary": "List contacts",
+        "operationId": "listContacts",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "list_id", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "responses": {
+          "200": {
+            "description": "List of contacts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contacts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "contact_id": { "type": "string", "format": "uuid" },
+                          "phone_number": { "type": "string" },
+                          "template_variables": { "type": "object" },
+                          "created_at": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/contacts/lists": {
+      "get": {
+        "tags": ["contacts"],
+        "summary": "List contact lists",
+        "operationId": "getContactLists",
+        "security": [ { "bearerAuth": [] } ],
+        "responses": {
+          "200": {
+            "description": "Contact lists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contact_lists": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "list_id": { "type": "string", "format": "uuid" },
+                          "name": { "type": "string" },
+                          "description": { "type": "string" },
+                          "created_at": { "type": "string", "format": "date-time" },
+                          "contact_count": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/contacts/{list_id}": {
+      "put": {
+        "tags": ["contacts"],
+        "summary": "Update contact list",
+        "operationId": "updateContactList",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "list_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditContactListPayload" } } } },
+        "responses": {
+          "200": {
+            "description": "Contact list updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "message": { "type": "string" },
+                    "list_id": { "type": "string" },
+                    "total_contacts": { "type": "integer" },
+                    "contact_ids": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["contacts"],
+        "summary": "Delete contact list",
+        "operationId": "deleteContactList",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "list_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "responses": {
+          "200": { "description": "Contact list deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" } } } } } },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/contacts/{list_id}/add": {
+      "post": {
+        "tags": ["contacts"],
+        "summary": "Add contacts to list",
+        "operationId": "addContactsToList",
+        "security": [ { "bearerAuth": [] } ],
+        "parameters": [ { "name": "list_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddContactsPayload" } } } },
+        "responses": {
+          "200": {
+            "description": "Contacts added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "message": { "type": "string" },
+                    "list_id": { "type": "string" },
+                    "added_contacts": { "type": "array", "items": { "type": "object", "properties": { "contact_id": { "type": "string" }, "phone_number": { "type": "string" } } } },
+                    "duplicate_contacts": { "type": "array", "items": { "type": "string" } },
+                    "total_added": { "type": "integer" },
+                    "total_duplicates": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/tools": {
+      "post": {
+        "tags": ["tools"],
+        "summary": "Create API Tool",
+        "operationId": "createTool",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateToolPayload" },
+              "examples": {
+                "create-tool": {
+                  "summary": "Create API tool example",
+                  "value": {
+                    "tools": [
+                      {
+                        "type": "function",
+                        "function": {
+                          "name": "check_availability",
+                          "description": "Check appointment availability",
+                          "parameters": {
+                            "type": "object",
+                            "properties": {
+                              "date": { "type": "string", "format": "date" },
+                              "time": { "type": "string" }
+                            },
+                            "required": ["date"]
+                          }
+                        }
+                      }
+                    ],
+                    "tools_params": {
+                      "check_availability": {
+                        "method": "GET",
+                        "url": "https://api.example.com/availability",
+                        "api_token": "your_token"
+                      }
+                    },
+                    "category": "communication",
+                    "tags": ["availability", "booking"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tool created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ToolResponse" } } } },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Organization not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["tools"],
+        "summary": "List API Tools",
+        "operationId": "listTools",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" }, "description": "Filter by tool category" },
+          { "name": "is_active", "in": "query", "schema": { "type": "boolean" }, "description": "Filter by active status" },
+          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Search in tool names and descriptions" }
+        ],
+        "responses": {
+          "200": { "description": "List of tools", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ToolsListResponse" } } } },
+          "404": { "description": "Organization not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/tools/{tool_id}": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Get Tool by ID",
+        "operationId": "getTool",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "tool_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Tool details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ToolResponse" } } } },
+          "404": { "description": "Tool not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "put": {
+        "tags": ["tools"],
+        "summary": "Update Tool",
+        "operationId": "updateTool",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "tool_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateToolPayload" },
+              "examples": {
+                "update-tool": {
+                  "summary": "Update tool example",
+                  "value": {
+                    "tools": [
+                      {
+                        "type": "function",
+                        "function": {
+                          "name": "check_availability_v2",
+                          "description": "Check appointment availability with updated parameters",
+                          "parameters": {
+                            "type": "object",
+                            "properties": {
+                              "date": { "type": "string", "format": "date" },
+                              "time": { "type": "string" },
+                              "duration": { "type": "integer" }
+                            },
+                            "required": ["date", "time"]
+                          }
+                        }
+                      }
+                    ],
+                    "tools_params": {
+                      "check_availability_v2": {
+                        "method": "POST",
+                        "url": "https://api.example.com/v2/availability",
+                        "api_token": "updated_token"
+                      }
+                    },
+                    "category": "scheduling",
+                    "tags": ["availability", "booking", "v2"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tool updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ToolResponse" } } } },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Tool not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["tools"],
+        "summary": "Delete Tool",
+        "operationId": "deleteTool",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "tool_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Tool deleted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ToolDeleteResponse" } } } },
+          "404": { "description": "Tool not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/tools/{tool_id}/test": {
+      "post": {
+        "tags": ["tools"],
+        "summary": "Test Tool",
+        "operationId": "testTool",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "tool_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ToolTestParams" },
+              "examples": {
+                "test-tool": {
+                  "summary": "Test tool with parameters",
+                  "value": {
+                    "date": "2024-01-15",
+                    "time": "14:30"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tool test completed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ToolTestResponse" } } } },
+          "400": { "description": "Bad request or invalid parameters", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Tool not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "408": { "description": "Request timeout", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/knowledgebase": {
+      "post": {
+        "tags": ["knowledgebases"],
+        "summary": "Create Knowledgebase",
+        "description": "Upload and process a document to create a searchable knowledgebase. Supports PDF, Word documents, text files, Markdown, HTML, XML, RTF, EPUB, and CSV formats. The document will be processed and vectorized for AI agent use.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "friendly_name": {
+                    "type": "string",
+                    "description": "Display name for the knowledgebase",
+                    "example": "Customer Support Documentation"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Document file to upload. Supported formats: PDF, Word (doc/docx), text (txt), Markdown (md), HTML, XML, RTF, EPUB, CSV"
+                  }
+                },
+                "required": ["friendly_name", "file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Knowledgebase creation initiated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/KnowledgebaseDetails" },
+                "example": {
+                  "kb_id": "123e4567-e89b-12d3-a456-426614174000",
+                  "vector_store_id": "123e4567-e89b-12d3-a456-426614174000",
+                  "status": "processing",
+                  "friendly_name": "Customer Support Documentation",
+                  "file_type": "application/pdf",
+                  "supported_formats": "PDF, Word documents, text files, Markdown, HTML, XML, RTF, EPUB, CSV"
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid file type or missing required fields", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Organization not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Failed to create knowledgebase", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/knowledgebases": {
+      "get": {
+        "tags": ["knowledgebases"],
+        "summary": "List Knowledgebases",
+        "description": "Retrieve all knowledgebases for the authenticated account, ordered by creation date (newest first).",
+        "responses": {
+          "200": {
+            "description": "List of knowledgebases",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/KnowledgebaseListResponse" },
+                "example": {
+                  "knowledgebases": [
+                    {
+                      "kb_id": "123e4567-e89b-12d3-a456-426614174000",
+                      "friendly_name": "Customer Support Documentation",
+                      "vector_store_id": "123e4567-e89b-12d3-a456-426614174000",
+                      "status": "processed",
+                      "created_at": "2024-01-15T10:30:00Z"
+                    },
+                    {
+                      "kb_id": "456e7890-e12b-34d5-a678-426614174111",
+                      "friendly_name": "Product Manual",
+                      "vector_store_id": "456e7890-e12b-34d5-a678-426614174111",
+                      "status": "processing",
+                      "created_at": "2024-01-14T15:20:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": { "description": "Organization not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Failed to fetch knowledgebases", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/knowledgebase/{kb_id}": {
+      "delete": {
+        "tags": ["knowledgebases"],
+        "summary": "Delete Knowledgebase",
+        "description": "Permanently delete a knowledgebase and all associated vector store data. This action cannot be undone.",
+        "parameters": [
+          {
+            "name": "kb_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Knowledgebase ID to delete",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Knowledgebase deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/KnowledgebaseDeleteResponse" },
+                "example": {
+                  "status": "success",
+                  "message": "Knowledge base deleted successfully",
+                  "kb_id": "123e4567-e89b-12d3-a456-426614174000"
+                }
+              }
+            }
+          },
+          "404": { "description": "Knowledgebase not found or doesn't belong to account", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Failed to delete knowledgebase", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/details": {
+      "get": {
+        "tags": ["analytics"],
+        "summary": "Get Call Analytics",
+        "description": "Retrieve comprehensive analytics for all calls associated with the authenticated account. Includes call details, costs, recordings, transcriptions, and agent information.",
+        "responses": {
+          "200": {
+            "description": "Call analytics data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CallAnalyticsResponse" },
+                "example": {
+                  "calls": [
+                    {
+                      "call_sid": "CA1234567890abcdef1234567890abcdef",
+                      "agent_id": "123e4567-e89b-12d3-a456-426614174000",
+                      "name": "Customer Support Agent",
+                      "account_id": "456e7890-e12b-34d5-a678-426614174111",
+                      "from_number": "+14155551234",
+                      "to_number": "+14155555678",
+                      "duration": 120.5,
+                      "recording_url": "https://api.twilio.com/recordings/RE1234567890",
+                      "transcription": "Customer called about billing inquiry...",
+                      "status": "completed",
+                      "cost": 0.15,
+                      "call_type": "outbound",
+                      "created_at": "2024-01-15T10:30:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": { "description": "Internal server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/call-details/{call_sid}": {
+      "get": {
+        "tags": ["analytics"],
+        "summary": "Get Detailed Call Analytics",
+        "description": "Retrieve detailed analytics for a specific call, including transfer information if applicable.",
+        "parameters": [
+          {
+            "name": "call_sid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Twilio Call SID",
+            "example": "CA1234567890abcdef1234567890abcdef"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed call analytics",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DetailedCallAnalytics" },
+                "example": {
+                  "call_sid": "CA1234567890abcdef1234567890abcdef",
+                  "agent_id": "123e4567-e89b-12d3-a456-426614174000",
+                  "account_id": "456e7890-e12b-34d5-a678-426614174111",
+                  "from_number": "+14155551234",
+                  "to_number": "+14155555678",
+                  "duration": 120.5,
+                  "recording_url": "https://api.twilio.com/recordings/RE1234567890",
+                  "transcription": "Customer called about billing inquiry...",
+                  "status": "completed",
+                  "call_type": "outbound",
+                  "cost": 0.15,
+                  "created_at": "2024-01-15T10:30:00Z",
+                  "transferred": false,
+                  "transfer_info": null
+                }
+              }
+            }
+          },
+          "404": { "description": "Call not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Internal server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/available-numbers": {
+      "get": {
+        "tags": ["phone-numbers"],
+        "summary": "Search Available Phone Numbers",
+        "description": "Search for available phone numbers in a specific country and region. Use this to find numbers before purchasing them.",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "schema": { "type": "string", "default": "US" },
+            "description": "Country code (ISO 3166-1 alpha-2)",
+            "example": "US"
+          },
+          {
+            "name": "number_type",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["local", "mobile", "toll-free", "national"], "default": "local" },
+            "description": "Type of phone number to search for"
+          },
+          {
+            "name": "area_code",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Area code to search within (US/Canada only)",
+            "example": "415"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20, "maximum": 50 },
+            "description": "Number of results to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available phone numbers",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AvailableNumbersResponse" },
+                "example": {
+                  "available_phone_numbers": [
+                    {
+                      "friendly_name": "(415) 555-1234",
+                      "phone_number": "+14155551234",
+                      "lata": "722",
+                      "locality": "San Francisco",
+                      "rate_center": "SNFC CNTRL",
+                      "latitude": "37.7749",
+                      "longitude": "-122.4194",
+                      "region": "CA",
+                      "postal_code": "94102",
+                      "iso_country": "US",
+                      "capabilities": {
+                        "voice": true,
+                        "sms": true,
+                        "mms": true
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid parameters", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Twilio API error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/account-phone-numbers": {
+      "get": {
+        "tags": ["phone-numbers"],
+        "summary": "List Account Phone Numbers",
+        "description": "Retrieve all phone numbers owned by the authenticated account, including cost and subscription information.",
+        "responses": {
+          "200": {
+            "description": "List of account phone numbers",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AccountPhoneNumbersResponse" },
+                "example": {
+                  "phone_numbers": [
+                    {
+                      "sid": "PNa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5",
+                      "phone_number": "+14155551234",
+                      "friendly_name": "Main Business Line",
+                      "capabilities": {
+                        "voice": true,
+                        "sms": true,
+                        "mms": true
+                      },
+                      "status": "inbound",
+                      "cost": {
+                        "amount": "$4.99",
+                        "period": "month",
+                        "is_free": false
+                      },
+                      "renewal_date": "01/15/2024"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": { "description": "Account not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Twilio API error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/purchase-number": {
+      "post": {
+        "tags": ["phone-numbers"],
+        "summary": "Purchase Phone Number",
+        "description": "Purchase a phone number with automatic Stripe billing setup. Eligible plans can use their free number allocation. Supports both paid and complimentary number provisioning.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PurchaseNumberPayload" },
+              "example": {
+                "phone_number": "+14155551234",
+                "friendly_name": "Main Business Line",
+                "payment_method_id": "pm_1234567890abcdef",
+                "is_free_number": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Phone number purchased successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PurchaseNumberResponse" },
+                "example": {
+                  "success": true,
+                  "phone_number": "+14155551234",
+                  "sid": "PNa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5",
+                  "subscription_id": "sub_1234567890",
+                  "is_free_number": false,
+                  "message": "Phone number purchased successfully!"
+                }
+              }
+            }
+          },
+          "400": { "description": "Payment failed or number unavailable", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Account not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Purchase failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/cancel-number": {
+      "post": {
+        "tags": ["phone-numbers"],
+        "summary": "Cancel Phone Number",
+        "description": "Cancel a phone number subscription and release the number. This will stop billing and permanently remove the number from your account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sid": { "type": "string", "description": "Twilio Phone Number SID", "example": "PNa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5" }
+                },
+                "required": ["sid"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Phone number cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CancelNumberResponse" },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "403": { "description": "You don't own this phone number", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Cancellation failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/update-number": {
+      "post": {
+        "tags": ["phone-numbers"],
+        "summary": "Update Phone Number",
+        "description": "Update the friendly name or other properties of a phone number you own.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateNumberPayload" },
+              "example": {
+                "sid": "PNa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5",
+                "friendly_name": "Customer Support Line"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Phone number updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UpdateNumberResponse" },
+                "example": {
+                  "success": true,
+                  "phone_number": "+14155551234",
+                  "friendly_name": "Customer Support Line"
+                }
+              }
+            }
+          },
+          "403": { "description": "You don't own this phone number", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Update failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/requirements": {
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Check Regulatory Requirements",
+        "description": "Check what regulatory compliance requirements are needed for purchasing a specific phone number in a country. Essential for international number purchases.",
+        "parameters": [
+          {
+            "name": "phone_number",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Phone number to check requirements for",
+            "example": "+14155551234"
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "schema": { "type": "string", "default": "US" },
+            "description": "Country code",
+            "example": "US"
+          },
+          {
+            "name": "number_type",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["local", "mobile", "tollfree"], "default": "local" },
+            "description": "Type of phone number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Regulatory requirements information",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulatoryRequirementsResponse" },
+                "example": {
+                  "phone_number": "+14155551234",
+                  "country": "US",
+                  "number_type": "local",
+                  "requirements": [],
+                  "total_regulations": 0,
+                  "public_documentation": {
+                    "country_specific_guidelines": "https://www.twilio.com/en-us/guidelines/us/regulatory",
+                    "general_regulatory_docs": "https://www.twilio.com/docs/phone-numbers/regulatory"
+                  },
+                  "note": "No specific regulatory requirements for US local numbers"
+                }
+              }
+            }
+          },
+          "500": { "description": "Failed to get regulatory requirements", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/regulations": {
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "List Available Regulations",
+        "description": "List all available regulations for a country, optionally filtered by number type and end user type.",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "schema": { "type": "string", "default": "US" },
+            "description": "Country code",
+            "example": "US"
+          },
+          {
+            "name": "number_type",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["local", "mobile", "tollfree"] },
+            "description": "Filter by number type"
+          },
+          {
+            "name": "end_user_type",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["individual", "business"] },
+            "description": "Filter by end user type"
+          },
+          {
+            "name": "include_constraints",
+            "in": "query",
+            "schema": { "type": "boolean", "default": false },
+            "description": "Include detailed constraints and requirements"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of regulations",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulationsListResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to list regulations", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/supporting-documents": {
+      "post": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Create Supporting Document",
+        "description": "Upload a supporting document for regulatory compliance. Required for phone number purchases in many countries.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SupportingDocumentRequest" },
+              "example": {
+                "friendly_name": "Business License",
+                "type": "business_license",
+                "file_data": "base64encodedfiledata...",
+                "mime_type": "application/pdf"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supporting document created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupportingDocumentResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to create supporting document", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "List Supporting Documents",
+        "description": "List all supporting documents uploaded for regulatory compliance.",
+        "responses": {
+          "200": {
+            "description": "List of supporting documents",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupportingDocumentsListResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to list supporting documents", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/end-users": {
+      "post": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Create End User",
+        "description": "Create an end user profile for regulatory compliance. Required for business or individual phone number purchases in regulated countries.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EndUserRequest" },
+              "example": {
+                "friendly_name": "John Doe - Individual",
+                "type": "individual",
+                "attributes": {
+                  "first_name": "John",
+                  "last_name": "Doe",
+                  "email": "john@example.com",
+                  "phone_number": "+14155551234"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "End user created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EndUserResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to create end user", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "List End Users",
+        "description": "List all end users created for regulatory compliance.",
+        "responses": {
+          "200": {
+            "description": "List of end users",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EndUsersListResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to list end users", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/bundles": {
+      "post": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Create Regulatory Bundle",
+        "description": "Create a regulatory bundle that groups end users and supporting documents for phone number compliance. Required for regulated phone number purchases.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegulatoryBundleRequest" },
+              "example": {
+                "friendly_name": "Business Phone Number Bundle",
+                "email": "compliance@company.com",
+                "iso_country": "US",
+                "end_user_type": "business",
+                "number_type": "local"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Regulatory bundle created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulatoryBundleResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to create regulatory bundle", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "List Regulatory Bundles",
+        "description": "List all regulatory bundles with optional filtering by status, country, or number type.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["draft", "pending-review", "in-review", "twilio-rejected", "twilio-approved", "provisionally-approved"] },
+            "description": "Filter by status"
+          },
+          {
+            "name": "iso_country",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by country"
+          },
+          {
+            "name": "number_type",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["local", "mobile", "tollfree"] },
+            "description": "Filter by number type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of regulatory bundles",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulatoryBundlesListResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to list regulatory bundles", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/bundles/{bundle_sid}": {
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Get Regulatory Bundle Details",
+        "description": "Get detailed information about a specific regulatory bundle, including assigned items and evaluation results.",
+        "parameters": [
+          {
+            "name": "bundle_sid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Regulatory bundle SID",
+            "example": "RB1234567890abcdef"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Regulatory bundle details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulatoryBundleDetails" }
+              }
+            }
+          },
+          "500": { "description": "Failed to get regulatory bundle", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "patch": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Update Bundle Status",
+        "description": "Update the status of a regulatory bundle (e.g., submit for review).",
+        "parameters": [
+          {
+            "name": "bundle_sid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Regulatory bundle SID"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["draft", "pending-review", "in-review", "twilio-rejected", "twilio-approved", "provisionally-approved"] },
+            "description": "New status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle status updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulatoryBundleResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to update regulatory bundle", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Delete Regulatory Bundle",
+        "description": "Delete a regulatory bundle. Only bundles in draft status can be deleted.",
+        "parameters": [
+          {
+            "name": "bundle_sid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Regulatory bundle SID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SimpleSuccessResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to delete regulatory bundle", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/bundles/{bundle_sid}/assign": {
+      "post": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Assign Item to Bundle",
+        "description": "Assign an end user or supporting document to a regulatory bundle.",
+        "parameters": [
+          {
+            "name": "bundle_sid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Regulatory bundle SID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BundleAssignmentRequest" },
+              "example": {
+                "bundle_sid": "RB1234567890abcdef",
+                "resource_sid": "EU1234567890abcdef"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item assigned to bundle",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ItemAssignmentResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to assign item to bundle", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/bundles/{bundle_sid}/evaluations": {
+      "post": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Create Bundle Evaluation",
+        "description": "Create an evaluation for a regulatory bundle to check compliance status.",
+        "parameters": [
+          {
+            "name": "bundle_sid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Regulatory bundle SID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EvaluationResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to create bundle evaluation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/regulatory/addresses": {
+      "post": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Create Address",
+        "description": "Create an address for regulatory compliance. Critical for fixing evaluation errors in many countries.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddressRequest" },
+              "example": {
+                "friendly_name": "Corporate Headquarters",
+                "customer_name": "Acme Corporation",
+                "street": "123 Business Ave",
+                "city": "San Francisco",
+                "region": "CA",
+                "postal_code": "94105",
+                "iso_country": "US",
+                "street_secondary": "Suite 100"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Address created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AddressResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to create address", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "List Addresses",
+        "description": "List all addresses created for regulatory compliance.",
+        "parameters": [
+          {
+            "name": "customer_name",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by customer name"
+          },
+          {
+            "name": "friendly_name",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by friendly name"
+          },
+          {
+            "name": "iso_country",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by country"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of addresses",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AddressesListResponse" }
+              }
+            }
+          },
+          "500": { "description": "Failed to list addresses", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/countries/available": {
+      "get": {
+        "tags": ["phone-numbers"],
+        "summary": "Get Available Countries",
+        "description": "Get all countries where Twilio phone numbers are available, including availability type (instant vs request-only) and compliance levels.",
+        "responses": {
+          "200": {
+            "description": "List of available countries",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AvailableCountriesResponse" },
+                "example": {
+                  "countries": [
+                    {
+                      "country_code": "US",
+                      "country": "United States",
+                      "beta": false,
+                      "available_number_types": ["local", "national", "mobile", "toll-free"],
+                      "compliance_level": "low",
+                      "availability_type": "instant",
+                      "subresource_uris": {
+                        "local": "/2010-04-01/Accounts/.../AvailablePhoneNumbers/US/Local.json",
+                        "toll_free": "/2010-04-01/Accounts/.../AvailablePhoneNumbers/US/TollFree.json"
+                      }
+                    }
+                  ],
+                  "total_count": 60,
+                  "instant_available": 45,
+                  "request_only": 15
+                }
+              }
+            }
+          },
+          "500": { "description": "Failed to fetch countries", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/countries/{country_code}/number-types": {
+      "get": {
+        "tags": ["phone-numbers"],
+        "summary": "Get Country Number Types",
+        "description": "Get available number types for a specific country (local, mobile, toll-free, national).",
+        "parameters": [
+          {
+            "name": "country_code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "ISO country code",
+            "example": "US"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available number types for country",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CountryNumberTypesResponse" },
+                "example": {
+                  "country_code": "US",
+                  "available_types": {
+                    "local": {
+                      "available": true,
+                      "name": "Local Numbers",
+                      "description": "Numbers assigned to a specific geographic region"
+                    },
+                    "toll-free": {
+                      "available": true,
+                      "name": "Toll-Free Numbers",
+                      "description": "Free for callers, you pay for incoming calls"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Failed to check number types", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/countries/{country_code}/compliance": {
+      "get": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Get Country Compliance Info",
+        "description": "Get compliance requirements and complexity level for a specific country.",
+        "parameters": [
+          {
+            "name": "country_code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "ISO country code",
+            "example": "US"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Country compliance information",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CountryComplianceResponse" },
+                "example": {
+                  "country_code": "US",
+                  "has_regulations": false,
+                  "regulations": [],
+                  "compliance_level": "low"
+                }
+              }
+            }
+          },
+          "500": { "description": "Failed to get compliance info", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/purchase-number-with-compliance": {
+      "post": {
+        "tags": ["regulatory-compliance"],
+        "summary": "Purchase Number with Compliance",
+        "description": "Purchase a phone number with regulatory compliance bundle. Required for regulated countries.",
+        "parameters": [
+          {
+            "name": "phone_number",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Phone number to purchase",
+            "example": "+14155551234"
+          },
+          {
+            "name": "friendly_name",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Friendly name for the number"
+          },
+          {
+            "name": "bundle_sid",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Approved regulatory bundle SID",
+            "example": "RB1234567890abcdef"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Phone number purchased with compliance",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PurchaseNumberWithComplianceResponse" }
+              }
+            }
+          },
+          "400": { "description": "Bundle not approved or number unavailable", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Failed to purchase number with compliance", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+  }
+}

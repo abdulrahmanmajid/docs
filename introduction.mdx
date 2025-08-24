@@ -1,34 +1,73 @@
 ---
-title: 'Welcome to Kallabot'
-description: 'Learn how to build your next-gen AI call center with Kallabot'
+title: "Introduction"
+description: "Meet the next generation of documentation. AI-native, beautiful out-of-the-box, and built for developers."
+icon: "book-open"
+mode: "custom"
 ---
 
-# Welcome to Kallabot
+export const HeroCard = ({ filename, title, description, href }) => {
+  return (
+    <a className="group cursor-pointer pb-8" href={href}>
+      <img
+        src={`https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/${filename}.png`}
+        className="block dark:hidden pointer-events-none group-hover:scale-105 transition-all duration-100"
+      />
+      <img
+        src={`https://mintlify.s3.us-west-1.amazonaws.com/mintlify/images/hero/${filename}-dark.png`}
+        className="pointer-events-none group-hover:scale-105 transition-all duration-100 hidden dark:block"
+      />
+      <h3 className="mt-5 text-gray-900 dark:text-zinc-50 font-medium">
+        {title}
+      </h3>
+      <span className="mt-1.5">{description}</span>
+    </a>
+  );
+};
 
-Kallabot is an AI-powered communication platform that helps businesses automate their phone calls and workflows. Our platform combines cutting-edge AI technology with enterprise-grade reliability to deliver exceptional customer experiences.
+<div className="relative">
+  <div className="absolute top-0 lg:-top-16 left-0 right-0">
+    <img
+      src="/images/hero/background-light.png"
+      className="block dark:hidden pointer-events-none"
+    />
+    <img
+      src="/images/hero/background-dark.png"
+      className="hidden dark:block pointer-events-none"
+    />
+  </div>
 
-## Key Features
+  <div className="px-4 py-16 lg:py-48 lg:pb-24 max-w-3xl mx-auto">
+    <h1 className="block text-4xl font-medium text-center text-gray-900 dark:text-zinc-50 tracking-tight">
+      Documentation
+    </h1>
 
-<CardGroup>
-  <Card title="Voice Calls" icon="phone">
-    AI-powered inbound and outbound calls with natural language understanding
-  </Card>
-  <Card title="Workflows" icon="flow-chart">
-    Visual workflow builder for creating complex communication flows
-  </Card>
-  <Card title="Analytics" icon="chart-mixed">
-    Real-time analytics and insights into your communication patterns
-  </Card>
-  <Card title="Integrations" icon="plug">
-    Connect with 150+ tools including CRM, helpdesk, and communication platforms
-  </Card>
-</CardGroup>
+    <div className="max-w-xl mx-auto px-4 mt-4 text-lg text-center text-gray-500 dark:text-zinc-500">
+      Meet the next generation of documentation. AI-native, beautiful out-of-the-box, and built for developers.
+    </div>
 
-## Platform Overview
+    <div className="px-6 lg:px-0 mt-12 lg:mt-24 grid sm:grid-cols-2 gap-x-6 gap-y-4">
+      <HeroCard filename="rocket" title="Introduction & Demo" description="Deploy your first AI Voice Agent in minutes with our step-by-step guide" href="/quickstart" />
 
-Kallabot provides a comprehensive solution for:
+      <HeroCard
+        filename="cli"
+        title="API-Reference"
+        description="Integrate Kallabot AI using our APIs in your applications and workflows"
+        href="/installation"
+      />
 
-- **Inbound Support**: 24/7 customer support with AI agents
-- **Outbound Campaigns**: Automated calls for sales, marketing, and support
-- **Custom Workflows**: Visual builder for creating communication flows
-- **Analytics & Reporting**: Detailed insights into your operations
+      <HeroCard
+        filename="editor"
+        title="Workflow Builder"
+        description="Build Custom workflows to automate your business and supercharge your Voice Agent"
+        href="/editor"
+      />
+
+      <HeroCard
+        filename="components"
+        title="Tutorials"
+        description="Build Workflows and Agents with our ready-to-use tutorials"
+        href="/text"
+      />
+    </div>
+  </div>
+</div>
