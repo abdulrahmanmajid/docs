@@ -1047,7 +1047,7 @@
           "cost": {
             "type": "object",
             "properties": {
-              "amount": { "type": "string", "example": "$4.99" },
+              "amount": { "type": "string", "example": "$2.99" },
               "period": { "type": "string", "example": "month" },
               "is_free": { "type": "boolean" }
             }
@@ -2654,7 +2654,7 @@
                       },
                       "status": "inbound",
                       "cost": {
-                        "amount": "$4.99",
+                        "amount": "$2.99",
                         "period": "month",
                         "is_free": false
                       },
