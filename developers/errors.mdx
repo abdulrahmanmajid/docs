@@ -1,0 +1,255 @@
+---
+title: "Errors"
+description: "Every error is an RFC 9457 problem with a stable code. Match on the code, retry on retryable."
+icon: "triangle-alert"
+---
+
+Every error the API returns has the same shape, sent as `Content-Type: application/problem+json`:
+
+```json
+{
+  "type": "https://docs.kallabot.com/errors/not_found",
+  "title": "Agent not found",
+  "status": 404,
+  "code": "not_found",
+  "retryable": false,
+  "detail": "Agent does not exist, or you do not have access to it.",
+  "request_id": "req_3f9c2a71b84e4d0a9c5e1b27",
+  "correlation_id": "cor_8a1e44c0d2f94b7e93a6c0d5"
+}
+```
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `code` | string | **The contract.** A stable, machine-readable code. It never changes meaning. |
+| `status` | integer | The HTTP status, repeated in the body. |
+| `retryable` | boolean | `true` when the same request may succeed if you try again later. |
+| `title` | string | A short summary for people. May be reworded at any time. |
+| `detail` | string | An explanation written for you, the caller. May be reworded at any time. |
+| `type` | URI | A link to this code's entry on this page. |
+| `field_problems` | array | For validation errors: one entry per bad field (see below). |
+| `request_id` | string | The id of this request. Quote it when you contact support. Also in the `X-Request-Id` header. |
+| `correlation_id` | string | Your `X-Correlation-Id` (or `X-Request-Id`) if you sent one, else ours. |
+
+Some errors add fields: `revision_conflict` adds `current_revision`. A problem never contains a provider's raw response, a stack trace or anything about our internals; those stay in our logs under the same `request_id`.
+
+<Warning>
+  Branch on `code`, never on `title` or `detail`. The wording is for humans and changes; the code doesn't.
+</Warning>
+
+## Field problems
+
+Validation errors (`422 invalid_request`) list every bad field, with a [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) to it, so you can show each message next to its field:
+
+```json
+{
+  "type": "https://docs.kallabot.com/errors/invalid_request",
+  "title": "Request is not valid",
+  "status": 422,
+  "code": "invalid_request",
+  "retryable": false,
+  "detail": "One or more fields are not valid.",
+  "field_problems": [
+    { "path": "/to", "code": "value_error", "message": "Value error, must be E.164, e.g. +971501234567" },
+    { "path": "/variables", "code": "value_error", "message": "Value error, at most 50 keys" }
+  ],
+  "request_id": "req_6d0b1f2a9c3e4b58a7f0d1e2"
+}
+```
+
+## Handling errors in code
+
+<CodeGroup>
+```javascript Node
+async function kallabot(path, init = {}) {
+  const res = await fetch(`https://api.kallabot.com${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${process.env.KALLABOT_API_KEY}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+  });
+  if (res.ok) return res.status === 204 ? null : res.json();
+
+  const problem = await res.json();
+  const error = new Error(`${problem.code}: ${problem.detail ?? problem.title}`);
+  Object.assign(error, problem, { retryAfter: Number(res.headers.get("Retry-After")) || null });
+  throw error;
+}
+
+try {
+  await kallabot("/v1/calls", { method: "POST", body: JSON.stringify(body), headers: { "Idempotency-Key": key } });
+} catch (err) {
+  if (err.code === "insufficient_credit") notifyOwner("Out of minutes");
+  else if (err.retryable) retryLater(err.retryAfter);
+  else throw err;
+}
+```
+
+```python Python
+import httpx
+
+class KallabotError(Exception):
+    def __init__(self, problem: dict, retry_after: str | None):
+        super().__init__(f"{problem['code']}: {problem.get('detail') or problem['title']}")
+        self.code = problem["code"]
+        self.retryable = problem.get("retryable", False)
+        self.field_problems = problem.get("field_problems", [])
+        self.request_id = problem.get("request_id")
+        self.retry_after = int(retry_after) if retry_after else None
+
+def check(res: httpx.Response) -> httpx.Response:
+    if res.is_error:
+        raise KallabotError(res.json(), res.headers.get("Retry-After"))
+    return res
+
+try:
+    check(client.post("/v1/calls", headers={"Idempotency-Key": key}, json=body))
+except KallabotError as err:
+    if err.code == "insufficient_credit":
+        notify_owner("Out of minutes")
+    elif err.retryable:
+        retry_later(err.retry_after)
+    else:
+        raise
+```
+</CodeGroup>
+
+## When to retry
+
+<Steps>
+  <Step title="Only retry when `retryable` is true">
+    That covers `429`, `502`, `503`, `500`, and `409 idempotency_in_progress`. Everything else needs a change to the request first.
+  </Step>
+  <Step title="Honour Retry-After">
+    When the response has a `Retry-After` header, wait at least that many seconds.
+  </Step>
+  <Step title="Otherwise back off exponentially, with jitter">
+    For example 1 s, 2 s, 4 s, 8 s, each with up to 50% random jitter, then give up after five tries.
+  </Step>
+  <Step title="Reuse the same Idempotency-Key">
+    A retried create with the same key can never run twice. See [Idempotency](/developers/idempotency).
+  </Step>
+</Steps>
+
+## General error codes
+
+These codes can come from any endpoint. Each heading is the anchor that the `type` link points to.
+
+### unauthenticated
+
+**401** · not retryable. The `Authorization` header is missing, isn't a bearer token, or the key is malformed, unknown, revoked or expired. Every one of these looks the same on purpose. The response carries `WWW-Authenticate: Bearer realm="kallabot"`. **Fix:** check the key, or create a new one.
+
+### insufficient_scope
+
+**403** · not retryable. The key is valid but lacks a scope this operation needs. `detail` names the missing scopes. **Fix:** use a key with the scope; see [scopes](/developers/authentication#scopes).
+
+### wrong_auth_plane
+
+**403** · not retryable. The operation is never available to API keys, whatever their scopes. Creating and revoking API keys is the main example: only a signed-in person can do it. **Fix:** do it in the dashboard.
+
+### personal_key_required
+
+**403** · not retryable. The operation acts as a person, and you sent a workspace key (`kb_live_…`). Whispering, listening in, taking over, call notes, number and minute requests, and transferring to a typed number all need a personal key. **Fix:** use a [personal key](/developers/authentication#two-kinds-of-key) (`kbp_live_…`).
+
+### key_owner_inactive
+
+**403** · not retryable. The personal key's owner has left the workspace or been suspended, so their key no longer works. **Fix:** use another key.
+
+### unsupported_api_version
+
+**400** · not retryable. The `Kallabot-Version` header names a version the API doesn't know. **Fix:** send a valid date, or leave the header out. See [Versioning](/developers/versioning).
+
+### sdk_version_unsupported
+
+**426** · not retryable. This release of a Kallabot SDK is no longer accepted. `detail` says how to upgrade. **Fix:** upgrade the SDK. See [SDKs](/developers/sdks).
+
+### forbidden
+
+**403** · not retryable. A generic refusal not covered by a more specific code. `detail` says why.
+
+### not_found
+
+**404** · not retryable. The resource doesn't exist, or your key isn't allowed to see it. We never say which: a `403` would confirm that the id exists in someone else's workspace. **Fix:** check the id and the key's workspace.
+
+### invalid_request
+
+**422** · not retryable. The body, a query parameter or a header isn't valid. `field_problems` lists each bad field with a JSON Pointer `path`. A cursor from a different query also returns this. **Fix:** correct the fields named.
+
+### unsupported_capability
+
+**422** · not retryable. The configuration asks for something this release doesn't do yet (cross-call `memory` on an agent, for example). It's a different code from `invalid_request` because the honest answer is "not yet", not "you typed it wrong". `field_problems` points at each unsupported path.
+
+### precondition_required
+
+**428** · not retryable. A required header is missing: `Idempotency-Key` on a create or control action, or `If-Match` on a change. `title` names the header. **Fix:** send it. See [Idempotency](/developers/idempotency) and [Concurrency](/developers/concurrency).
+
+### revision_conflict
+
+**412** (or **409** where a revision travels in the body) · not retryable as-is. Someone changed the resource after you read it. The body includes `current_revision` and the response has an `ETag`. **Fix:** read it again, reapply your change, send the new revision.
+
+### conflict
+
+**409** · not retryable as-is. The request clashes with the resource's current state, such as a name that's already taken. `detail` says what. Many endpoints use a more specific code; see [endpoint-specific codes](#endpoint-specific-codes).
+
+### idempotency_key_reused
+
+**409** · not retryable. You reused an `Idempotency-Key` with a different request body. **Fix:** use a new key for a new request.
+
+### idempotency_in_progress
+
+**409** · retryable, `Retry-After: 2`. An identical request with the same key is still running. **Fix:** wait and retry with the same key; you'll get its result.
+
+### insufficient_credit
+
+**402** · not retryable. The workspace (or the person whose minutes a call would use) has no minutes left. **Fix:** add minutes, or move some from the pool. See [Minutes](/guides/minutes).
+
+### payload_too_large
+
+**413** · not retryable. The body is over the limit: 1 MB for almost every endpoint. **Fix:** send less. An agent config is normally a few kilobytes.
+
+### rate_limited
+
+**429** · retryable. You went over a [rate limit](/developers/rate-limits). The response has `Retry-After` plus the `RateLimit-*` headers. **Fix:** wait `Retry-After` seconds.
+
+### capacity_exceeded
+
+**429** · retryable, `Retry-After: 5`. The workspace already has as many calls running at once as it's allowed. `detail` gives the numbers. **Fix:** wait for a call to end, then retry.
+
+### provider_unavailable
+
+**502** · retryable. A carrier or AI provider behind the request didn't respond. **Fix:** retry with backoff.
+
+### capability_disabled
+
+**503** · retryable. This capability is switched off right now, for example during maintenance. `detail` names it. **Fix:** retry later; check with support if it lasts.
+
+### internal_error
+
+**500** · retryable. Something went wrong on our side. It has been logged. **Fix:** retry with backoff, and quote the `request_id` if it keeps happening.
+
+## Endpoint-specific codes
+
+Some endpoints return more precise codes inside the general statuses. The most common:
+
+| Code | Status | When |
+| --- | --- | --- |
+| `ip_not_allowed` | 403 | The key's IP allowlist doesn't include your address. |
+| `no_scopes` | 403 | The key's service account was narrowed until the key has no usable scopes. |
+| `organization_suspended` | 403 | The workspace isn't active. |
+| `scope_exceeds_ceiling` | 403 | A key would hold a scope its service account doesn't. |
+| `invalid_webcall_origin` | 403 | A browser sent a web call offer from an origin other than the session's `allowed_origin`. |
+| `person_required` | 403 | Saved views belong to a person. |
+| `call_content_required`, `content_not_permitted` | 403 | Reading or hearing call content needs `call:content`. |
+| `party_suppressed` | 403 | The number is on the workspace's suppression (do-not-call) list. |
+| `consent_withdrawn` | 403 | The person opted out of calls. |
+| `no_caller_id` | 409 | The workspace has no active number that can call out. |
+| `agent_not_published` | 409 | The agent has no published version. Publish it, or send `test_mode: true`. |
+| `agent_unavailable` | 409 | The agent can't take calls right now (archived or suspended). |
+| `call_not_connected` | 409 | The call isn't live, so it can't be whispered to or controlled. |
+| `transfer_unavailable` | 409 | Transfers aren't available for this call. |
+| `webcall_grant_expired` | 409 | The browser-call grant expired. Start a new web call. |
+| `already_added` | 409 | That website or sheet tab is already in your knowledge library. The body includes the `existing` source; send `"again": true` to add it anyway. |
+
+Validation field codes you may see in `field_problems`: `emergency_number` (calls to emergency numbers are refused), `number_not_owned` and `number_inbound_only` (on `from`), `unknown_scope`, `server_managed_field`.

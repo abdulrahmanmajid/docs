@@ -1,0 +1,60 @@
+---
+title: "API keys"
+description: "Create keys that let your developer or another app use Kallabot, with only the access they need."
+icon: "key-round"
+---
+
+An API key lets software use your Kallabot workspace: your website placing a call when someone fills in a form, your CRM reading call summaries, or a developer building on Kallabot.
+
+Find them in **Settings → For developers → API keys**. There are two kinds:
+
+| Kind | Starts with | For |
+| --- | --- | --- |
+| **Workspace key** | `kb_live_` | Automations, like your website or CRM. It acts as the workspace. Owners, admins and developers can make these. |
+| **Personal key** | `kbp_live_` | Acting as **you**. Everything it does is logged under your name, and it can never do more than your role allows. It stops working if you leave the workspace or are suspended. Anyone can make one under **Your personal keys**. Owners and admins can see their teammates' personal keys. |
+
+A few things always need a personal key, because a person must be behind them: listening in, taking over or whispering on a live call, transferring a call to a number you type, call notes, and asking for numbers or minutes.
+
+## Create a key
+
+<Steps>
+  <Step title="Name it">
+    After what will use it, like "Website lead form". One key per app makes it easy to switch one off later.
+  </Step>
+  <Step title="Choose its access">
+    | Access | Lets it |
+    | --- | --- |
+    | **Full access** | Do everything the API allows: agents, calls, numbers, webhooks. |
+    | **Place calls** | Start phone and browser calls with your agents, and see how they went. |
+    | **Read only** | Read agents, calls, numbers, tools, usage and webhooks. Changes nothing. |
+    | **Call data** | Read calls with their transcripts, numbers and summaries, for a CRM or data warehouse. |
+    | **Webhooks** | Manage webhook endpoints and read their deliveries. |
+
+    Pick the smallest one that does the job.
+  </Step>
+  <Step title="Choose how long it lasts">
+    30 days for a one-off job, 90 days for most things, or a year for long-running integrations. Every key expires within a year.
+  </Step>
+  <Step title="Copy it now">
+    The key is shown **once**. Copy it and give it to your developer through a safe channel, like a password manager. Kallabot can't show it again.
+  </Step>
+</Steps>
+
+<Warning>
+  Treat a key like a password to your business. Don't email it, paste it in chat, or put it in a website's code where visitors can see it.
+</Warning>
+
+## Replace or switch off a key
+
+- **Roll** a key to replace it with no downtime. You get a new key with the same name, access and lifetime, and the old key keeps working for 24 hours while your developer switches over. After that it stops on its own.
+- **Revoke** a key to switch it off for good, straight away. Do this if a key may have leaked, then create a new one.
+
+The list shows when each key was last used, so you can spot keys nobody uses any more.
+
+## Allowed IP addresses
+
+Under **Allowed IP addresses**, list the addresses your keys may be used from: your office or your developer's servers. Up to 20 entries. Requests from anywhere else are refused. Leave the list empty to allow any address.
+
+<Card title="For developers" icon="code" href="/developers/authentication">
+  Key format, every scope, IP allowlists and rotation.
+</Card>

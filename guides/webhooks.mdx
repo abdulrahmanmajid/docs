@@ -1,0 +1,57 @@
+---
+title: "Webhooks"
+description: "Send Kallabot events, like a finished call or a new message, to your own software or a workflow, as they happen."
+icon: "webhook"
+---
+
+A webhook tells another system about something the moment it happens in Kallabot: a call ended, a summary is ready, a WhatsApp message arrived, an agent was published. Your developer, your CRM or a [workflow](/guides/workflows) receives it and acts on it.
+
+Find them in **Settings → For developers → Webhooks**.
+
+## Add an endpoint
+
+<Steps>
+  <Step title="Click Add endpoint">
+    Paste the **Endpoint URL**: the web address that should receive events. It must start with `https://`.
+  </Step>
+  <Step title="Choose events">
+    Pick **Every event**, or **Choose events instead** and tick the ones you want, grouped as Calls, Chats, Tools, Phone numbers, Agents and Knowledge.
+  </Step>
+  <Step title="Choose agents (optional)">
+    Leave **Every agent**, or pick **Chosen agents** to only send events about some of them.
+  </Step>
+  <Step title="Decide on content">
+    Turn on **Include content** only if the receiving system needs phone numbers, message text or summaries. Leave it off otherwise.
+  </Step>
+  <Step title="Save the signing secret">
+    Kallabot shows a **signing secret** once. Give it to your developer: it proves each event really came from Kallabot.
+  </Step>
+</Steps>
+
+## Check it works
+
+Click **Send test**. Kallabot sends a sample event straight away and shows what your server answered. If it says **Your server didn't take the test**, open the delivery to see the answer it got.
+
+## The delivery log
+
+**Deliveries** lists every event sent, with each attempt, and refreshes every 15 seconds. Open one to see exactly what was sent and what came back. Click **Retry** to send it again.
+
+## When an endpoint fails
+
+If your server doesn't answer, Kallabot keeps trying for about a day. If it keeps failing for **5 days**, the endpoint turns itself off and the workspace owners get an email. Nothing is lost: events are kept for 30 days.
+
+To recover:
+
+<Steps>
+  <Step title="Fix the receiving server">Make sure it's back up.</Step>
+  <Step title="Turn the endpoint on">Click **Turn on**. Its failure count resets.</Step>
+  <Step title="Replay what it missed">Click **Replay failed since…** and pick when the trouble started.</Step>
+</Steps>
+
+## Rotate the secret
+
+If the signing secret may have leaked, click **Rotate secret**. The new secret is shown once. The old one keeps working for 24 hours, so your developer has time to switch.
+
+<Card title="For developers" icon="code" href="/developers/webhooks">
+  Signature verification code, retry schedule, the full event catalogue and the webhooks API.
+</Card>

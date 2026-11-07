@@ -1,228 +1,206 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "maple",
-  "name": "Kallabot Documentation",
+  "theme": "aspen",
+  "name": "Kallabot Docs",
+  "description": "Kallabot builds AI agents that answer and make phone calls and reply on WhatsApp, Messenger, Instagram and website chat. Guides for owners, and the Kallabot API for developers.",
   "colors": {
-    "primary": "#64748b",
-    "light": "#64748b",
-    "dark": "#262626"
+    "primary": "#111216",
+    "light": "#eeece7",
+    "dark": "#ff5a1f"
   },
-  "favicon": "/favicon.png",
+  "appearance": {
+    "default": "dark"
+  },
+  "background": {
+    "color": {
+      "light": "#fbfaf8",
+      "dark": "#0a0b0e"
+    }
+  },
+  "fonts": {
+    "heading": {
+      "family": "Host Grotesk",
+      "weight": 500
+    },
+    "body": {
+      "family": "Geist"
+    }
+  },
+  "styling": {
+    "eyebrows": "section",
+    "codeblocks": "dark"
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://kallabot.com"
+  },
   "navigation": {
-    "dropdowns": [
+    "tabs": [
       {
-        "dropdown": "Documentation",
-        "description": "View the documentation",
-        "icon": "book",
+        "tab": "Guides",
+        "icon": "book-open",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Get started",
             "pages": [
-              "introduction",
-              "concepts",
-              "tips-and-tricks"
+              "index",
+              "quickstart"
             ]
           },
           {
-            "group": "Features",
+            "group": "Your agent",
             "pages": [
-              "features/variables",
-              "features/knowledge-base",
-              "features/contacts",
-              "features/inbound-calls",
-              "features/outbound-calls",
-              "features/workflow-builder",
-              "features/tools-integrations",
-              "features/analytics",
-              "features/recordings-transcripts",
-              "features/campaigns"
+              "guides/agents",
+              "guides/knowledge",
+              "guides/tools"
+            ]
+          },
+          {
+            "group": "Phone",
+            "pages": [
+              "guides/phone-numbers",
+              "guides/bring-your-own-carrier",
+              "guides/verification",
+              "guides/caller-trust"
+            ]
+          },
+          {
+            "group": "Chat channels",
+            "pages": [
+              "guides/web-chat",
+              "guides/whatsapp",
+              "guides/messenger-instagram"
+            ]
+          },
+          {
+            "group": "Conversations",
+            "pages": [
+              "guides/inbox",
+              "guides/calls",
+              "guides/live-console",
+              "guides/voicemail",
+              "guides/scheduled-calls",
+              "guides/analytics"
+            ]
+          },
+          {
+            "group": "Your workspace",
+            "pages": [
+              "guides/team",
+              "guides/minutes",
+              "guides/billing",
+              "guides/security"
+            ]
+          },
+          {
+            "group": "Connect other software",
+            "pages": [
+              "guides/workflows",
+              "guides/webhooks",
+              "guides/api-keys"
             ]
           }
         ]
       },
       {
-        "dropdown": "API Reference",
-        "description": "Reference for the API",
-        "icon": "code",
+        "tab": "Developers",
+        "icon": "terminal",
         "groups": [
           {
-            "group": "Introduction",
+            "group": "Get started",
+            "pages": [
+              "developers/introduction",
+              "developers/quickstart",
+              "developers/sdks"
+            ]
+          },
+          {
+            "group": "Essentials",
+            "pages": [
+              "developers/authentication",
+              "developers/errors",
+              "developers/idempotency",
+              "developers/concurrency",
+              "developers/pagination",
+              "developers/rate-limits",
+              "developers/request-ids"
+            ]
+          },
+          {
+            "group": "Build",
+            "pages": [
+              "developers/agents",
+              "developers/knowledge",
+              "developers/calls",
+              "developers/web-calls",
+              "developers/inbox",
+              "developers/web-chat"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "developers/webhooks",
+              "developers/events"
+            ]
+          },
+          {
+            "group": "Policies",
+            "pages": [
+              "developers/versioning"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "icon": "braces",
+        "groups": [
+          {
+            "group": "Overview",
             "pages": [
               "api-reference/introduction"
             ]
           },
           {
-            "group": "API Endpoints",
-            "pages": [
-              {
-                "group": "Agents",
-                "pages": [
-                  "api-reference/agents/create-agent",
-                  "api-reference/agents/update-agent",
-                  "api-reference/agents/list-agents",
-                  "api-reference/agents/get-agent",
-                  "api-reference/agents/delete-agent"
-                ]
-              },
-              {
-                "group": "Calls",
-                "pages": [
-                  "api-reference/calls/create-call",
-                  "api-reference/calls/end-call"
-                ]
-              },
-              {
-                "group": "Campaigns",
-                "pages": [
-                  "api-reference/campaigns/create-campaign",
-                  "api-reference/campaigns/edit-campaign",
-                  "api-reference/campaigns/list-campaigns",
-                  "api-reference/campaigns/get-campaign-status",
-                  "api-reference/campaigns/pause-campaign",
-                  "api-reference/campaigns/resume-campaign",
-                  "api-reference/campaigns/delete-campaign"
-                ]
-              },
-              {
-                "group": "Contacts",
-                "pages": [
-                  "api-reference/contacts/create-contact-list",
-                  "api-reference/contacts/update-contact-list",
-                  "api-reference/contacts/add-contacts-to-list",
-                  "api-reference/contacts/list-contacts",
-                  "api-reference/contacts/list-contact-lists",
-                  "api-reference/contacts/delete-contact-list"
-                ]
-              },
-              {
-                "group": "Tools",
-                "pages": [
-                  "api-reference/tools/create-api-tool",
-                  "api-reference/tools/list-api-tools",
-                  "api-reference/tools/get-tool-by-id",
-                  "api-reference/tools/update-tool",
-                  "api-reference/tools/delete-tool",
-                  "api-reference/tools/test-tool"
-                ]
-              },
-              {
-                "group": "Knowledgebases",
-                "pages": [
-                  "api-reference/knowledgebases/create-knowledgebase",
-                  "api-reference/knowledgebases/list-knowledgebases",
-                  "api-reference/knowledgebases/delete-knowledgebase"
-                ]
-              },
-              {
-                "group": "Analytics",
-                "pages": [
-                  "api-reference/analytics/get-call-analytics",
-                  "api-reference/analytics/get-detailed-call-analytics"
-                ]
-              },
-              {
-                "group": "Phone Numbers",
-                "pages": [
-                  "api-reference/phone-numbers/search-available-phone-numbers",
-                  "api-reference/phone-numbers/list-account-phone-numbers",
-                  "api-reference/phone-numbers/purchase-phone-number",
-                  "api-reference/phone-numbers/update-phone-number",
-                  "api-reference/phone-numbers/cancel-phone-number",
-                  "api-reference/phone-numbers/get-available-countries",
-                  "api-reference/phone-numbers/get-country-number-types"
-                ]
-              },
-              {
-                "group": "Regulatory Compliance",
-                "pages": [
-                  "api-reference/regulatory-compliance/check-regulatory-requirements",
-                  "api-reference/regulatory-compliance/list-available-regulations",
-                  "api-reference/regulatory-compliance/list-supporting-documents",
-                  "api-reference/regulatory-compliance/create-supporting-document",
-                  "api-reference/regulatory-compliance/list-end-users",
-                  "api-reference/regulatory-compliance/create-end-user",
-                  "api-reference/regulatory-compliance/list-regulatory-bundles",
-                  "api-reference/regulatory-compliance/create-regulatory-bundle",
-                  "api-reference/regulatory-compliance/get-regulatory-bundle-details",
-                  "api-reference/regulatory-compliance/delete-regulatory-bundle",
-                  "api-reference/regulatory-compliance/update-bundle-status",
-                  "api-reference/regulatory-compliance/assign-item-to-bundle",
-                  "api-reference/regulatory-compliance/create-bundle-evaluation",
-                  "api-reference/regulatory-compliance/list-addresses",
-                  "api-reference/regulatory-compliance/create-address",
-                  "api-reference/regulatory-compliance/get-country-compliance-info",
-                  "api-reference/regulatory-compliance/purchase-number-with-compliance"
-                ]
-              }
-            ]
+            "group": "Endpoints",
+            "openapi": "api-reference/openapi.json"
           }
         ]
       },
       {
-        "dropdown": "Changelog",
-        "icon": "newspaper",
-        "description": "Updates and changes",
-        "groups": [
-          {
-            "group": "Changelog",
-            "pages": [
-              "change-log/index"
-            ]
-          }
+        "tab": "Changelog",
+        "icon": "history",
+        "pages": [
+          "changelog"
         ]
       }
     ],
     "global": {
       "anchors": [
         {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "users-medical",
-          "color": {
-            "light": "#4ECDC4",
-            "dark": "#4ECDC4"
-          }
+          "anchor": "Open Kallabot",
+          "href": "https://kallabot.com",
+          "icon": "phone"
         },
         {
-          "anchor": "Blog",
-          "href": "https://kallabot.com/blogs",
-          "icon": "newspaper",
-          "color": {
-            "light": "#FFE66D",
-            "dark": "#FFE66D"
-          }
+          "anchor": "Email support",
+          "href": "mailto:contact@kallabot.com",
+          "icon": "mail"
         }
       ]
-    }
-  },
-  "api": {
-    "playground": {
-      "display": "interactive"
-    },
-    "examples": {
-      "languages": [ "curl", "javascript", "python"]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.png",
-    "dark": "/logo/dark.png"
-  },
-  "appearance": {
-    "default": "dark"
-  },
-  "background": {
-    "image": "linear-gradient(to bottom right, rgba(255, 107, 107, 0.1), rgba(78, 205, 196, 0.1))",
-    "decoration": "windows",
-    "color": {
-      "light": "#f8f9fc",
-      "dark": "#0c0c0c"
     }
   },
   "navbar": {
     "links": [
       {
-        "label": "Status",
-        "href": "https://status.kallabot.com/"
+        "label": "Open the app",
+        "href": "https://kallabot.com"
       },
       {
         "label": "Support",
@@ -231,83 +209,101 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://kallabot.com/dashboard"
+      "label": "Get API key",
+      "href": "https://kallabot.com/settings?section=api-keys"
+    }
+  },
+  "api": {
+    "playground": {
+      "display": "interactive"
+    },
+    "examples": {
+      "languages": [
+        "curl",
+        "javascript",
+        "python"
+      ],
+      "defaults": "required"
     }
   },
   "search": {
-    "prompt": "Search the Kallabot docs..."
+    "prompt": "Search Kallabot docs"
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/example",
-      "linkedin": "https://www.linkedin.com/company/example",
-      "github": "https://github.com/example",
-      "slack": "https://example.com/community"
-    },
-    "links": [
-      {
-        "header": "Resources",
-        "items": [
-          {
-            "label": "Customers",
-            "href": "https://example.com/customers"
-          },
-          {
-            "label": "Enterprise",
-            "href": "https://example.com/enterprise"
-          },
-          {
-            "label": "Request Preview",
-            "href": "https://example.com/preview"
-          }
-        ]
-      },
-      {
-        "header": "Company",
-        "items": [
-          {
-            "label": "Careers",
-            "href": "https://example.com/careers"
-          },
-          {
-            "label": "Blog",
-            "href": "https://example.com/blog"
-          },
-          {
-            "label": "Privacy Policy",
-            "href": "https://example.com/legal/privacy"
-          }
-        ]
-      }
-    ]
-  },
-  "integrations": {
-    "ga4": {
-      "measurementId": "G-XXXXXXXXXX"
-    },
-    "koala": {
-      "publicApiKey": "pk_example_key_123"
-    },
-    "telemetry": {
-      "enabled": true
-    },
-    "cookies": {
-      "key": "example_cookie_key",
-      "value": "example_cookie_value"
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Kallabot Docs",
+      "og:image": "https://docs.kallabot.com/images/og.png",
+      "twitter:card": "summary_large_image"
     }
   },
   "contextual": {
     "options": [
       "copy",
       "view",
+      "download-spec",
       "chatgpt",
-      "claude"
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
     ]
   },
-  "errors": {
-    "404": {
-      "redirect": true
+  "redirects": [
+    {
+      "source": "/errors/:slug",
+      "destination": "/developers/errors#:slug"
+    },
+    {
+      "source": "/introduction",
+      "destination": "/"
+    },
+    {
+      "source": "/features/:slug*",
+      "destination": "/"
+    },
+    {
+      "source": "/concepts",
+      "destination": "/"
+    },
+    {
+      "source": "/tips-and-tricks",
+      "destination": "/guides/agents"
+    },
+    {
+      "source": "/change-log",
+      "destination": "/changelog"
     }
+  ],
+  "footer": {
+    "links": [
+      {
+        "header": "Kallabot",
+        "items": [
+          {
+            "label": "Open the app",
+            "href": "https://kallabot.com"
+          },
+          {
+            "label": "Workflows",
+            "href": "https://workflows.kallabot.com"
+          }
+        ]
+      },
+      {
+        "header": "Help",
+        "items": [
+          {
+            "label": "contact@kallabot.com",
+            "href": "mailto:contact@kallabot.com"
+          },
+          {
+            "label": "Changelog",
+            "href": "/changelog"
+          }
+        ]
+      }
+    ]
   }
 }

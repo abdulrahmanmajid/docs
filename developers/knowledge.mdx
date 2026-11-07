@@ -1,0 +1,152 @@
+---
+title: "Knowledge"
+description: "Add text, websites, Google Sheets and files to your knowledge library, and attach them to agents."
+icon: "book-open"
+---
+
+Knowledge sources are the facts your agents answer from. A source is pasted text, a website, a Google Sheet or a file. Sources live in a workspace-wide library; an agent uses the ones listed in its `config.knowledge.ids`.
+
+Reading needs `knowledge:read`; every change needs `knowledge:write`.
+
+## Add a source
+
+`POST /v1/knowledge/sources` takes JSON for text, a website or a sheet, and multipart form data for a file. It needs an `Idempotency-Key`.
+
+<CodeGroup>
+```bash Website
+curl https://api.kallabot.com/v1/knowledge/sources \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"kind": "url", "url": "https://brightsmile.ae/prices", "name": "Price list"}'
+```
+
+```bash Text
+curl https://api.kallabot.com/v1/knowledge/sources \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"kind": "text", "name": "Opening hours", "text": "We are open 9am to 6pm, Saturday to Thursday. Closed on Fridays."}'
+```
+
+```bash Google Sheet
+curl https://api.kallabot.com/v1/knowledge/sources \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"kind": "sheet", "url": "https://docs.google.com/spreadsheets/d/1AbC.../edit#gid=0", "sheet": "Prices"}'
+```
+
+```bash File
+curl https://api.kallabot.com/v1/knowledge/sources \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -F "file=@treatments.pdf" \
+  -F "name=Treatments and aftercare"
+```
+
+```javascript Node
+const res = await fetch("https://api.kallabot.com/v1/knowledge/sources", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.KALLABOT_API_KEY}`,
+    "Content-Type": "application/json",
+    "Idempotency-Key": crypto.randomUUID(),
+  },
+  body: JSON.stringify({ kind: "url", url: "https://brightsmile.ae/prices", name: "Price list" }),
+});
+const { source } = await res.json();
+console.log(source.id, source.status); // … "processing"
+```
+
+```python Python
+import os, uuid, httpx
+
+client = httpx.Client(
+    base_url="https://api.kallabot.com",
+    headers={"Authorization": f"Bearer {os.environ['KALLABOT_API_KEY']}"},
+)
+res = client.post(
+    "/v1/knowledge/sources",
+    headers={"Idempotency-Key": str(uuid.uuid4())},
+    json={"kind": "url", "url": "https://brightsmile.ae/prices", "name": "Price list"},
+)
+source = res.json()["source"]
+print(source["id"], source["status"])  # … processing
+```
+
+```typescript Node SDK
+import { readFile } from "node:fs/promises";
+import Kallabot, { toFile } from "@kallabot/sdk";
+const kallabot = new Kallabot();
+
+await kallabot.knowledge.sources.create({ kind: "url", url: "https://brightsmile.ae/prices", name: "Price list" });
+await kallabot.knowledge.sources.create({
+  file: toFile(await readFile("treatments.pdf"), "treatments.pdf"), // sent as multipart
+  name: "Treatments and aftercare",
+});
+```
+
+```python Python SDK
+from pathlib import Path
+from kallabot import Kallabot
+client = Kallabot()
+
+client.knowledge.sources.create(kind="url", url="https://brightsmile.ae/prices", name="Price list")
+client.knowledge.sources.create(file=Path("treatments.pdf"), name="Treatments and aftercare")  # multipart
+```
+</CodeGroup>
+
+| `kind` | Send | Notes |
+| --- | --- | --- |
+| `text` | JSON: `name`, `text` | Up to 200,000 characters. `truncated: true` in the response means it was cut at the limit. |
+| `url` | JSON: `url`, optional `name` | Up to 20 pages of the same site are read, starting from `url`. |
+| `sheet` | JSON: `url`, optional `sheet`, `name` | A Google Sheet anyone with the link can view. `sheet` picks a tab by name; default is the tab the link opens, else the first. |
+| `file` | Multipart: `file`, optional `name` | PDF, Word (`.docx`), text, Markdown, CSV or HTML, up to 10 MB. |
+
+The source is read before the request returns, so a page or file that can't be read is refused rather than saved. The answer is `201`:
+
+```json
+{
+  "source": {
+    "id": "7e6d5c4b-3a29-4180-9f7e-6d5c4b3a2918",
+    "name": "Price list",
+    "kind": "url",
+    "status": "processing",
+    "source_url": "https://brightsmile.ae/prices",
+    "char_count": 18432,
+    "progress": 0,
+    "chunks": 0,
+    "warnings": [],
+    "error": null
+  },
+  "truncated": false
+}
+```
+
+The source is `processing` until its index is built, then `ready` (or `failed`, with `error`). Subscribe to the `knowledge.source.ready` and `knowledge.source.failed` [webhooks](/developers/events#knowledge) instead of polling.
+
+### Already added
+
+Adding a website or sheet tab that's already in the library answers `409` with code `already_added`, and the body includes the `existing` source so you can use it instead. Send `"again": true` to add a second copy anyway.
+
+## Attach it to an agent
+
+Put the source's `id` in the agent's `config.knowledge.ids`, then publish. See [Agents](/developers/agents#config-reference).
+
+```json
+"knowledge": { "ids": ["7e6d5c4b-3a29-4180-9f7e-6d5c4b3a2918"], "mode": "auto" }
+```
+
+## Manage sources
+
+| Endpoint | What it does |
+| --- | --- |
+| `GET /v1/knowledge/sources` | The library, newest first, without each source's text. Each source lists the agents that use it. Filter with `kind`; page with `limit` and `cursor`. |
+| `GET /v1/knowledge/sources/{source_id}` | One source in full. |
+| `PATCH /v1/knowledge/sources/{source_id}` | Rename it (`name`), or replace the `text` of a pasted-text source. |
+| `DELETE /v1/knowledge/sources/{source_id}` | Delete it. Agents that used it stop straight away; `used_by` lists them. |
+| `POST /v1/knowledge/sources/{source_id}/resync` | Read a website or sheet again now. If the read fails, the old text stays. |
+| `POST /v1/knowledge/sources/{source_id}/reindex` | Retry indexing for a source that failed. Returns `202`. |
+| `PUT /v1/knowledge/{source_id}/refresh` | Re-read a website or sheet on a schedule. |
+| `GET /v1/knowledge/sheet-columns?url=…` | Preview a Google Sheet's columns and row count before adding it. Nothing is saved. |
+| `POST /v1/knowledge/search` | Search the library the way an agent would. |
+
+Catalogs (listings imported from a spreadsheet with column mapping) have their own endpoints under `/v1/knowledge/catalog`. See the **Knowledge** section of the [API reference](/api-reference/introduction).

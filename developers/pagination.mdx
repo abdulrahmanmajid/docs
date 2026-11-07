@@ -1,0 +1,83 @@
+---
+title: "Pagination"
+description: "Lists use signed cursors, newest first, so records never repeat or go missing while new ones arrive."
+icon: "list-ordered"
+---
+
+List endpoints return a page of results and a cursor for the next page:
+
+```json
+{
+  "data": [ { "id": "call_5f0a1c9e2b7d4a8e3c6f1b0d", "...": "..." } ],
+  "has_more": true,
+  "next_cursor": "eyJ0IjoiMjAyNi0xMS0wN1QwOTozMzoxMSswMDowMCIsImkiOiIuLi4ifQ.Q2hlY2tz"
+}
+```
+
+| Parameter | Default | Max | Meaning |
+| --- | --- | --- | --- |
+| `limit` | 25 | 100 | How many items per page. Values over 100 are capped at 100. |
+| `cursor` | none | 512 chars | The `next_cursor` from the previous page. Omit it for the first page. |
+
+Pass `next_cursor` back as `cursor` until `has_more` is `false`. Keep every other query parameter the same.
+
+## Why cursors
+
+Calls and messages arrive all the time. With page numbers, a new call on page 1 pushes an old one onto page 2 and you'd read it twice. Cursors remember the exact position (by creation time and id), so each item appears exactly once.
+
+Cursors are **signed** and remember the filters they were issued for. If you change a filter and keep the old cursor, you get `422 invalid_request` ("This cursor was issued for a different query"). Start again from the first page instead. Treat cursors as opaque: don't parse or build them.
+
+## Walk every page
+
+<CodeGroup>
+```bash curl
+curl "https://api.kallabot.com/v1/calls?limit=100&direction=outbound&since=2026-11-01T00:00:00Z" \
+  -H "Authorization: Bearer $KALLABOT_API_KEY"
+
+# then, with the next_cursor from that response:
+curl "https://api.kallabot.com/v1/calls?limit=100&direction=outbound&since=2026-11-01T00:00:00Z&cursor=eyJ0Ijoi..." \
+  -H "Authorization: Bearer $KALLABOT_API_KEY"
+```
+
+```javascript Node
+async function* listAll(path, params = {}) {
+  let cursor;
+  do {
+    const query = new URLSearchParams({ ...params, limit: "100", ...(cursor ? { cursor } : {}) });
+    const page = await fetch(`https://api.kallabot.com${path}?${query}`, {
+      headers: { Authorization: `Bearer ${process.env.KALLABOT_API_KEY}` },
+    }).then((r) => r.json());
+    yield* page.data;
+    cursor = page.has_more ? page.next_cursor : undefined;
+  } while (cursor);
+}
+
+for await (const call of listAll("/v1/calls", { direction: "outbound" })) {
+  console.log(call.id, call.outcome);
+}
+```
+
+```python Python
+def list_all(client, path: str, **params):
+    cursor = None
+    while True:
+        query = {**params, "limit": 100, **({"cursor": cursor} if cursor else {})}
+        page = client.get(path, params=query).json()
+        yield from page["data"]
+        if not page["has_more"]:
+            return
+        cursor = page["next_cursor"]
+
+for call in list_all(client, "/v1/calls", direction="outbound"):
+    print(call["id"], call["outcome"])
+```
+</CodeGroup>
+
+## Lists that page differently
+
+There aren't any. Every list endpoint pages the same way, with `limit` and `cursor` in and `data`, `next_cursor` and `has_more` out, including webhook deliveries, call events, scheduled calls and short lists like webhook endpoints. A few lists add extra fields next to `data`:
+
+- **`GET /v1/calls`** adds `total` and a `summary` block (today's calls, completed, talk time, needs attention) for the filters you sent.
+- **`GET /v1/inbox/threads`** orders by last activity and adds `counts` (open, needs you, mine, unread).
+
+The [SDKs](/developers/sdks) page through every list for you: `for await (const call of kallabot.calls.list())` in TypeScript, `for call in client.calls.list()` in Python.

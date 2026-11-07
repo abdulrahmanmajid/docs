@@ -1,0 +1,505 @@
+---
+title: "API quickstart"
+sidebarTitle: "Quickstart"
+description: "Create a key, create an agent, place a phone call and receive a signed webhook, in about five minutes."
+icon: "rocket"
+---
+
+By the end of this page an agent you created from code will phone you, and your server will get a signed `call.ended` event when you hang up.
+
+<Note>
+  Every step has **Node SDK** and **Python SDK** tabs. The SDKs aren't published to npm and PyPI yet; until they are, use the curl, fetch or httpx tabs. See [SDKs](/developers/sdks).
+</Note>
+
+**You need:** a Kallabot workspace with at least one phone number that can call out ([get a number](/guides/phone-numbers)), and a mobile phone to answer.
+
+<Steps>
+  <Step title="Create an API key">
+    In the app, open **Settings → For developers → API keys** and click **New key**.
+
+    - **Name:** something you'll recognise, like `Quickstart`.
+    - **Access:** choose **Full access** for this walkthrough. For production, pick the narrowest preset (see [scopes](/developers/authentication#scopes)).
+    - **Lifetime:** 30 days is fine for a test.
+
+    Copy the key now. It starts with `kb_live_` and is shown **once**. Then export it:
+
+    ```bash
+    export KALLABOT_API_KEY="kb_live_..."
+    ```
+
+    <Warning>Keep the key on your server. Never put it in a browser, a mobile app or a public repo.</Warning>
+  </Step>
+
+  <Step title="Create an agent">
+    An agent is a JSON config. The smallest valid one is just a `prompt`; every other field has a sensible default.
+
+    Creates need an `Idempotency-Key` header. Any unique string works; a UUID is ideal. If the network drops and you retry with the same key, you get the same agent back instead of two.
+
+    <CodeGroup>
+    ```bash curl
+    curl https://api.kallabot.com/v1/agents \
+      -H "Authorization: Bearer $KALLABOT_API_KEY" \
+      -H "Content-Type: application/json" \
+      -H "Idempotency-Key: $(uuidgen)" \
+      -d '{
+        "config": {
+          "name": "Front desk",
+          "prompt": "You answer the phone for Bright Smile Dental in Dubai. Help callers book a cleaning or a check-up. We are open 9am to 6pm, Saturday to Thursday.",
+          "greeting": "Hi, thanks for calling Bright Smile Dental. How can I help?",
+          "language": "en",
+          "timezone": "Asia/Dubai",
+          "call": { "direction": "both", "record": true }
+        }
+      }'
+    ```
+
+    ```javascript Node
+    const res = await fetch("https://api.kallabot.com/v1/agents", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.KALLABOT_API_KEY}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": crypto.randomUUID(),
+      },
+      body: JSON.stringify({
+        config: {
+          name: "Front desk",
+          prompt:
+            "You answer the phone for Bright Smile Dental in Dubai. Help callers book a cleaning or a check-up. We are open 9am to 6pm, Saturday to Thursday.",
+          greeting: "Hi, thanks for calling Bright Smile Dental. How can I help?",
+          language: "en",
+          timezone: "Asia/Dubai",
+          call: { direction: "both", record: true },
+        },
+      }),
+    });
+    const agent = await res.json();
+    const etag = res.headers.get("ETag"); // "1"
+    console.log(agent.id, agent.status, etag);
+    ```
+
+    ```python Python
+    import os, uuid, httpx
+
+    client = httpx.Client(
+        base_url="https://api.kallabot.com",
+        headers={"Authorization": f"Bearer {os.environ['KALLABOT_API_KEY']}"},
+    )
+
+    res = client.post(
+        "/v1/agents",
+        headers={"Idempotency-Key": str(uuid.uuid4())},
+        json={
+            "config": {
+                "name": "Front desk",
+                "prompt": "You answer the phone for Bright Smile Dental in Dubai. Help callers book a cleaning or a check-up. We are open 9am to 6pm, Saturday to Thursday.",
+                "greeting": "Hi, thanks for calling Bright Smile Dental. How can I help?",
+                "language": "en",
+                "timezone": "Asia/Dubai",
+                "call": {"direction": "both", "record": True},
+            }
+        },
+    )
+    res.raise_for_status()
+    agent = res.json()
+    etag = res.headers["ETag"]  # '"1"'
+    print(agent["id"], agent["status"], etag)
+    ```
+
+    ```typescript Node SDK
+    import Kallabot from "@kallabot/sdk";
+    const kallabot = new Kallabot(); // reads KALLABOT_API_KEY; adds Idempotency-Key for you
+
+    const agent = await kallabot.agents.create({
+      config: {
+        name: "Front desk",
+        prompt:
+          "You answer the phone for Bright Smile Dental in Dubai. Help callers book a cleaning or a check-up. We are open 9am to 6pm, Saturday to Thursday.",
+        greeting: "Hi, thanks for calling Bright Smile Dental. How can I help?",
+        language: "en",
+        timezone: "Asia/Dubai",
+        call: { direction: "both", record: true },
+      },
+    });
+    console.log(agent.id, agent.status, agent.revision);
+    ```
+
+    ```python Python SDK
+    from kallabot import Kallabot
+
+    kb = Kallabot()  # reads KALLABOT_API_KEY; adds Idempotency-Key for you
+    agent = kb.agents.create(
+        config={
+            "name": "Front desk",
+            "prompt": "You answer the phone for Bright Smile Dental in Dubai. Help callers book a cleaning or a check-up. We are open 9am to 6pm, Saturday to Thursday.",
+            "greeting": "Hi, thanks for calling Bright Smile Dental. How can I help?",
+            "language": "en",
+            "timezone": "Asia/Dubai",
+            "call": {"direction": "both", "record": True},
+        }
+    )
+    print(agent.id, agent.status, agent.revision)
+    ```
+    </CodeGroup>
+
+    The response is `201 Created` with the full agent. The parts you need next:
+
+    ```json Response (abridged)
+    {
+      "id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+      "name": "Front desk",
+      "slug": "front-desk",
+      "status": "draft",
+      "direction": "both",
+      "revision": 1,
+      "published_version": null,
+      "draft_version": 1,
+      "has_unpublished_changes": true,
+      "capabilities": { "can_edit": true, "can_publish": true, "can_archive": true, "can_call": false },
+      "config": { "name": "Front desk", "prompt": "You answer the phone for…", "language": "en" },
+      "findings": []
+    }
+    ```
+
+    `can_call` is `false` because a new agent is a draft. Callers only ever hear a published version.
+  </Step>
+
+  <Step title="Publish it">
+    Publishing makes the draft live. Send the revision you just read in `If-Match`, so you never publish over someone else's edit.
+
+    <CodeGroup>
+    ```bash curl
+    curl -X POST https://api.kallabot.com/v1/agents/$AGENT_ID/publish \
+      -H "Authorization: Bearer $KALLABOT_API_KEY" \
+      -H "If-Match: \"1\"" \
+      -H "Idempotency-Key: $(uuidgen)"
+    ```
+
+    ```javascript Node
+    const published = await fetch(`https://api.kallabot.com/v1/agents/${agent.id}/publish`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.KALLABOT_API_KEY}`,
+        "If-Match": etag,
+        "Idempotency-Key": crypto.randomUUID(),
+      },
+    }).then((r) => r.json());
+    console.log(published.status, published.published_version); // "active" 1
+    ```
+
+    ```python Python
+    published = client.post(
+        f"/v1/agents/{agent['id']}/publish",
+        headers={"If-Match": etag, "Idempotency-Key": str(uuid.uuid4())},
+    ).json()
+    print(published["status"], published["published_version"])  # active 1
+    ```
+
+    ```typescript Node SDK
+    const published = await kallabot.agents.publish(agent.id, { ifMatch: agent.revision });
+    ```
+
+    ```python Python SDK
+    published = kb.agents.publish(agent.id, if_match=agent.revision)
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Get ready for the webhook">
+    Before you place the call, tell Kallabot where to send events. Your URL must be public HTTPS on port 443. For local testing, a tunnel such as `ngrok http 3000` works.
+
+    <CodeGroup>
+    ```bash curl
+    curl https://api.kallabot.com/v1/webhooks \
+      -H "Authorization: Bearer $KALLABOT_API_KEY" \
+      -H "Content-Type: application/json" \
+      -H "Idempotency-Key: $(uuidgen)" \
+      -d '{
+        "url": "https://example.ngrok.app/kallabot",
+        "name": "Quickstart",
+        "events": ["call.ended", "call.analyzed"]
+      }'
+    ```
+
+    ```javascript Node
+    const hook = await fetch("https://api.kallabot.com/v1/webhooks", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.KALLABOT_API_KEY}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": crypto.randomUUID(),
+      },
+      body: JSON.stringify({
+        url: "https://example.ngrok.app/kallabot",
+        name: "Quickstart",
+        events: ["call.ended", "call.analyzed"],
+      }),
+    }).then((r) => r.json());
+    console.log(hook.secret); // whsec_… shown once
+    ```
+
+    ```python Python
+    hook = client.post(
+        "/v1/webhooks",
+        headers={"Idempotency-Key": str(uuid.uuid4())},
+        json={
+            "url": "https://example.ngrok.app/kallabot",
+            "name": "Quickstart",
+            "events": ["call.ended", "call.analyzed"],
+        },
+    ).json()
+    print(hook["secret"])  # whsec_… shown once
+    ```
+
+    ```typescript Node SDK
+    const hook = await kallabot.webhooks.create({
+      url: "https://example.ngrok.app/kallabot",
+      name: "Quickstart",
+      events: ["call.ended", "call.analyzed"],
+    });
+    console.log(hook.secret); // whsec_… shown once
+    ```
+
+    ```python Python SDK
+    hook = kb.webhooks.create(
+        url="https://example.ngrok.app/kallabot",
+        name="Quickstart",
+        events=["call.ended", "call.analyzed"],
+    )
+    print(hook.secret)  # whsec_… shown once
+    ```
+    </CodeGroup>
+
+    Save the `secret` (it starts with `whsec_`). It's only returned when the endpoint is created or its secret is rotated. Then run a receiver that checks the signature:
+
+    <CodeGroup>
+    ```javascript server.mjs
+    import crypto from "node:crypto";
+    import express from "express";
+
+    const SECRET = process.env.KALLABOT_WEBHOOK_SECRET; // whsec_…
+    const app = express();
+
+    function verify(rawBody, headers) {
+      const id = headers["webhook-id"];
+      const timestamp = headers["webhook-timestamp"];
+      const signatures = headers["webhook-signature"];
+      if (!id || !timestamp || !signatures) return false;
+      if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
+
+      const key = Buffer.from(SECRET.slice("whsec_".length), "base64");
+      const expected = crypto
+        .createHmac("sha256", key)
+        .update(`${id}.${timestamp}.${rawBody}`)
+        .digest();
+
+      return signatures.split(" ").some((entry) => {
+        const [version, signature] = entry.split(",");
+        if (version !== "v1" || !signature) return false;
+        const given = Buffer.from(signature, "base64");
+        return given.length === expected.length && crypto.timingSafeEqual(given, expected);
+      });
+    }
+
+    app.post("/kallabot", express.raw({ type: "application/json" }), (req, res) => {
+      if (!verify(req.body.toString("utf8"), req.headers)) return res.sendStatus(400);
+      const event = JSON.parse(req.body);
+      console.log(event.type, event.data);
+      res.sendStatus(204);
+    });
+
+    app.listen(3000);
+    ```
+
+    ```python server.py
+    import base64, hashlib, hmac, json, os, time
+    from fastapi import FastAPI, Request, Response
+
+    SECRET = os.environ["KALLABOT_WEBHOOK_SECRET"]  # whsec_…
+    app = FastAPI()
+
+    def verify(raw_body: bytes, headers) -> bool:
+        msg_id = headers.get("webhook-id")
+        timestamp = headers.get("webhook-timestamp")
+        signatures = headers.get("webhook-signature")
+        if not (msg_id and timestamp and signatures):
+            return False
+        if abs(time.time() - int(timestamp)) > 300:
+            return False
+        key = base64.b64decode(SECRET.removeprefix("whsec_"))
+        signed = f"{msg_id}.{timestamp}.".encode() + raw_body
+        expected = base64.b64encode(hmac.new(key, signed, hashlib.sha256).digest()).decode()
+        return any(
+            hmac.compare_digest(expected, entry.split(",", 1)[1])
+            for entry in signatures.split()
+            if entry.startswith("v1,")
+        )
+
+    @app.post("/kallabot")
+    async def kallabot(request: Request):
+        raw = await request.body()
+        if not verify(raw, request.headers):
+            return Response(status_code=400)
+        event = json.loads(raw)
+        print(event["type"], event["data"])
+        return Response(status_code=204)
+    ```
+
+    ```typescript Node SDK
+    // Next.js route handler: verify checks the signature and timestamp for you
+    import { Webhooks, WebhookVerificationError } from "@kallabot/sdk";
+
+    export async function POST(request: Request) {
+      try {
+        const event = await Webhooks.verify(await request.text(), request.headers, process.env.KALLABOT_WEBHOOK_SECRET!);
+        console.log(event.type, event.data);
+        return new Response(null, { status: 204 });
+      } catch (err) {
+        if (err instanceof WebhookVerificationError) return new Response(null, { status: 400 });
+        throw err;
+      }
+    }
+    ```
+
+    ```python Python SDK
+    import kallabot
+    from fastapi import FastAPI, Request, Response
+
+    app = FastAPI()
+
+    @app.post("/kallabot")
+    async def webhook(request: Request):
+        try:
+            event = kallabot.webhooks.verify(await request.body(), request.headers, secret=SECRET)
+        except kallabot.WebhookVerificationError:
+            return Response(status_code=400)
+        print(event.type, event.data)
+        return Response(status_code=204)
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Place a call">
+    Phone numbers are always in E.164 format: a plus sign, the country code and the number, no spaces. Calls are created with `202 Accepted`: the call exists, and dialling starts right after.
+
+    <CodeGroup>
+    ```bash curl
+    curl https://api.kallabot.com/v1/calls \
+      -H "Authorization: Bearer $KALLABOT_API_KEY" \
+      -H "Content-Type: application/json" \
+      -H "Idempotency-Key: $(uuidgen)" \
+      -d '{
+        "agent_id": "'"$AGENT_ID"'",
+        "to": "+971501234567",
+        "variables": { "first_name": "Sara" },
+        "client_ref": "quickstart-1"
+      }'
+    ```
+
+    ```javascript Node
+    const call = await fetch("https://api.kallabot.com/v1/calls", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.KALLABOT_API_KEY}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": crypto.randomUUID(),
+      },
+      body: JSON.stringify({
+        agent_id: agent.id,
+        to: "+971501234567",
+        variables: { first_name: "Sara" },
+        client_ref: "quickstart-1",
+      }),
+    }).then((r) => r.json());
+    console.log(call.id, call.lifecycle); // call_… "queued"
+    ```
+
+    ```python Python
+    call = client.post(
+        "/v1/calls",
+        headers={"Idempotency-Key": str(uuid.uuid4())},
+        json={
+            "agent_id": agent["id"],
+            "to": "+971501234567",
+            "variables": {"first_name": "Sara"},
+            "client_ref": "quickstart-1",
+        },
+    ).json()
+    print(call["id"], call["lifecycle"])  # call_… queued
+    ```
+
+    ```typescript Node SDK
+    const call = await kallabot.calls.create({
+      agent_id: agent.id,
+      to: "+971501234567",
+      variables: { first_name: "Sara" },
+      client_ref: "quickstart-1",
+    });
+    ```
+
+    ```python Python SDK
+    call = kb.calls.create(
+        agent_id=agent.id,
+        to="+971501234567",
+        variables={"first_name": "Sara"},
+        client_ref="quickstart-1",
+    )
+    ```
+    </CodeGroup>
+
+    Your phone rings from your workspace's number. Talk to the agent, then hang up.
+  </Step>
+
+  <Step title="Receive the webhook">
+    Within a second of hanging up, your server prints `call.ended`. A little later, once the summary is written, it prints `call.analyzed`.
+
+    ```json call.ended
+    {
+      "id": "evt_4b1f0c9e2d8a4e57b6c3a1f09e7d2c48",
+      "type": "call.ended",
+      "api_version": "2026-11-01",
+      "timestamp": "2026-11-07T09:33:11.402Z",
+      "data": {
+        "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d",
+        "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+        "channel": "phone",
+        "direction": "outbound",
+        "lifecycle": "completed",
+        "outcome": "answered",
+        "revision": 7,
+        "test_mode": false,
+        "party_masked": "+97150•••4567",
+        "terminal_reason": "remote_hangup",
+        "ring_ms": 5200,
+        "talk_ms": 84000,
+        "total_ms": 91400,
+        "ended_at": "2026-11-07T09:33:11Z"
+      }
+    }
+    ```
+
+    Then fetch the full call, with the transcript, using the `call_id`:
+
+    ```bash
+    curl https://api.kallabot.com/v1/calls/call_5f0a1c9e2b7d4a8e3c6f1b0d/transcript \
+      -H "Authorization: Bearer $KALLABOT_API_KEY"
+    ```
+  </Step>
+</Steps>
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Configure agents" icon="sliders-horizontal" href="/developers/agents">
+    Voice, languages, turn-taking, tools, knowledge and transfers.
+  </Card>
+  <Card title="Calls in depth" icon="phone" href="/developers/calls">
+    Lifecycle, cancel, schedule, transcripts, recordings and live control.
+  </Card>
+  <Card title="Webhook events" icon="webhook" href="/developers/events">
+    Every event and its payload.
+  </Card>
+  <Card title="Handle errors" icon="triangle-alert" href="/developers/errors">
+    Every error code and when to retry.
+  </Card>
+</CardGroup>

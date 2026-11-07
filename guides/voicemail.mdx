@@ -1,0 +1,39 @@
+---
+title: "Voicemail detection"
+description: "When your agent's call goes to voicemail, it leaves your message and hangs up, instead of talking to a machine."
+icon: "voicemail"
+---
+
+When your agent calls someone and gets their voicemail, you don't want it chatting to a recording. With voicemail detection on, the agent waits a moment to tell whether a person or a machine answered:
+
+- **A person answers:** the agent starts the conversation as usual.
+- **Voicemail answers:** the agent waits for the beep, leaves your message once, and hangs up.
+
+This is for calls your agent **makes**. Calls to your numbers are answered by the agent, so there's no voicemail involved.
+
+## Turn it on
+
+<Steps>
+  <Step title="Open the agent's Voice step">
+    Open your agent and go to **Voice**, then its call settings.
+  </Step>
+  <Step title="Switch on Leave a voicemail message">
+    Then write the message, in the words you'd want to hear. Keep it short:
+
+    ```text
+    Hi, it's Bright Smile Dental calling about your appointment on Saturday.
+    Please call us back on 04 123 4567. Thank you!
+    ```
+  </Step>
+  <Step title="Publish">
+    Click **Publish changes**. From now on, every call this agent makes checks for voicemail first.
+  </Step>
+</Steps>
+
+<Note>
+  The agent needs a message before you can turn this on. Waiting to hear who answered adds a short pause at the start of outbound calls, which is normal.
+</Note>
+
+## See which calls hit voicemail
+
+Calls that reached voicemail are marked on their call page, and you can filter for them in **Calls**. If you use [webhooks](/guides/webhooks), each one also sends a `call.voicemail.detected` event, handy for trying again later or sending a WhatsApp instead.

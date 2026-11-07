@@ -1,0 +1,60 @@
+---
+title: "Versioning and changes"
+sidebarTitle: "Versioning"
+description: "What we promise not to break, how webhook payloads are versioned, and how you hear about changes."
+icon: "git-branch"
+---
+
+## The API version
+
+Every path starts with `/v1`. Within `v1` we only make **additive** changes, which never break a client that follows the rules below. A change that would break clients ships as a new major version, with time for you to move.
+
+### Changes we make without notice
+
+Write your client so these never break it:
+
+- New endpoints, and new optional request fields or query parameters.
+- New fields in responses and webhook payloads.
+- New event types in the catalogue (a `*` or `call.*` subscription receives them).
+- New values for status-like fields such as `lifecycle`, `outcome`, `disposition` or `terminal_reason`. Handle values you don't know as "other".
+- New endpoint-specific error codes, inside the existing HTTP statuses.
+- Reworded `title` and `detail` text in errors.
+- Higher limits.
+
+### Changes we announce first
+
+- Removing or renaming a field, endpoint or event.
+- Changing what an error `code` means, or a field's type.
+- Making an optional request field required.
+- Lower rate limits.
+
+These go in the [changelog](/changelog) with a date before they take effect.
+
+## Dated versions
+
+Each release of the API's behaviour has a date. Pin the one you built against with the `Kallabot-Version` header:
+
+```bash
+curl https://api.kallabot.com/v1/agents \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" \
+  -H "Kallabot-Version: 2026-11-07"
+```
+
+- The header is optional. Without it, you get the current version.
+- Every response echoes the version that served it in `Kallabot-Version`, so you can log it.
+- A value the API doesn't know gets `400 unsupported_api_version`.
+- The current version is `2026-11-07`. New versions are listed in the [changelog](/changelog).
+
+With the SDKs, set it once as a default header: `new Kallabot({ defaultHeaders: { "Kallabot-Version": "2026-11-07" } })` or `Kallabot(default_headers={"Kallabot-Version": "2026-11-07"})`.
+
+## Webhook payload versions
+
+Every event carries an `api_version` (currently `2026-11-01`), and every endpoint records the version it was created with. When a payload changes shape in a way that could break a receiver, the catalogue version is bumped and the change is listed in the changelog.
+
+## The OpenAPI spec
+
+The [API reference](/api-reference/introduction) is generated from the running backend on every release, so it can't drift from what the API actually does. If the docs and the API ever disagree, the API is right and the docs are a bug: please tell us at [contact@kallabot.com](mailto:contact@kallabot.com).
+
+## Deprecations
+
+A deprecated endpoint or field is marked `deprecated` in the spec and the reference, and keeps working until the date given in the changelog. The old webhook event names (`call.completed` and the `transfer.*` events) are an example: they're still accepted on subscription and mapped to their new names.

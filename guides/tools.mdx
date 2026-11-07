@@ -1,0 +1,74 @@
+---
+title: "Tools and integrations"
+description: "Let your agent book appointments, save leads, send messages, transfer calls and talk to your own systems."
+icon: "wrench"
+---
+
+Tools are the things your agent can **do** during a conversation, not just say. Add them in the agent's **Tools** step. Each tool shows what it needs and has a test button, so you can check it works before a customer tries it.
+
+## Built-in tools
+
+<CardGroup cols={2}>
+  <Card title="Google Calendar" icon="calendar-check">
+    Checks your free times and books appointments straight into your calendar.
+  </Card>
+  <Card title="Google Sheets" icon="sheet">
+    Saves a row (a new lead, an order) or looks a row up (stock, prices).
+  </Card>
+  <Card title="HubSpot" icon="contact">
+    Adds callers as contacts in your HubSpot CRM.
+  </Card>
+  <Card title="Send a WhatsApp message" icon="message-circle">
+    During a phone call, sends the caller a WhatsApp, like a location pin or a booking confirmation.
+  </Card>
+  <Card title="Send an email" icon="mail">
+    Sends a short email, for example a summary to your team.
+  </Card>
+  <Card title="Transfer to a person" icon="phone-forwarded">
+    Hands a phone call to someone on your team. See the note below.
+  </Card>
+  <Card title="Knowledge lookup" icon="book-open">
+    Searches your [knowledge](/guides/knowledge) when the agent needs a fact.
+  </Card>
+  <Card title="Web search" icon="search">
+    Looks up something current on the web, like traffic or opening hours elsewhere. You can limit it to certain websites.
+  </Card>
+</CardGroup>
+
+### Connect Google
+
+Calendar and Sheets need a Google account. In the tool, click **Connect Google** and sign in. If your IT team prefers, you can connect a Google service account instead by uploading its key file.
+
+For **Calendar**, choose the calendar, how long one appointment is, your bookable hours for each day, and how much notice you need (for example, no bookings in the next two hours).
+
+For **Sheets**, pick the spreadsheet and tab, tell Kallabot what each column holds, and write when the agent should use it, such as "when someone wants a viewing". Send a test row to check.
+
+### Transfers
+
+<Note>
+  Transferring a phone call needs Kallabot's call bridge on your line. It's rolling out workspace by workspace. If the tool says it isn't available on calls yet, your agent tells the caller it can't put them through and offers a call back instead.
+</Note>
+
+Each transfer destination has a name ("Reception"), a number, and a sentence about when to use it. The agent only transfers to numbers on your list, never to one a caller gives it.
+
+## Your own systems
+
+<Tabs>
+  <Tab title="Custom API">
+    Connect any system with a web address (an "API"): your booking software, an order lookup, a CRM. Describe what the tool does in one sentence, fill in the address and the details the agent should collect (like a phone number or an order id), and test it.
+
+    You can add a sentence for the agent to say while the tool runs, such as "One moment, let me check that", so callers never sit in silence. Passwords and keys you enter are stored encrypted and never shown again.
+
+    Usually a developer sets this up once. They can find the details in the [API reference](/api-reference/introduction) under **Tools**.
+  </Tab>
+  <Tab title="MCP server">
+    If your software offers an MCP server (a standard way for AI to use a product), paste its address. Kallabot lists the actions it offers and you choose which ones your agent may use. Actions the server marks as destructive (like deleting records) stay off unless you switch them on.
+  </Tab>
+  <Tab title="Thousands more apps">
+    For Slack, other CRMs, spreadsheets and email tools, use [Workflows](/guides/workflows). Point a [webhook](/guides/webhooks) at a workflow, and every finished call or new message can flow on to hundreds of other apps.
+  </Tab>
+</Tabs>
+
+## See what your tools did
+
+Every time an agent uses a tool, it's recorded: what it sent, what came back and how long it took. Open a call in [Calls](/guides/calls) to see its tool runs.

@@ -1,0 +1,305 @@
+---
+title: "Event catalogue"
+sidebarTitle: "Events"
+description: "Every webhook event Kallabot sends, what triggers it, and what its payload looks like."
+icon: "list"
+---
+
+Every delivery has the same envelope; only `type` and `data` change:
+
+```json
+{
+  "id": "evt_4b1f0c9e2d8a4e57b6c3a1f09e7d2c48",
+  "type": "call.ended",
+  "api_version": "2026-11-01",
+  "timestamp": "2026-11-07T09:33:11.402Z",
+  "data": { }
+}
+```
+
+Subscribe to exact types, to a wildcard such as `call.*`, or to `*`. Payloads may gain new fields over time, so ignore fields you don't recognise. The live list, with a JSON Schema for each event, is at `GET /v1/webhooks/event-types`, and every event has its own page with its payload schema in the [API reference](/api-reference/introduction).
+
+**Content fields** are left out unless the endpoint has `include_content: true`. They're marked below.
+
+## Calls
+
+| Event | When |
+| --- | --- |
+| `call.created` | A call was placed, or someone called one of your numbers. |
+| `call.ringing` | The other phone is ringing. |
+| `call.answered` | The call was answered and the agent is talking. |
+| `call.ended` | The call finished, for any reason. Carries the durations. |
+| `call.transcript.ready` | The transcript is saved. |
+| `call.recording.ready` | The recording is saved. |
+| `call.analyzed` | The summary, outcome and mood are ready. |
+| `call.voicemail.detected` | An outbound call reached voicemail. |
+| `call.transfer.requested` | The agent or a teammate asked to transfer the call. |
+| `call.transfer.completed` | The transfer connected. |
+| `call.transfer.failed` | The transfer didn't connect. |
+| `call.operator.joined` | A teammate started listening in or took over. |
+| `call.operator.left` | A teammate stopped listening or handed the call back. |
+
+<AccordionGroup>
+  <Accordion title="call.created, call.ringing, call.answered, call.ended">
+    These four share one shape. `revision` goes up with every change, so you can ignore an older event that arrives late. Content: `from_number`, `to_number`.
+
+    ```json call.ended
+    {
+      "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d",
+      "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+      "channel": "phone",
+      "direction": "outbound",
+      "lifecycle": "completed",
+      "outcome": "answered",
+      "revision": 7,
+      "test_mode": false,
+      "party_masked": "+97150•••8362",
+      "from_number": "+97142345678",
+      "to_number": "+971501238362",
+      "terminal_reason": "remote_hangup",
+      "ring_ms": 5200,
+      "talk_ms": 184000,
+      "total_ms": 191400,
+      "ended_at": "2026-11-07T09:33:11Z"
+    }
+    ```
+
+    `call.ringing` adds `ringing_at`; `call.answered` adds `answered_at`; `call.ended` adds `terminal_reason`, `ring_ms`, `talk_ms`, `total_ms` and `ended_at`. `channel` is `phone` or `web`.
+  </Accordion>
+
+  <Accordion title="call.transcript.ready, call.recording.ready">
+    ```json call.transcript.ready
+    { "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d", "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30", "turn_count": 18 }
+    ```
+
+    ```json call.recording.ready
+    { "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d", "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30", "duration_ms": 184000 }
+    ```
+
+    Then fetch them with [`GET /v1/calls/{call_id}/transcript`](/developers/calls#transcript-and-recording) and `…/recording`.
+  </Accordion>
+
+  <Accordion title="call.analyzed">
+    Content: `summary`.
+
+    ```json
+    {
+      "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d",
+      "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+      "disposition": "booked",
+      "sentiment_label": "positive",
+      "summary": "Booked a viewing for Saturday at 11.",
+      "callback_at": null,
+      "needs_review": false
+    }
+    ```
+
+    `disposition` is one of the agent's `analysis.dispositionLabels`. `callback_at` is set when the caller asked to be called back; a proposed [scheduled call](/developers/calls#schedule-a-call-for-later) is created for it.
+  </Accordion>
+
+  <Accordion title="call.transfer.requested, call.transfer.completed, call.transfer.failed">
+    ```json call.transfer.completed
+    {
+      "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d",
+      "transfer_attempt_id": "5d1f6a2e-8c3b-4f7a-b9e0-1a2b3c4d5e6f",
+      "destination_id": "sales",
+      "destination_label": "Sales desk",
+      "mode": "cold",
+      "transferred_at": "2026-11-04T09:31:12.481000+00:00",
+      "billed_by": "kallabot"
+    }
+    ```
+
+    `call.transfer.failed` carries `error` (for example `no_answer`) instead of `transferred_at`. `billed_by` is `kallabot` or `customer_carrier` (your own carrier carried the transferred part).
+  </Accordion>
+
+  <Accordion title="call.voicemail.detected">
+    ```json
+    { "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d", "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30" }
+    ```
+  </Accordion>
+
+  <Accordion title="call.operator.joined, call.operator.left">
+    ```json
+    {
+      "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d",
+      "operator_session_id": "0b9c8d7e-6f5a-4b3c-2d1e-0f9a8b7c6d5e",
+      "mode": "listen",
+      "user_id": "user_2xYz"
+    }
+    ```
+
+    `mode` is `listen`, `takeover` or `phone_takeover`.
+  </Accordion>
+</AccordionGroup>
+
+## Tools
+
+| Event | When |
+| --- | --- |
+| `tool.called` | An agent used a tool on a call or in a chat. |
+
+```json tool.called
+{
+  "channel": "phone",
+  "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d",
+  "conversation_id": null,
+  "kind": "api",
+  "tool_id": "3c2b1a0f-9e8d-4c7b-a6f5-e4d3c2b1a0f9",
+  "remote_name": "book_viewing",
+  "ok": true,
+  "error_code": null,
+  "duration_ms": 412
+}
+```
+
+`kind` is `api`, `mcp_server`, `google_sheets` or a built-in. On a chat, `conversation_id` is set instead of `call_id`.
+
+## Conversations
+
+Chats on WhatsApp, Messenger, Instagram and web chat. `channel` is `whatsapp`, `messenger`, `instagram` or `web_chat`. `conversation_id` is the thread and stays the same across visits; `session_id` is one sitting.
+
+| Event | When |
+| --- | --- |
+| `conversation.started` | A new chat started. |
+| `conversation.message.received` | A customer sent a message. Content: `text`. |
+| `conversation.message.sent` | The agent or a teammate replied. Content: `text`. |
+| `conversation.handed_off` | A chat was handed to a person. |
+| `conversation.closed` | A chat was closed. |
+| `conversation.analyzed` | The chat's summary and outcome are ready. Content: `summary`. |
+
+<AccordionGroup>
+  <Accordion title="conversation.message.received, conversation.message.sent">
+    ```json
+    {
+      "conversation_id": "9a8b7c6d-5e4f-4a3b-2c1d-0e9f8a7b6c5d",
+      "channel": "whatsapp",
+      "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+      "message_id": "wamid.HBgM",
+      "kind": "text",
+      "author": "contact",
+      "text": "Is the 2-bed in Marina still available?"
+    }
+    ```
+
+    `author` is `contact`, `agent`, `human` (a teammate), `business_app` (sent from the WhatsApp Business app) or `system`.
+  </Accordion>
+  <Accordion title="conversation.started, conversation.closed">
+    ```json
+    { "conversation_id": "9a8b7c6d-5e4f-4a3b-2c1d-0e9f8a7b6c5d", "channel": "messenger", "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30" }
+    ```
+  </Accordion>
+  <Accordion title="conversation.handed_off">
+    ```json
+    {
+      "conversation_id": "9a8b7c6d-5e4f-4a3b-2c1d-0e9f8a7b6c5d",
+      "channel": "instagram",
+      "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+      "handover_by": "customer",
+      "reason": "asked for a person"
+    }
+    ```
+  </Accordion>
+  <Accordion title="conversation.analyzed">
+    ```json
+    {
+      "conversation_id": "9a8b7c6d-5e4f-4a3b-2c1d-0e9f8a7b6c5d",
+      "channel": "web_chat",
+      "session_id": "3e2d1c0b-9a8f-4e7d-6c5b-4a3f2e1d0c9b",
+      "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+      "disposition": "lead_captured",
+      "sentiment_label": "positive",
+      "summary": "Asked about prices; left an email."
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Numbers
+
+| Event | When |
+| --- | --- |
+| `number.purchased` | A phone number was added to the workspace. |
+| `number.released` | A phone number was released. |
+| `number.updated` | A number changed: finished setting up or failed, its verification, address or label changed, or a failed purchase was cleared. |
+| `number.compliance.updated` | A number verification changed: its status, a check, an update or replacement, its name, or it was deleted. |
+| `number.order.updated` | A number waiting on verification moved on: `waiting`, `buying`, `bought`, `taken`, `failed` or `canceled`. |
+| `number.port_in.updated` | A number you're moving from another carrier moved on. |
+| `number.trust.updated` | A number's signed calls, caller name or spam check registration changed status. |
+
+<AccordionGroup>
+  <Accordion title="number.purchased, number.released, number.updated">
+    ```json
+    { "phone_number_id": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f", "e164": "+97142345678", "status": "active" }
+    ```
+  </Accordion>
+  <Accordion title="number.compliance.updated">
+    ```json
+    { "bundle_id": "5b7c9d1e-2f3a-4b5c-8d6e-7f8091a2b3c4", "status": "twilio-approved", "stage": "approved" }
+    ```
+
+    `stage` is the simple view: `draft`, `waiting`, `approved`, `fix`, `rules_changed`, `update`, `updating` or `hidden`.
+  </Accordion>
+  <Accordion title="number.order.updated">
+    ```json
+    { "order_id": "0d1e2f3a-4b5c-4d6e-8f70-81a2b3c4d5e6", "status": "bought", "phone_number_id": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f" }
+    ```
+  </Accordion>
+  <Accordion title="number.port_in.updated">
+    ```json
+    { "port_in_id": "f0e1d2c3-b4a5-4968-8776-655443322110", "status": "in_progress" }
+    ```
+  </Accordion>
+  <Accordion title="number.trust.updated">
+    ```json
+    { "phone_number_id": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f", "e164": "+14155550100", "item": "caller_name", "status": "twilio-approved" }
+    ```
+
+    `item` is `signed_calls`, `caller_name` or `spam_check`.
+  </Accordion>
+</AccordionGroup>
+
+## Agents
+
+| Event | When |
+| --- | --- |
+| `agent.created` | An agent was created. |
+| `agent.updated` | An agent's settings changed. |
+| `agent.published` | A new version went live. |
+| `agent.archived` | An agent was archived. |
+
+```json agent.published
+{ "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30", "version": 3, "revision": 5 }
+```
+
+`agent.updated` may include `changed_paths`, JSON Pointers to what changed.
+
+## Knowledge
+
+| Event | When |
+| --- | --- |
+| `knowledge.source.ready` | A knowledge source finished indexing. |
+| `knowledge.source.failed` | A source couldn't be read. `error` says why. |
+| `knowledge.source.refreshed` | A source was read again. |
+
+```json knowledge.source.failed
+{ "source_id": "7e6d5c4b-3a29-4180-9f7e-6d5c4b3a2918", "name": "Price list", "status": "failed", "error": "The page returned 404." }
+```
+
+## Webhooks
+
+| Event | When |
+| --- | --- |
+| `webhook.test` | You sent a test from Settings or `POST /v1/webhooks/{endpoint_id}/test`. |
+
+```json webhook.test
+{ "message": "This is a test event from Kallabot." }
+```
+
+## Old names
+
+These older names are still accepted when subscribing and map to the new ones: `call.completed` → `call.ended`, `transfer.requested` → `call.transfer.requested`, `transfer.completed` → `call.transfer.completed`, `transfer.failed` → `call.transfer.failed`.
+
+<Note>
+  The catalogue also reserves `number.suspended`, `number.payment_failed` and `billing.balance.low`. They aren't sent yet, and `GET /v1/webhooks/event-types` marks them `available: false`. A `*` or `number.*` subscription will receive them once they ship.
+</Note>

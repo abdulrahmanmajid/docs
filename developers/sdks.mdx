@@ -1,0 +1,169 @@
+---
+title: "SDKs"
+description: "Official TypeScript and Python libraries: typed, safe to retry, auto-paging, with webhook verification and a browser call client."
+icon: "package"
+---
+
+<Note>
+  The SDKs aren't published yet. The install commands below will work once `@kallabot/sdk` is on npm and `kallabot` is on PyPI. Until then, call the API directly; every example in these docs also has a curl tab.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="TypeScript / JavaScript" icon="braces">
+    `npm i @kallabot/sdk`
+
+    Node 18+, Deno, Bun, Cloudflare Workers, Vercel Edge, and browsers (for voice calls). No runtime dependencies.
+  </Card>
+  <Card title="Python" icon="code">
+    `pip install kallabot`
+
+    Python 3.9+. Sync `Kallabot` and async `AsyncKallabot` clients with the same methods.
+  </Card>
+</CardGroup>
+
+Both are generated from the same OpenAPI spec as the [API reference](/api-reference/introduction), so every operation, field and scope is there, with editor completion.
+
+## Quickstart
+
+<CodeGroup>
+```typescript Node SDK
+import Kallabot from "@kallabot/sdk";
+
+const kallabot = new Kallabot(); // reads KALLABOT_API_KEY
+const call = await kallabot.calls.create({
+  agent_id: "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+  to: "+971501234567",
+  variables: { first_name: "Sara" },
+});
+console.log(call.id, call.lifecycle); // "call_5f0a…", "queued"
+```
+
+```python Python SDK
+from kallabot import Kallabot
+
+client = Kallabot()  # reads KALLABOT_API_KEY
+call = client.calls.create(
+    agent_id="8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+    to="+971501234567",
+    variables={"first_name": "Sara"},
+)
+print(call.id, call.lifecycle)  # call_5f0a…  queued
+```
+</CodeGroup>
+
+Methods are named after their resource: `calls.create()`, `agents.list()`, `agents.publish()`, `agents.versions.list()`, `knowledge.sources.create()`, `webhooks.create()`, `webCalls.create()` (`web_calls.create()` in Python). TypeScript reads with `get()`, Python with `retrieve()`. Both kinds of [API key](/developers/authentication#two-kinds-of-key) work the same way.
+
+## What the SDKs do for you
+
+<AccordionGroup>
+  <Accordion title="Automatic idempotency keys" icon="repeat">
+    Every create and action gets a fresh `Idempotency-Key`, **reused on every retry**, so a retried `calls.create` can never ring someone twice. Pass your own to dedupe across your own retries:
+
+    ```typescript
+    await kallabot.calls.create({ agent_id, to }, { idempotencyKey: `reminder-${appointment.id}` });
+    ```
+    ```python
+    client.calls.create(agent_id=agent_id, to=to, idempotency_key=f"reminder-{appointment.id}")
+    ```
+  </Accordion>
+
+  <Accordion title="Retries with backoff" icon="refresh-cw">
+    Network errors, timeouts, `408`, retryable `5xx` (only where a repeat can't run twice), `429` and `409 idempotency_in_progress` are retried with exponential backoff and jitter. A `429` waits exactly `Retry-After`. Set `maxRetries` / `max_retries` (default 2). Errors that need a change to the request are never retried.
+  </Accordion>
+
+  <Accordion title="Typed errors" icon="triangle-alert">
+    Every API error is an exception carrying the stable `code`, `status`, `detail`, field problems and `requestId` / `request_id`.
+
+    ```typescript
+    import { PaymentRequiredError, ValidationError, KallabotError } from "@kallabot/sdk";
+    try {
+      await kallabot.calls.create({ agent_id, to });
+    } catch (err) {
+      if (err instanceof PaymentRequiredError) notifyOwner("Out of minutes");
+      else if (err instanceof ValidationError) err.fieldProblems.forEach((p) => show(p.path, p.message));
+      else if (err instanceof KallabotError) console.error(err.code, err.requestId);
+      else throw err;
+    }
+    ```
+    ```python
+    import kallabot
+    try:
+        client.calls.create(agent_id=agent_id, to=to)
+    except kallabot.APIStatusError as err:
+        if err.code == "insufficient_credit":
+            notify_owner("Out of minutes")
+        else:
+            raise
+    ```
+  </Accordion>
+
+  <Accordion title="Auto-pagination" icon="list-ordered">
+    Iterate a list and the SDK fetches further pages as you go:
+
+    ```typescript
+    for await (const agent of kallabot.agents.list({ status: "active" })) console.log(agent.name);
+    ```
+    ```python
+    for call in client.calls.list(direction="outbound"):
+        print(call.id, call.outcome)
+    ```
+  </Accordion>
+
+  <Accordion title="Revisions" icon="git-merge">
+    Pass the `revision` you read so a stale write is refused: `{ ifMatch: agent.revision }` in TypeScript, `if_match=agent.revision` in Python.
+  </Accordion>
+
+  <Accordion title="Webhook verification" icon="webhook">
+    `verify` checks the Standard Webhooks signature and timestamp and returns a typed event.
+
+    ```typescript
+    import { Webhooks } from "@kallabot/sdk";
+    const event = await Webhooks.verify(rawBody, request.headers, process.env.KALLABOT_WEBHOOK_SECRET!);
+    ```
+    ```python
+    event = kallabot.webhooks.verify(raw_body, headers, secret="whsec_…")
+    ```
+
+    See [Webhooks](/developers/webhooks#with-the-kallabot-sdk).
+  </Accordion>
+
+  <Accordion title="Request IDs and rate limits" icon="life-buoy">
+    Every result knows its response: `agent.lastResponse.requestId` and `.rateLimit` in TypeScript; `agent.request_id` and `agent.rate_limit` in Python.
+  </Accordion>
+
+  <Accordion title="File uploads" icon="upload">
+    `knowledge.sources.create` sends files as multipart: `toFile(buffer, "menu.pdf")` in TypeScript, a `Path`, an open file or bytes in Python. See [Knowledge](/developers/knowledge).
+  </Accordion>
+</AccordionGroup>
+
+## Browser voice calls
+
+`@kallabot/sdk/web` connects a web page to an agent over WebRTC. It never sees an API key: your server creates the session and hands the browser a single-use grant.
+
+```typescript
+import { KallabotWebCall } from "@kallabot/sdk/web";
+
+const { id, grant, ice_servers } = await fetch("/api/voice", { method: "POST" }).then((r) => r.json());
+const call = await KallabotWebCall.start({ callId: id, grant, iceServers: ice_servers });
+call.on("transcript", (line) => render(line));
+await call.hangUp();
+```
+
+See [Web calls](/developers/web-calls) for the server side.
+
+<Warning>
+  The main client refuses to start in a web page, whichever key you pass, because anyone could read the key there. In the browser, use only `@kallabot/sdk/web`.
+</Warning>
+
+## Pin the API version
+
+Set `Kallabot-Version` once as a default header, so a future API version never changes behaviour under you:
+
+```typescript
+const kallabot = new Kallabot({ defaultHeaders: { "Kallabot-Version": "2026-11-07" } });
+```
+```python
+client = Kallabot(default_headers={"Kallabot-Version": "2026-11-07"})
+```
+
+Each request also identifies the SDK release (`X-Kallabot-SDK`). If a release is ever retired, the API answers `426 sdk_version_unsupported` and the SDK tells you how to upgrade. See [Versioning](/developers/versioning).

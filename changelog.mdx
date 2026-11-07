@@ -1,0 +1,80 @@
+---
+title: "Changelog"
+description: "New features, improvements and API changes in Kallabot."
+icon: "history"
+rss: true
+---
+
+<Update label="2026-11-07" description="Personal keys, browser calls, SDKs and billing" tags={["API", "Product"]} rss={{ title: "Personal keys, browser calls, SDKs and billing", description: "Personal API keys, direct browser web calls, API transfers, IP allowlists, unified pagination, API versions, webhook event reference, billing and official SDKs." }}>
+  ## API keys
+
+  - **Personal API keys** (`kbp_live_…`) act as the teammate who made them, are logged under their name, are capped by their current role, and stop when they leave. Workspace keys (`kb_live_…`) stay for automations. See [Authentication](/developers/authentication#two-kinds-of-key).
+  - Whispering, listening in, taking over, call notes, and number and minute requests need a personal key (`403 personal_key_required` otherwise).
+  - **Transfers through the API.** Workspace keys can transfer a live call to the agent's configured destinations; transferring to a typed number needs a personal key.
+  - **IP allowlist** in **Settings → API keys → Allowed IP addresses**, up to 20 entries.
+  - **Roll** now keeps the old key working for 24 hours.
+
+  ## Calls
+
+  - **Browser web calls with no server relay.** Your server creates a session with `allowed_origin`; the browser connects with the single-use grant through `/client/offer`. See [Web calls](/developers/web-calls).
+
+  ## API conventions
+
+  - **One pagination style everywhere:** `limit` and `cursor` in, `data`, `next_cursor` and `has_more` out.
+  - **`Idempotency-Key` is required** on every create and action `POST`.
+  - **Dated API versions** with the optional `Kallabot-Version: 2026-11-07` header, echoed on every response. See [Versioning](/developers/versioning).
+  - New error codes: `personal_key_required`, `key_owner_inactive`, `invalid_webcall_origin`, `unsupported_api_version`, `sdk_version_unsupported`.
+  - **Webhook events reference:** all 35 events now have their own pages in the API reference.
+  - **Knowledge sources** can be added, edited and deleted through the API. See [Knowledge](/developers/knowledge).
+
+  ## Billing
+
+  Plans (Agent, Brokerage with a 14-day trial, Enterprise), minute packs, auto top-up and Stripe's billing portal, in the app and the API. See [Plans and billing](/guides/billing).
+
+  ## SDKs
+
+  Official [TypeScript and Python SDKs](/developers/sdks), with automatic idempotency keys, retries, typed errors, auto-pagination, webhook verification and a browser call client. Publishing to npm and PyPI is coming soon.
+</Update>
+
+<Update label="November 2026" description="The new Kallabot platform" tags={["Product", "API"]} rss={{ title: "The new Kallabot platform", description: "A rebuilt platform: agents on every channel, a new public API, signed webhooks and these docs." }}>
+  ## The new Kallabot
+
+  Kallabot has been rebuilt from the ground up. One agent now works across phone, WhatsApp, Messenger, Instagram and your website, and everything it does is visible and controllable.
+
+  **Agents**
+
+  - A six-step agent builder (Identity, Voice, Instructions, Knowledge, Tools, Channels) with a live preview, templates and duplication.
+  - Around 50 languages with regional dialects, including Emirati, Saudi, Egyptian and other Arabic dialects, and callers who switch language mid-sentence.
+  - Natural turn-taking: the agent waits until callers have finished, can be interrupted, and backchannels while they talk.
+  - Voice cloning in the voice lab.
+  - Drafts, publishing and version history with one-click restore.
+
+  **Channels**
+
+  - Phone numbers in many countries, number forwarding, number porting, and bring-your-own carrier or office phone system over SIP.
+  - Number verification for countries that require it, and caller trust (signed calls, caller name, spam check registration, number health).
+  - WhatsApp through Meta Embedded Signup, including numbers that stay on the WhatsApp Business app, with message templates and a full studio.
+  - Messenger and Instagram, with comment-to-DM and story mention replies.
+  - A web chat widget with a visual studio, voice, and a one-line install.
+
+  **Working alongside your agents**
+
+  - One inbox for WhatsApp, Instagram, Messenger and web chat, with take-over, hand-back, notes, quick replies and bookings.
+  - Calls with recordings, transcripts, summaries, saved views and CSV export.
+  - A live console to listen in, whisper to the agent, take over or transfer.
+  - Voicemail detection for outbound calls, scheduled calls and confirmable call-backs.
+  - Live analytics across every channel, with weekly emails and share links.
+  - Roles, branches, minutes per person and an audit log.
+
+  **For developers**
+
+  - A new public API at `https://api.kallabot.com/v1`, generated into a full [API reference](/api-reference/introduction).
+  - Scoped API keys in the format `kb_live_…`, with expiry, instant revocation and per-key access presets.
+  - RFC 9457 problem responses with stable error codes, required `Idempotency-Key` on creates, `If-Match` revisions, cursor pagination and per-key rate limits with `RateLimit-*` headers.
+  - Signed webhooks following Standard Webhooks, with a catalogue of 35 events, automatic retries, delivery logs, replay and secret rotation with a grace period.
+  - Browser voice calls over WebRTC.
+
+  **Removed**
+
+  The previous API (campaigns, contacts, regulatory and the old agent and call endpoints) and its `sk_` and `bn-` keys have been retired. Contact [contact@kallabot.com](mailto:contact@kallabot.com) if you need help moving over.
+</Update>

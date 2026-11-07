@@ -1,0 +1,52 @@
+---
+title: "Bring your own carrier"
+description: "Keep your phone company or office phone system and let Kallabot's agents answer and call through it."
+icon: "cable"
+---
+
+Already have numbers with a phone company, or an office phone system? Connect it, and your agents answer and make calls on those numbers. Your carrier keeps billing you for the line as usual.
+
+Open **Numbers → Add**, then choose one of:
+
+- **Connect your phone company:** Twilio, DIDLogic, DIDWW, Vonage, Bandwidth, or any other carrier that offers SIP.
+- **Connect your office phone system:** 3CX, FreePBX, Zoom Phone, Cisco, or any other PBX.
+
+## The four steps
+
+<Steps>
+  <Step title="Your company">
+    Pick your carrier or phone system from the list. Kallabot fills in the right settings for it. Choose **Other** if yours isn't listed.
+  </Step>
+  <Step title="Link">
+    How you link depends on your provider:
+
+    <Tabs>
+      <Tab title="Twilio">
+        Paste your Twilio **Account SID** and **Auth Token**. Kallabot finds your numbers and sets up the connection on your Twilio account for you. No SIP settings to copy.
+      </Tab>
+      <Tab title="Other carriers">
+        Enter the SIP address your carrier gave you, and either a SIP **username and password** or, if your carrier uses addresses instead, the **IP addresses** it sends calls from. Kallabot shows you its own SIP address and IP to add on your carrier's side.
+      </Tab>
+      <Tab title="Office phone system">
+        Kallabot shows you a SIP address and login details to add to your phone system as a new trunk. Calls your system sends to that trunk reach your agent.
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Your numbers">
+    Tick the numbers on this connection and choose which agent answers each one.
+  </Step>
+  <Step title="Hear it work">
+    Kallabot places a test call through your connection so you can hear the agent answer, before any customer does.
+  </Step>
+</Steps>
+
+## Good to know
+
+- **Check the connection** any time from its page. Kallabot tells you in plain words if your carrier can't be reached or refuses the login.
+- **Calling out** from these numbers goes through your carrier, at your carrier's rates.
+- **Transfers** a call makes on your own carrier are billed by your carrier. A call's detail page says who carried the transferred part.
+- **Advanced settings** like number format, a dialling prefix, codecs and DTMF mode are there if your carrier needs them. Most people never touch them.
+
+<Tip>
+  Not sure what your carrier needs? Email [contact@kallabot.com](mailto:contact@kallabot.com) with your carrier's name, and we'll walk you through it.
+</Tip>

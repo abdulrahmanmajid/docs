@@ -1,0 +1,90 @@
+---
+title: "Kallabot API"
+sidebarTitle: "Introduction"
+description: "Build AI agents that answer and make phone calls and reply on chat, from your own code."
+icon: "code"
+---
+
+The Kallabot API is the same API the Kallabot dashboard runs on. Anything you can do with an agent in the app, you can script: create and publish agents, place phone calls, start browser calls, read transcripts and recordings, manage numbers, and get a signed webhook the moment something happens.
+
+```bash
+curl https://api.kallabot.com/v1/agents \
+  -H "Authorization: Bearer $KALLABOT_API_KEY"
+```
+
+<Columns cols={2}>
+  <Card title="5-minute quickstart" icon="rocket" href="/developers/quickstart">
+    Create a key, create an agent, place a call and receive a webhook.
+  </Card>
+  <Card title="API reference" icon="braces" href="/api-reference/introduction">
+    Every endpoint, generated from the live backend.
+  </Card>
+</Columns>
+
+## The basics
+
+<CardGroup cols={3}>
+  <Card title="Base URL" icon="globe">
+    `https://api.kallabot.com`
+
+    Every path starts with `/v1`.
+  </Card>
+  <Card title="Authentication" icon="key-round" href="/developers/authentication">
+    `Authorization: Bearer kb_live_…`
+
+    Keys carry scopes.
+  </Card>
+  <Card title="Format" icon="file-json">
+    JSON in, JSON out. Errors are `application/problem+json`.
+  </Card>
+</CardGroup>
+
+## What you can build
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="bot" href="/developers/agents">
+    Create agents from a JSON config, validate it, version it and publish it.
+  </Card>
+  <Card title="Phone calls" icon="phone-outgoing" href="/developers/calls">
+    Place outbound calls, schedule them for later, read the transcript, recording and summary.
+  </Card>
+  <Card title="Browser calls" icon="audio-lines" href="/developers/web-calls">
+    Let someone talk to an agent from a web page over WebRTC.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/developers/webhooks">
+    Signed events for calls, chats, tools, numbers, agents and knowledge.
+  </Card>
+  <Card title="Inbox" icon="inbox" href="/developers/inbox">
+    Read WhatsApp, Messenger, Instagram and web chat threads and manage their state.
+  </Card>
+  <Card title="Web chat" icon="message-square" href="/developers/web-chat">
+    Create and publish website chat widgets.
+  </Card>
+</CardGroup>
+
+## Conventions you can rely on
+
+Every endpoint follows the same rules, so you learn them once.
+
+| Convention | What it means | Guide |
+| --- | --- | --- |
+| Scopes | Each operation lists the scopes a key needs (`x-required-scopes` in the spec). | [Authentication](/developers/authentication) |
+| Stable error codes | Every error has a machine `code` that never changes. Match on it, not on the message. | [Errors](/developers/errors) |
+| Safe retries | Creates and control actions take an `Idempotency-Key`. A retry never runs twice. | [Idempotency](/developers/idempotency) |
+| No lost updates | Changes to agents and calls send `If-Match` with the revision you read. | [Concurrency](/developers/concurrency) |
+| Cursor pagination | Lists return `data`, `has_more` and `next_cursor`. | [Pagination](/developers/pagination) |
+| Rate limit headers | Every authenticated response says how much budget is left. | [Rate limits](/developers/rate-limits) |
+| Request IDs | Every response has an `X-Request-Id`. Quote it to support. | [Request IDs](/developers/request-ids) |
+
+## What the API doesn't do yet
+
+We keep this list honest so you don't build on something that isn't there.
+
+- **API keys are made in the dashboard.** A key can't create other keys. See [Authentication](/developers/authentication).
+- **Replying to chats is dashboard-only for now.** API keys can read inbox threads and change their state. See [Inbox](/developers/inbox).
+- **Connecting WhatsApp, Messenger and Instagram** happens in the dashboard through Meta sign-in.
+- **No campaigns API.** To call a list, loop over it with [`POST /v1/calls`](/developers/calls) or [schedule calls](/developers/calls#schedule-a-call-for-later).
+
+<Tip>
+  Building with an AI coding tool? Every page has a menu to copy it as Markdown or open it in ChatGPT, Claude or Cursor. The [API reference](/api-reference/introduction) explains how to download the full OpenAPI spec.
+</Tip>

@@ -1,0 +1,92 @@
+---
+title: "Web chat widgets"
+sidebarTitle: "Web chat"
+description: "Create, configure and publish website chat widgets from code, then install them with one script tag."
+icon: "message-square"
+---
+
+A web chat widget is a chat bubble on your website, answered by one of your agents. Visitors can type, and, if you allow it, tap to talk. Most people design widgets in the dashboard's studio; the API lets you create and manage them from code, for example one widget per client site.
+
+Widget endpoints need `webchat:read` to read and `webchat:write` for every change. Chats from widgets land in the [inbox](/developers/inbox) with `channel: "web"`.
+
+## Create a widget
+
+```bash
+curl https://api.kallabot.com/v1/webchat/widgets \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{
+    "name": "Marina Homes website",
+    "agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30",
+    "allowed_origins": ["https://marinahomes.ae", "https://www.marinahomes.ae"],
+    "voice_enabled": true,
+    "limits": { "messages_per_visitor_hour": 60, "voice_minutes_per_day": 120, "max_concurrent_voice": 3 }
+  }'
+```
+
+| Field | Notes |
+| --- | --- |
+| `name` | For you; visitors don't see it. |
+| `agent_id` | The agent that answers. The widget only replies once that agent is published. |
+| `allowed_origins` | The exact website origins the widget may run on, like `https://example.com`. Anywhere else, the browser refuses to show it. |
+| `studio` | The widget's look and words, as the dashboard studio saves them (up to 64 KB). Easiest to design in the dashboard. |
+| `voice_enabled` | Let visitors talk to the agent from the widget. |
+| `limits` | Per-visitor message rate, daily voice minutes and how many voice chats can run at once. |
+
+The response is the widget, including its `public_key` (`wck_…`):
+
+```json
+{
+  "id": "4c3b2a19-0e8d-4f7c-b6a5-9d8c7b6a5f4e",
+  "name": "Marina Homes website",
+  "status": "active",
+  "public_key": "wck_Xr8f2LmQ9tVb4nKc7HsY1pDz",
+  "allowed_origins": ["https://marinahomes.ae", "https://www.marinahomes.ae"],
+  "agent": { "id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30", "name": "Zara", "published": true },
+  "auto_reply_enabled": true,
+  "voice_enabled": true,
+  "limits": { "messages_per_visitor_hour": 60, "voice_minutes_per_day": 120, "max_concurrent_voice": 3 },
+  "studio": null,
+  "studio_revision": 0,
+  "published": null,
+  "unpublished_changes": true,
+  "revision": 1,
+  "created_at": "2026-11-07T10:02:44Z",
+  "updated_at": "2026-11-07T10:02:44Z"
+}
+```
+
+## Publish and install
+
+Visitors see the widget as it was when you last published. Publish after every change you want live:
+
+```bash
+curl -X POST https://api.kallabot.com/v1/webchat/widgets/4c3b2a19-0e8d-4f7c-b6a5-9d8c7b6a5f4e/publish \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" \
+  -H "Idempotency-Key: $(uuidgen)"
+```
+
+Send `{"studio_revision": 3}` to publish only if nobody saved a newer design in the meantime.
+
+Then put one line on every page of the site, just before `</body>`:
+
+```html
+<script src="https://kallabot.com/widget/v1/widget.js" data-key="wck_Xr8f2LmQ9tVb4nKc7HsY1pDz" async></script>
+```
+
+The script is tiny. It adds the widget in a frame, so later design changes reach the site without touching this line.
+
+<Note>
+  The public key isn't a secret: it's meant to be on your website. What protects the widget is `allowed_origins`, the rate limits, and the fact that the key can only start chats with this one agent.
+</Note>
+
+## Change, rotate, delete
+
+| Endpoint | What it does |
+| --- | --- |
+| `PATCH /v1/webchat/widgets/{widget_id}` | Change `name`, `agent_id`, `allowed_origins`, `studio`, `voice_enabled`, `auto_reply_enabled` or `limits`. Send `revision` to refuse the change if someone else saved first. |
+| `POST /v1/webchat/widgets/{widget_id}/rotate-key` | Issue a new `public_key`. Every open visitor session ends, and you must update the script tag. |
+| `DELETE /v1/webchat/widgets/{widget_id}` | Switch the widget off for good. Its past chats stay in the inbox. |
+| `GET /v1/webchat/widgets` | Every widget, with `sessions_live` for each. Add `include_deleted=true` for deleted ones. |
+
+`auto_reply_enabled: false` stops the agent replying, so teammates answer every chat from the inbox themselves.

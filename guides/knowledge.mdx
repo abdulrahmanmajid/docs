@@ -1,0 +1,53 @@
+---
+title: "Knowledge"
+description: "Teach your agent your prices, policies and listings so it answers with your facts, not guesses."
+icon: "book-open"
+---
+
+Knowledge is everything your agent can look up: your website, price list, menu, FAQs, policies or property listings. When a customer asks something, the agent checks your knowledge first and answers from it.
+
+Add knowledge in the agent's **Knowledge** step. Everything you add goes into your workspace's library, so other agents can use it too.
+
+## What you can add
+
+<CardGroup cols={2}>
+  <Card title="Website" icon="globe">
+    Paste a page address. Kallabot reads the page and keeps the text.
+  </Card>
+  <Card title="Files" icon="file-text">
+    PDF, Word (`.docx`), text, Markdown, HTML or CSV.
+  </Card>
+  <Card title="Text" icon="type">
+    Type or paste it straight in. Good for short facts like opening hours.
+  </Card>
+  <Card title="Google Sheet" icon="sheet">
+    Paste a sheet's link. Good for price lists you already keep in a sheet.
+  </Card>
+</CardGroup>
+
+### Listings and catalogs
+
+Selling property, cars or products? Import a spreadsheet of listings as a **catalog**. Kallabot asks which column is the price, the location, the size and so on, then shows you each listing so you can check it and mark items available or not. The agent can then answer "Do you have a 2-bedroom in Marina under 120k?" from your real stock.
+
+## Keep it fresh
+
+Websites and sheets change. For each source you can choose **Keep fresh**, and Kallabot reads it again on a schedule. You can also re-read a source any time. If a source can't be read (a page was removed, for example), it's marked as failed so you can fix it.
+
+## Check what it knows
+
+Use **Ask** to type a question and see exactly what your agent would find. If the answer is missing or wrong, fix the source rather than the instructions.
+
+## Choose where each source is used
+
+An agent can use a source on some channels and not others. For example, a detailed internal price sheet for phone calls only, and a shorter public one for Instagram. Switch a source off for a channel without removing it.
+
+## Tips
+
+- **One topic per source** works better than one giant document.
+- **Write prices and hours as plain text**, not only inside images. Kallabot can't read text in pictures.
+- **Small libraries are read in full.** Kallabot gives small libraries to the agent whole, and searches bigger ones on every question. You don't need to choose.
+- **Remove what's out of date.** An old price list is worse than none.
+
+<Info>
+  Developers: you can add, update and search knowledge sources through the API too. See [Knowledge](/developers/knowledge).
+</Info>
