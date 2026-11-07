@@ -1,0 +1,94 @@
+---
+title: "Phone numbers"
+description: "Get a new number, forward the one you have, or move it to Kallabot. Then choose who answers it."
+icon: "phone"
+---
+
+Your agent needs a phone number to take and make calls. Open **Numbers** and click **Add**. You have four ways in:
+
+<CardGroup cols={2}>
+  <Card title="Forward a number you already have" icon="phone-forwarded" href="#forward-your-number">
+    Keep your number and your phone company. Calls you miss, or all calls, go to your agent. Easiest way to start.
+  </Card>
+  <Card title="Get a new number" icon="circle-plus" href="#get-a-new-number">
+    Local, mobile or toll-free numbers in many countries.
+  </Card>
+  <Card title="Move your number to Kallabot" icon="arrow-right-left" href="#move-port-your-number">
+    Bring your existing number over for good.
+  </Card>
+  <Card title="Connect your phone company or office system" icon="cable" href="/guides/bring-your-own-carrier">
+    Use your own carrier (Twilio, DIDWW and others) or your office phone system.
+  </Card>
+</CardGroup>
+
+## Forward your number
+
+You keep your number and your phone company. You just tell your phone to send calls to Kallabot.
+
+<Steps>
+  <Step title="Choose where calls go">
+    In **Numbers → Add → Forward a number you already have**, pick the agent that should answer.
+  </Step>
+  <Step title="Turn on forwarding">
+    Kallabot shows you a short code to dial from your phone, such as `**21*…#` to forward every call. Dial it. Most mobile networks also let you forward only when you're busy or don't answer.
+  </Step>
+  <Step title="Test it">
+    Call your number from another phone. Your agent should answer.
+  </Step>
+</Steps>
+
+## Get a new number
+
+<Steps>
+  <Step title="Choose a country and type">
+    **Numbers → Add → Get a new number.** Pick the country, then local, mobile or toll-free. You can search for digits you'd like in the number.
+  </Step>
+  <Step title="Verify your business, if the country asks">
+    Many countries need proof of who you are and where you are before a number is yours, like a trade licence and an address. Kallabot tells you exactly what's needed. If the number needs a verification, it's saved for you and bought automatically as soon as the verification is approved. See [Verification](/guides/verification).
+  </Step>
+  <Step title="Choose who answers">
+    Pick the agent for the number. It's live straight away.
+  </Step>
+</Steps>
+
+Can't find the area you need? Use **Request a number** and our team sources it for you.
+
+<Note>
+  Some numbers can only **receive** calls. UAE local numbers are one example. To make calls from the UAE, add a number that can call out, such as a mobile or a number from your own carrier.
+</Note>
+
+## Move (port) your number
+
+Moving a number means it leaves your old phone company and lives with Kallabot. In **Numbers → Add → Move a number you have**, enter the number and follow the steps. You'll need a recent bill or letter from your current provider.
+
+- **US numbers** move through an automatic transfer. Kallabot tracks each step and tells you when it's done.
+- **Other countries** are handled by our team with your old provider. We'll keep you posted by email.
+
+Your number keeps working with your old provider until the move completes.
+
+## Choose who answers
+
+Open a number to set it up:
+
+| Setting | What it does |
+| --- | --- |
+| **Agent** | Which agent answers calls to this number. |
+| **Ring a person first** | Rings someone's phone first for a set time. If nobody picks up, the agent answers. |
+| **Only ring a person** | Calls go to a person, not the agent. |
+| **Office hours** | Ringing a person only happens inside your hours. Outside them, the agent answers straight away. |
+| **Forward when the agent can't answer** | If the agent is busy or unavailable, the call is forwarded to a number you choose instead of failing. |
+| **Label** | A name your team sees, like "Marina branch". |
+
+## Calling out
+
+When an agent makes a call, it uses its own **caller number**. Set it per agent in **Numbers**. If you don't, Kallabot uses a number from the agent's branch.
+
+To be recognised and avoid "spam likely" warnings when you call people, see [Caller trust](/guides/caller-trust).
+
+## Releasing a number
+
+Release a number you no longer need from its settings. **This can't be undone**: the number goes back to the phone company and someone else may get it.
+
+<Info>
+  Agents never call emergency numbers, and can't be set to transfer to them.
+</Info>

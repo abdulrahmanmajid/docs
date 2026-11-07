@@ -1,0 +1,73 @@
+---
+title: "Web chat"
+description: "Put a chat bubble on your website that your agent answers, by text or by voice."
+icon: "message-square"
+---
+
+Web chat puts a small chat bubble in the corner of your website. Visitors type a question and your agent answers straight away, from the same knowledge it uses on the phone. You can also let visitors tap to **talk** to the agent.
+
+Start from **Agents → Create agent ▾ → Web chat widget**.
+
+## Design it in the studio
+
+The studio shows your widget on top of a live preview of your own website, so you see exactly what visitors will see.
+
+<Steps>
+  <Step title="Site">
+    Enter your website's address. This is also the only site the widget will run on, so nobody can copy it onto theirs. Add more addresses if you have several sites.
+  </Step>
+  <Step title="Look">
+    Colours, position (left or right corner), the agent's face and name, and how the bubble looks. Make it match your brand.
+  </Step>
+  <Step title="Words">
+    The welcome message and the suggested questions visitors can tap, like "What are your prices?" or "Book a viewing".
+  </Step>
+  <Step title="Rules">
+    When the bubble nudges visitors, for example after they've been on a page for a while, or scrolled halfway down.
+  </Step>
+  <Step title="Test & install">
+    Chat with your widget right there in the preview. When you're happy, click **Publish**, then copy your install code.
+  </Step>
+</Steps>
+
+<Note>
+  The widget only answers once its agent is published. Visitors see the design as it was when you last clicked **Publish**.
+</Note>
+
+## Install it on your website
+
+Copy the one line from **Test & install** and paste it into your website, just before the closing `</body>` tag, on every page where you want the bubble:
+
+```html
+<script src="https://kallabot.com/widget/v1/widget.js" data-key="wck_…" async></script>
+```
+
+<AccordionGroup>
+  <Accordion title="WordPress">
+    Use a plugin that adds code to your footer (such as "Insert Headers and Footers"), paste the line into the footer box, and save.
+  </Accordion>
+  <Accordion title="Wix, Squarespace, Webflow, Shopify">
+    Look for **Custom code** or **Code injection** in your site settings, and paste the line into the footer (or "end of body") section.
+  </Accordion>
+  <Accordion title="Someone else runs your website">
+    Send them the line and ask them to add it before `</body>` on every page. That's all they need.
+  </Accordion>
+</AccordionGroup>
+
+After that, you never touch the code again. Design changes reach your site the moment you publish them.
+
+## Let visitors talk
+
+Switch on **voice** and visitors get a button to talk to your agent out loud, right from the widget, with no phone call needed. Voice chats show up in [Calls](/guides/calls) like phone calls, with a recording and transcript.
+
+You can cap how many voice minutes the widget uses each day, and how many voice chats can run at once.
+
+## Answer chats yourself
+
+Every web chat lands in your [Inbox](/guides/inbox), next to WhatsApp, Instagram and Messenger. You can read along, take over from the agent and reply yourself, then hand it back. If you'd rather answer every chat yourself, switch off the agent's automatic replies.
+
+## Keep it safe
+
+- **Allowed sites.** The widget only appears on the website addresses you listed.
+- **Message limits.** Cap how many messages one visitor can send in an hour, so nobody can run up your usage.
+- **New install code.** If your code ends up somewhere it shouldn't, make a new one from the studio. Every open chat ends, and you paste the new line on your site.

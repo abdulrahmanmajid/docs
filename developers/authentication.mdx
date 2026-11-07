@@ -1,0 +1,180 @@
+---
+title: "Authentication and scopes"
+sidebarTitle: "Authentication"
+description: "API keys, what each scope allows, IP allowlists, expiry and rotation."
+icon: "key-round"
+---
+
+Every request carries an API key as a bearer token:
+
+```bash
+curl https://api.kallabot.com/v1/agents \
+  -H "Authorization: Bearer kb_live_7k2m9xq4ab3c_tq4w..."
+```
+
+A missing, malformed, unknown, revoked or expired key always gets the same answer, `401` with code `unauthenticated`. The API never tells you which part was wrong, so a guessed key learns nothing.
+
+## Two kinds of key
+
+| Kind | Looks like | Acts as | Use it for |
+| --- | --- | --- | --- |
+| **Workspace key** | `kb_live_…` | The workspace (a service account) | Automations: your backend, a CRM sync, a cron job. |
+| **Personal key** | `kbp_live_…` | The person who created it | Acting as a teammate: live call control, notes, requests made in someone's name. |
+
+A **personal key** is logged under its owner's name in the audit log, and can never do more than its owner's **current** role allows: demote the person and their key shrinks with them. It stops working the moment they leave the workspace or are suspended (`401`, or `403 key_owner_inactive`).
+
+Some operations act as a person and need a personal key. They're marked `x-requires-personal-key` in the spec and "Needs a personal key" in the [API reference](/api-reference/introduction). A workspace key gets `403 personal_key_required`:
+
+- Whispering to the agent, listening in and taking over (`/whisper`, `/operator`)
+- Call notes
+- Asking for a number we don't stock (`POST /v1/numbers/requests`) and asking for minutes (`POST /v1/minutes/requests`)
+- Transferring a call to a typed number (`to`). Workspace keys may transfer only to the agent's configured destinations (`destination_id`).
+
+## Key format
+
+```text
+kb_live_7k2m9xq4ab3c_tq4wz6r2...
+│  │    │            └── secret: 32 random bytes, base32
+│  │    └─────────────── lookup: 12 characters, safe to show and log
+│  └──────────────────── environment
+└─────────────────────── kb = workspace key, kbp = personal key
+```
+
+- Kallabot stores only a peppered SHA-256 hash of the key. Nobody at Kallabot can read it back, and there is no "show key" button. If you lose a key, make a new one.
+- The dashboard shows the first characters (`kb_live_7k2m`) and the last four, so you can tell keys apart.
+- Old `sk_` and `bn-` keys from the previous platform no longer work.
+
+<Tip>
+  Secret scanners can match the `kb_live_` prefix. If a key ever lands in a commit or a log, revoke it at once in **Settings → For developers → API keys**.
+</Tip>
+
+## Create a key
+
+Keys are created in the dashboard, by a person, never through the API. A leaked key that could mint new keys would be impossible to contain, so the key endpoints accept only a signed-in session. Calling them with an API key returns `403 wrong_auth_plane`.
+
+<Steps>
+  <Step title="Open the keys page">
+    **Settings → For developers → API keys**. Workspace keys need the owner, admin or developer role. Anyone can make **personal keys** for themselves under **Your personal keys**; owners and admins can also see their teammates' personal keys.
+  </Step>
+  <Step title="Name it after what uses it">
+    For example `Website lead form` or `CRM sync`. One key per integration makes revoking one painless.
+  </Step>
+  <Step title="Choose its access">
+    Pick a preset (below). A key can never hold a scope the person creating it doesn't have.
+  </Step>
+  <Step title="Choose its lifetime">
+    30 days, 90 days or 1 year. Every key expires; the longest a key can live is one year.
+  </Step>
+  <Step title="Copy it once">
+    The full key is shown in this one response and never again.
+  </Step>
+</Steps>
+
+### Access presets
+
+| Preset | Scopes | Use it for |
+| --- | --- | --- |
+| **Full access** | Every scope the workspace's API allows | Trying things out. Avoid in production. |
+| **Place calls** | `agent:read`, `call:read`, `call:create`, `call:control`, `webcall:create` | A backend that starts phone and browser calls and checks how they went. |
+| **Read only** | `agent:read`, `call:read`, `number:read`, `tool:read`, `billing:read`, `webhook:read` | Dashboards and reporting. Changes nothing. |
+| **Call data** | `agent:read`, `call:read`, `call:content` | Copying calls with transcripts and summaries into a CRM or warehouse. |
+| **Webhooks** | `webhook:read`, `webhook:write` | Managing webhook endpoints from code. |
+
+## Scopes
+
+A scope answers "may this key do this kind of thing at all?". Each operation in the [API reference](/api-reference/introduction) lists the scopes it needs, and the OpenAPI spec carries them as `x-required-scopes`. A key missing one gets `403 insufficient_scope`, and the `detail` names what's missing.
+
+<Note>
+  Scopes decide **what** a key may do. Which **rows** it can see is decided separately. An API key sees the whole workspace, unless its access was narrowed to specific agents, in which case it can only use and see those agents.
+</Note>
+
+### Agents
+
+| Scope | Allows |
+| --- | --- |
+| `agent:read` | List and read agents, their versions, and validate a config without saving it. |
+| `agent:write` | Create agents, edit drafts, revert to an older version, edit an agent's WhatsApp copy. |
+| `agent:publish` | Publish a draft so callers hear it. |
+| `agent:archive` | Archive an agent. Archived agents stop taking calls; their history stays. |
+
+### Calls
+
+| Scope | Allows |
+| --- | --- |
+| `call:read` | List and read calls, call events, tags, saved views and tool runs. Phone numbers come back masked. |
+| `call:create` | Place outbound calls, and create, move, confirm or cancel scheduled calls. |
+| `call:control` | Cancel or hang up a call, send the agent a whisper, and (for people) listen in, take over or transfer. |
+| `call:content` | Read transcripts, recordings, summaries, extracted fields and unmasked numbers. Kept separate on purpose: reading the call log is not the same as hearing a client. |
+| `call:export` | Download the call log as CSV. |
+| `call:annotate` | Tag calls, mark them reviewed or archived, and write notes. |
+| `webcall:create` | Start a browser voice call with an agent. |
+
+### Chat
+
+| Scope | Allows |
+| --- | --- |
+| `inbox:read` | Read WhatsApp, Messenger, Instagram and web chat threads, notes, customer history, bookings and inbox settings. |
+| `inbox:write` | Change a thread's status, assignee, priority and tags; manage quick replies and inbox settings; ask for a fresh summary. Sending replies is dashboard-only for now. |
+| `webchat:read` | Read website chat widgets. |
+| `webchat:write` | Create, edit, publish and delete widgets, and rotate their public key. |
+
+### Knowledge and tools
+
+| Scope | Allows |
+| --- | --- |
+| `knowledge:read` | List and read knowledge sources, preview a Google Sheet's columns, check indexing status, search knowledge, preview listings, read catalog items. |
+| `knowledge:write` | Add, rename, edit and delete sources; resync, reindex or schedule refreshes; import a catalog, edit catalog items. |
+| `tool:read` | List and read tools, their run history and saved credentials (never the secret itself). |
+| `tool:write` | Create, edit, test and delete tools; probe MCP servers and approve their tools; save, rotate and revoke credentials. |
+
+### Numbers
+
+| Scope | Allows |
+| --- | --- |
+| `number:read` | Countries, available numbers, your lines, orders, port-ins, SIP trunks and caller numbers. |
+| `number:write` | Buy numbers, change a line's agent and settings, choose caller numbers, connect SIP trunks, start port-ins. |
+| `number:release` | Release a number. This can't be undone: the number goes back to the carrier. |
+
+### Webhooks and minutes
+
+| Scope | Allows |
+| --- | --- |
+| `webhook:read` | List endpoints, deliveries and the event catalogue. |
+| `webhook:write` | Create, edit, test, enable and delete endpoints; rotate secrets; retry and recover deliveries. |
+| `billing:read` | Read minutes balances. |
+| `billing:write` | Move minutes between the workspace pool and people. |
+
+### Dashboard-only scopes
+
+These exist for people signed in to the app. They are not part of the public API and API keys don't use them: `apikey:read`, `apikey:write`, `audit:read`, `audit:export`, `analytics:report`, `provider:read`, `call:listen`, `whatsapp:read`, `whatsapp:content`, `whatsapp:write`, `whatsapp:reply`.
+
+### Actions only a person can take
+
+Some actions need a person behind them, even with `call:control`. Use a [personal key](#two-kinds-of-key) for them: whispering, listening in, taking over, transferring to a typed number, and call notes. Saved call views also belong to a person.
+
+## IP allowlist
+
+Limit where your keys can be used from in **Settings → API keys → Allowed IP addresses**. Add up to 20 addresses or ranges (CIDR, like `203.0.113.0/24`). A request from anywhere else gets `403 ip_not_allowed`, even with a valid key. An empty list means any address.
+
+## Rotate a key
+
+Click **Roll** on a key to rotate it without downtime:
+
+<Steps>
+  <Step title="Roll the key">Kallabot issues a new key with the same name, scopes, environment and lifetime as the old one. The new key is shown once.</Step>
+  <Step title="Deploy it within 24 hours">The old key keeps working for 24 hours, so you have time to switch every place that uses it.</Step>
+  <Step title="Watch the old key go quiet">The keys list shows each key's **last used** time. After 24 hours the old key stops on its own.</Step>
+</Steps>
+
+Behind the button, rotation accepts a grace period of 0 to 72 hours (`grace_hours`, default 24), where 0 retires the old key immediately. The dashboard always uses 24 hours.
+
+If a key may have leaked, don't roll it. **Revoke** it: it stops within seconds, everywhere. Then create a new key. Give a short reason when you revoke; it's kept in the audit log.
+
+## Other ways a key stops working
+
+| What happened | Result |
+| --- | --- |
+| The key expired or was revoked | `401 unauthenticated` |
+| Its service account was disabled | `401 unauthenticated` (every key under it stops at once) |
+| The service account's scopes were narrowed until none were left | `403 no_scopes` |
+| The workspace was suspended | `403 organization_suspended` |

@@ -1,0 +1,109 @@
+---
+title: "Idempotency"
+description: "Retry any create or control action safely. The same Idempotency-Key never runs twice."
+icon: "repeat"
+---
+
+Networks fail at the worst moment. If you send `POST /v1/calls` and the connection drops before the answer arrives, you can't tell whether the call was placed. Retrying blindly could ring someone twice.
+
+So creates and control actions **require** an `Idempotency-Key` header. Send a unique value with each new request, and the **same** value when you retry it:
+
+```bash
+curl https://api.kallabot.com/v1/calls \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 7d1c0e4a-2f8b-4a39-9d55-6b1e0f3c2a81" \
+  -d '{"agent_id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30", "to": "+971501234567"}'
+```
+
+## How it behaves
+
+| You send | You get |
+| --- | --- |
+| A new key | The request runs normally. |
+| The same key and the same body, after the first finished | The **first** response again, with its original status. Nothing runs twice. |
+| The same key while the first is still running | `409 idempotency_in_progress` with `Retry-After: 2`. Retry with the same key and you'll get the first result. |
+| The same key with a **different** body | `409 idempotency_key_reused`. That's a bug in the client; use a new key. |
+| No key on an endpoint that needs one | `428 precondition_required`. |
+
+Details worth knowing:
+
+- Keys are scoped to your workspace, your credential and the operation. Two different integrations can't collide.
+- A key is honoured for **24 hours**. After that, the same key is treated as new.
+- Keys can be up to 255 characters. A UUID v4 is the simplest choice.
+- A replay re-checks authorization first, so knowing someone else's key never hands you their result.
+- If an attempt crashes mid-way, the key is released after 60 seconds so a retry can take over.
+
+<Note>
+  Creating an API key is the one exception to "the first response again". A replay returns the key's details but never the secret a second time, because a key is only ever shown once.
+</Note>
+
+## Which endpoints need a key
+
+`Idempotency-Key` is **required on every `POST` that creates something or takes an action**: placing and cancelling calls, creating agents, tools, webhooks, widgets and knowledge sources, publishing, buying numbers, moving minutes, starting web calls, and so on. Without it they answer `428 precondition_required`. The only `POST`s that don't need one are read-only ones, like `POST /v1/agents/validate` and `POST /v1/knowledge/search`.
+
+Some `PATCH` and `DELETE` operations take one too, such as editing or archiving an agent. The [API reference](/api-reference/introduction) marks the header **required** on every operation that needs it.
+
+<Tip>
+  The [SDKs](/developers/sdks) send a fresh key on every create and action automatically, and reuse it on retries.
+</Tip>
+
+## A retry helper
+
+<CodeGroup>
+```javascript Node
+async function withRetry(path, body, { attempts = 5 } = {}) {
+  const key = crypto.randomUUID(); // one key for every attempt of this request
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    let res;
+    try {
+      res = await fetch(`https://api.kallabot.com${path}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.KALLABOT_API_KEY}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": key,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      await sleep(backoff(attempt)); // network error: safe to retry with the same key
+      continue;
+    }
+    if (res.ok) return res.json();
+    const problem = await res.json();
+    if (!problem.retryable) throw Object.assign(new Error(problem.code), problem);
+    const retryAfter = Number(res.headers.get("Retry-After"));
+    await sleep(retryAfter ? retryAfter * 1000 : backoff(attempt));
+  }
+  throw new Error("Gave up after retries");
+}
+
+const backoff = (n) => 2 ** n * 1000 * (0.5 + Math.random() / 2);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+```
+
+```python Python
+import random, time, uuid, httpx
+
+def with_retry(client: httpx.Client, path: str, body: dict, attempts: int = 5) -> dict:
+    key = str(uuid.uuid4())  # one key for every attempt of this request
+    for attempt in range(attempts):
+        try:
+            res = client.post(path, json=body, headers={"Idempotency-Key": key})
+        except httpx.TransportError:
+            time.sleep(backoff(attempt))  # network error: safe to retry with the same key
+            continue
+        if res.is_success:
+            return res.json()
+        problem = res.json()
+        if not problem.get("retryable"):
+            raise RuntimeError(problem["code"])
+        retry_after = res.headers.get("Retry-After")
+        time.sleep(int(retry_after) if retry_after else backoff(attempt))
+    raise RuntimeError("Gave up after retries")
+
+def backoff(n: int) -> float:
+    return (2 ** n) * (0.5 + random.random() / 2)
+```
+</CodeGroup>

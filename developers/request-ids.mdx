@@ -1,0 +1,66 @@
+---
+title: "Request IDs and support"
+sidebarTitle: "Request IDs and support"
+description: "Every response has an X-Request-Id. Quote it and we can find exactly what happened."
+icon: "life-buoy"
+---
+
+Every response from the API, success or failure, carries two headers:
+
+```http
+X-Request-Id: req_3f9c2a71b84e4d0a9c5e1b27
+X-Correlation-Id: cor_8a1e44c0d2f94b7e93a6c0d5
+```
+
+| Header | Set by | Use it for |
+| --- | --- | --- |
+| `X-Request-Id` | Always Kallabot | The id of this one request in our logs. Error bodies repeat it as `request_id`. |
+| `X-Correlation-Id` | You, if you send one | Tying our logs to yours. Send `X-Correlation-Id` (or `X-Request-Id`) on your request, up to 64 characters, and we echo it back and log it. If you don't, we make one. |
+
+We always choose the request id ourselves, even when you send an `X-Request-Id`; yours becomes the correlation id. That way no client can make its requests look like someone else's in our logs.
+
+## Log it
+
+Log `X-Request-Id` next to every failed call to the API. It turns "a call failed yesterday afternoon" into a single lookup.
+
+<CodeGroup>
+```javascript Node
+const res = await fetch("https://api.kallabot.com/v1/calls", {
+  method: "POST",
+  headers: { ...auth, "X-Correlation-Id": job.id, "Idempotency-Key": job.id },
+  body: JSON.stringify(body),
+});
+if (!res.ok) {
+  const problem = await res.json();
+  logger.error({ requestId: res.headers.get("X-Request-Id"), code: problem.code }, "Kallabot call failed");
+}
+```
+
+```python Python
+res = client.post(
+    "/v1/calls",
+    headers={"X-Correlation-Id": job_id, "Idempotency-Key": job_id},
+    json=body,
+)
+if res.is_error:
+    log.error("Kallabot call failed", extra={"request_id": res.headers["X-Request-Id"], "code": res.json()["code"]})
+```
+</CodeGroup>
+
+## Calls have their own trail
+
+A call keeps the request that created it: `GET /v1/calls/{call_id}` returns `request_id` and `correlation_id`. For what happened during the call itself (ringing, answering, tool runs, transfers), read `GET /v1/calls/{call_id}/events`.
+
+## Contact support
+
+Email [contact@kallabot.com](mailto:contact@kallabot.com) with:
+
+<Steps>
+  <Step title="The request id">From `X-Request-Id` or the error's `request_id`. For a call, the call id (`call_…`) is just as good.</Step>
+  <Step title="The time, with a time zone">Roughly when it happened.</Step>
+  <Step title="What you expected">And what happened instead, including the error `code`.</Step>
+</Steps>
+
+<Warning>
+  Never send an API key, a webhook secret or a customer's personal details by email. Ids are enough for us to find everything.
+</Warning>

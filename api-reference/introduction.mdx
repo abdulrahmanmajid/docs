@@ -1,106 +1,51 @@
 ---
-title: 'API Documentation'
-sidebarTitle: 'Introduction'
-description: 'Complete reference and documentation for the Kallabot Conversational AI API'
-icon: 'book-open'
+title: "API reference"
+sidebarTitle: "Overview"
+description: "Every public endpoint of the Kallabot API, generated from the live backend."
+icon: "braces"
 ---
 
-# Kallabot AI API Documentation
+This reference is generated from the Kallabot backend's own route definitions on every release, so it always matches what the API does. Each endpoint page shows its parameters, request and response schemas, the scopes its key needs, and a playground where you can send a real request with your key.
 
-Welcome to the Kallabot API documentation. Our comprehensive REST API enables you to programmatically create and manage AI voice agents for both inbound and outbound calling scenarios, providing a powerful platform for building automated voice interactions.
+<CardGroup cols={2}>
+  <Card title="Base URL" icon="globe">
+    `https://api.kallabot.com`
+  </Card>
+  <Card title="Auth" icon="key-round" href="/developers/authentication">
+    `Authorization: Bearer kb_live_…`
+  </Card>
+</CardGroup>
 
-## 🚀 Quick Start Guide
+## Sections
 
-Get started with the Kallabot API in minutes. Our API allows you to:
-- Create and manage AI voice agents
-- Handle inbound calls with intelligent routing
-- Initiate outbound calls with customized scripts
-- Monitor call analytics and performance
-- Manage voice agent configurations
-- Access call recordings and transcriptions
-- Set up webhooks for real-time notifications
+| Section | What's in it |
+| --- | --- |
+| **Agents** | Create, validate, version, publish and archive agents. |
+| **Calls** | Place, list, read, cancel and annotate calls; transcripts, recordings, events; whisper, listen-in, take-over and transfer. |
+| **Scheduled calls** | Book outbound calls for later and confirm callbacks. |
+| **Web calls** | Start browser voice calls over WebRTC. |
+| **Tools** | HTTP API tools, MCP servers, Google Sheets tools, and the credentials they use. |
+| **Knowledge** | Add, edit, resync and delete knowledge sources (text, websites, Google Sheets, files); search; import catalogs. |
+| **Numbers** | Countries, available numbers, buying, line settings, caller numbers, port-ins. |
+| **SIP trunks** | Bring your own carrier over SIP and attach its numbers. |
+| **Inbox** | Chat threads across WhatsApp, Messenger, Instagram and web chat, and their state. |
+| **Web chat** | Website chat widgets. |
+| **Webhooks** | Endpoints, deliveries, retries, recovery and the event catalogue. |
+| **Minutes** | Minutes balances, minute requests and moving minutes. |
+| **Billing** | Plans, the billing summary, invoices, checkout and portal links, subscription changes, seats and auto top-up. |
 
-## 📋 API Reference Structure
+Webhook events are documented here too: each of the 35 events has its own page with its payload schema.
 
-Our API is organized into logical groups for easy navigation:
+## Reading an endpoint page
 
-- **Agents** - Create, manage, and configure AI voice agents
-- **Calls** - Initiate and control voice calls
-- **Campaigns** - Manage automated calling campaigns
-- **Contacts** - Organize contact lists for campaigns
-- **Tools** - Integrate external APIs and services
-- **Knowledge Bases** - Upload and manage knowledge bases for AI agents
-- **Analytics** - Access call analytics and performance metrics
-- **Phone Numbers** - Purchase and manage phone numbers
-- **Regulatory Compliance** - Handle compliance requirements for different regions
+- **Scopes.** Each description ends with the scopes the key needs, like **Scopes:** `call:read`, `call:content`. Missing one returns `403 insufficient_scope`.
+- **Headers.** `Idempotency-Key` is marked required on every operation that needs it. `If-Match` appears where it applies; [Concurrency](/developers/concurrency) lists where it's required. See also [Idempotency](/developers/idempotency).
+- **Responses.** Every endpoint can return the [standard errors](/developers/errors) (`401`, `403`, `422`, `429`, `500`) as `application/problem+json`. Successful responses carry the [`RateLimit-*`](/developers/rate-limits) and `X-Request-Id` headers.
 
-## Base URL
+## Use the spec
 
-All API requests should be made to:
+The OpenAPI 3.1 document behind this reference can be downloaded from the menu at the top of any endpoint page. Every operation carries `x-required-scopes`. Load it into Postman, Insomnia or an OpenAPI client generator to get a typed client.
 
-```bash
-https://api.kallabot.com
-```
-
-## Authentication
-
-All API endpoints require authentication using an API key. You can obtain your API key from the [dashboard settings](https://app.kallabot.com/settings/api).
-
-To authenticate your requests, include your API key in the Authorization header:
-
-```bash
-Authorization: Bearer your_api_key
-```
-
-## Rate Limiting
-
-The API implements rate limiting to ensure fair usage:
-- 100 requests per minute for standard accounts
-- 1000 requests per minute for enterprise accounts
-
-Rate limit information is included in the response headers:
-- `X-RateLimit-Limit`: Total requests allowed per window
-- `X-RateLimit-Remaining`: Remaining requests in current window
-- `X-RateLimit-Reset`: Time when the rate limit resets
-
-## Response Format
-
-All responses are returned in JSON format. Successful responses will have a 2xx status code and follow this structure:
-
-```json
-{
-  "success": true,
-  "data": {
-    // Response data
-  }
-}
-```
-
-## Error Handling
-
-Error responses include HTTP status codes in the 4xx or 5xx range and follow this format:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "error_code",
-    "message": "Human-readable error message",
-    "details": {} // Additional error details when available
-  }
-}
-```
-
-## Versioning
-
-The API uses semantic versioning. The current version is v1. We maintain backward compatibility within major versions.
-
-## Getting Started
-
-To start using the Kallabot API:
-1. Sign up for a Kallabot account
-2. Get your API key from the dashboard
-3. Make your first API call to create a voice agent
-4. Set up webhooks to receive real-time call events
-
-For detailed examples and use cases, refer to our [quickstart guide](/quickstart).
+<Info>
+  The API reference covers what an API key can call. Dashboard-only actions (creating API keys, connecting WhatsApp and Meta accounts, replying to chats) aren't listed here.
+</Info>

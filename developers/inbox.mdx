@@ -1,0 +1,128 @@
+---
+title: "Inbox"
+description: "Read WhatsApp, Messenger, Instagram and web chat threads, and keep their status, owner and tags in sync with your tools."
+icon: "inbox"
+---
+
+The inbox is every chat your agents handle, across four channels, in one list. With an API key you can read threads, see who's handling them, and change their status, assignee, priority and tags, for example to mirror them into a helpdesk or CRM.
+
+| `channel` | Where the chat happens |
+| --- | --- |
+| `whatsapp` | Your WhatsApp Business number |
+| `messenger` | Your Facebook Page |
+| `instagram` | Your Instagram business account |
+| `web` | The [web chat widget](/developers/web-chat) on your website |
+
+Phone calls aren't in the inbox; they're in [Calls](/developers/calls).
+
+<Info>
+  **What API keys can and can't do today.** Reading threads and changing their state work with API keys (`inbox:read`, `inbox:write`). **Sending replies, attachments, taking over and handing back are dashboard-only for now**: they need a teammate signed in. Connecting the channels themselves happens in the dashboard through Meta sign-in.
+</Info>
+
+## List threads
+
+```bash
+curl "https://api.kallabot.com/v1/inbox/threads?status=open&channel=whatsapp&limit=50" \
+  -H "Authorization: Bearer $KALLABOT_API_KEY"
+```
+
+| Filter | Values |
+| --- | --- |
+| `channel` | `whatsapp`, `messenger`, `instagram`, `web` |
+| `status` | `open`, `done`, `snoozed` |
+| `assignee` | `unassigned` or a user id |
+| `handled_by` | Who's replying right now: `agent` or `human` |
+| `unread` | `true` for threads with unread customer messages |
+| `agent_id` | Threads one agent handles |
+| `q` | Search by contact name, handle or text |
+
+Threads are ordered by last activity. The answer pages with a cursor (see [Pagination](/developers/pagination)) and adds `counts` for the open, needs-you, mine and unread tabs.
+
+```json
+{
+  "data": [
+    {
+      "channel": "whatsapp",
+      "id": "9a8b7c6d-5e4f-4a3b-2c1d-0e9f8a7b6c5d",
+      "connection": { "id": "0f1e2d3c-…", "name": "Marina Homes" },
+      "agent": { "id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30", "name": "Zara" },
+      "contact": { "name": "Omar K.", "handle": null, "phone": "+971501234567", "email": null, "avatar_url": null },
+      "handled_by": "agent",
+      "handler": null,
+      "state": {
+        "status": "open",
+        "snoozed_until": null,
+        "assignee": null,
+        "priority": "normal",
+        "tags": ["lead"],
+        "done_at": null
+      },
+      "summary": { "text": "Asked about 2-bed flats in Marina under 120k a year.", "at": "2026-11-07T08:14:02Z" },
+      "unread_count": 1,
+      "window": { "open": true, "expires_at": "2026-11-08T08:12:40Z" },
+      "last_message": {
+        "direction": "inbound",
+        "author": "contact",
+        "type": "text",
+        "preview": "Is the 2-bed still available?",
+        "occurred_at": "2026-11-07T08:12:40Z"
+      },
+      "last_activity_at": "2026-11-07T08:12:40Z",
+      "created_at": "2026-11-06T17:02:11Z"
+    }
+  ],
+  "has_more": false,
+  "next_cursor": null,
+  "counts": { "open": 12, "needs_you": 2, "mine": 0, "unread": 3 }
+}
+```
+
+`window` is the channel's reply window. WhatsApp, Messenger and Instagram only allow free-form replies for 24 hours after the customer's last message; web chat has no window.
+
+Read one thread with `GET /v1/inbox/threads/{channel}/{thread_id}`.
+
+## Change a thread's state
+
+`PATCH /v1/inbox/threads/{channel}/{thread_id}/state` with any of:
+
+| Field | Values |
+| --- | --- |
+| `status` | `open`, `done`, `snoozed` |
+| `snoozed_until` | When a snoozed thread comes back (ISO 8601) |
+| `assignee_user_id` | A teammate's user id, or `null` to unassign |
+| `priority` | `urgent`, `high`, `normal`, `low` |
+| `tags` | The full list of tags |
+
+```bash
+curl -X PATCH https://api.kallabot.com/v1/inbox/threads/whatsapp/9a8b7c6d-5e4f-4a3b-2c1d-0e9f8a7b6c5d/state \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" -H "Content-Type: application/json" \
+  -d '{"status": "done", "tags": ["lead", "viewing-booked"]}'
+```
+
+`POST /v1/inbox/threads/{channel}/{thread_id}/read` marks a thread as read.
+
+## More you can read
+
+| Endpoint | Returns |
+| --- | --- |
+| `GET …/threads/{channel}/{thread_id}/notes` | Teammates' internal notes on the thread. |
+| `GET …/threads/{channel}/{thread_id}/history` | The same customer's other calls and chats. |
+| `GET /v1/inbox/customers/history?phone=+971…` | A customer's calls and chats by phone or `email`. |
+| `POST …/threads/{channel}/{thread_id}/summary` | A fresh summary of the thread (needs `inbox:write`). |
+| `GET /v1/inbox/bookings` | Appointments agents booked from chats. Filter by `from`, `to`, `channel`, `agent_id`. |
+| `GET /v1/inbox/quick-replies` | Saved replies teammates insert with a shortcut. Manage them with `POST`, `PATCH` and `DELETE`. |
+| `GET /v1/inbox/settings` | How new threads are assigned and passed on. Change with `PUT`. |
+
+## Get every message as it happens
+
+Thread endpoints return a preview of the last message, not the whole history. To capture each message, subscribe a webhook to the conversation events:
+
+```json
+{
+  "url": "https://example.com/kallabot",
+  "events": ["conversation.*"],
+  "include_content": true
+}
+```
+
+`conversation.message.received` and `conversation.message.sent` then carry the message `text`, and `conversation.analyzed` carries the summary. Without `include_content`, the events still arrive, minus the text. See [Events](/developers/events#conversations).

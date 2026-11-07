@@ -1,0 +1,111 @@
+---
+title: "Concurrency and revisions"
+sidebarTitle: "Concurrency"
+description: "Use ETag and If-Match so two people editing the same agent never silently overwrite each other."
+icon: "git-merge"
+---
+
+Agents, calls and tools carry a `revision`: a number that goes up by one on every change. Reads return it twice, in the body and as an `ETag` header:
+
+```http
+HTTP/1.1 200 OK
+ETag: "4"
+Content-Type: application/json
+
+{ "id": "8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30", "revision": 4, ... }
+```
+
+When you change the resource, send the revision you read in `If-Match`. If nobody else changed it in the meantime, the write goes through and you get the new `ETag`. If someone did, you get `412 revision_conflict` and nothing is overwritten.
+
+```bash
+curl -X PATCH https://api.kallabot.com/v1/agents/8f0e4c1a-3b7d-4e2f-9a61-2c5d8b7e1f30 \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H 'If-Match: "4"' \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"config": {"prompt": "…", "greeting": "Hello, Bright Smile Dental, Sara speaking."}, "change_note": "New greeting"}'
+```
+
+`If-Match` accepts `"4"`, `W/"4"` or a bare `4`.
+
+## The conflict response
+
+```json
+{
+  "type": "https://docs.kallabot.com/errors/revision_conflict",
+  "title": "Someone else changed this first",
+  "status": 412,
+  "code": "revision_conflict",
+  "retryable": false,
+  "detail": "Reload and reapply your change — this resource moved on since you read it.",
+  "current_revision": 5,
+  "request_id": "req_0c2d4e6f8a1b3c5d7e9f0a1b"
+}
+```
+
+The response also carries `ETag: "5"`. Read the resource again, reapply your change on top, and send `If-Match: "5"`.
+
+<Warning>
+  Don't "fix" a conflict by blindly resending with `current_revision`. That throws away the other person's change, which is exactly what the check exists to prevent.
+</Warning>
+
+## Where it's required
+
+| Operation | `If-Match` |
+| --- | --- |
+| `PATCH /v1/agents/{agent_id}` | Required |
+| `POST /v1/agents/{agent_id}/publish` | Required |
+| `POST /v1/agents/{agent_id}/versions/{version_id}/revert` | Required |
+| `DELETE /v1/agents/{agent_id}` (archive) | Required |
+| `PATCH /v1/agents/{agent_id}/channel` | Required |
+| `PATCH /v1/tools/{tool_id}`, `DELETE /v1/tools/{tool_id}` | Required |
+| `PATCH /v1/calls/{call_id}` (tags, review, archive) | Required |
+| `POST /v1/calls/{call_id}/cancel` | Optional. Cancelling a call that's already ending shouldn't fail. |
+
+Missing a required `If-Match` returns `428 precondition_required`.
+
+A few resources take the revision **in the body** instead of a header: `PATCH /v1/webhooks/{endpoint_id}` needs `"revision"`, and `PATCH /v1/webchat/widgets/{widget_id}` accepts one. A stale revision there is also refused rather than overwriting.
+
+## Read, change, write
+
+<CodeGroup>
+```javascript Node
+async function updateGreeting(agentId, greeting) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(`https://api.kallabot.com/v1/agents/${agentId}`, { headers: auth });
+    const agent = await res.json();
+    const etag = res.headers.get("ETag");
+
+    const update = await fetch(`https://api.kallabot.com/v1/agents/${agentId}`, {
+      method: "PATCH",
+      headers: { ...auth, "Content-Type": "application/json", "If-Match": etag, "Idempotency-Key": crypto.randomUUID() },
+      body: JSON.stringify({ config: { ...agent.config, greeting }, change_note: "Greeting" }),
+    });
+    if (update.status !== 412) return update.json();
+    // Someone else saved first: loop, re-read, reapply.
+  }
+  throw new Error("Agent keeps changing; try again later");
+}
+```
+
+```python Python
+def update_greeting(client, agent_id: str, greeting: str) -> dict:
+    for _ in range(3):
+        res = client.get(f"/v1/agents/{agent_id}")
+        agent, etag = res.json(), res.headers["ETag"]
+        update = client.patch(
+            f"/v1/agents/{agent_id}",
+            headers={"If-Match": etag, "Idempotency-Key": str(uuid.uuid4())},
+            json={"config": {**agent["config"], "greeting": greeting}, "change_note": "Greeting"},
+        )
+        if update.status_code != 412:
+            update.raise_for_status()
+            return update.json()
+        # Someone else saved first: loop, re-read, reapply.
+    raise RuntimeError("Agent keeps changing; try again later")
+```
+</CodeGroup>
+
+<Note>
+  `config` in a `PATCH` replaces the whole draft config, so start from the config you read (as above) rather than sending only the changed field.
+</Note>

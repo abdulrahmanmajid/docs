@@ -1,0 +1,36 @@
+---
+title: "Security and audit"
+description: "Your sign-in sessions, the audit log, and the controls that keep customer conversations private."
+icon: "lock"
+---
+
+## Your sign-in
+
+You sign in with your email and a six-digit code we send you, or with a password if you've set one.
+
+Under **Settings → Security** you can:
+
+- See every device you're signed in on, and sign one out.
+- **Sign out everywhere** at once, for example after losing a laptop.
+- Read your recent sign-in history.
+
+## Audit log
+
+The **Audit log** records who did what in your workspace, and when: agents created and published, numbers bought and released, people invited, roles changed, API keys created and revoked, webhooks changed, and every time someone read a call transcript. Open **Audit log** in the app to see each entry with the person's name and face.
+
+## Who can see conversations
+
+Recordings, transcripts and chat messages are treated as private:
+
+- Each role only sees what it needs. See [Roles](/guides/team#roles).
+- Members see their own calls; managers see their branch.
+- Reading a transcript is itself recorded in the audit log.
+- Phone numbers show partly hidden (like `+97150•••4567`) unless a person is allowed to see call content.
+
+## Do not call
+
+Add numbers to the **Suppression list** and no agent will ever call them. If someone tells your agent to stop calling, honour it by adding them here.
+
+## For developers
+
+API keys are scoped, expire within a year, and can be revoked instantly. Webhooks are signed. See [Authentication](/developers/authentication) and [Webhooks](/developers/webhooks).

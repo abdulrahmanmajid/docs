@@ -1,0 +1,97 @@
+---
+title: "Rate limits"
+description: "Per-key and per-workspace request budgets, the RateLimit headers, and how to back off."
+icon: "gauge"
+---
+
+Every authenticated request takes one token from two buckets: one for **who** is asking and one for the **workspace**. A request goes through only when both buckets have a token.
+
+| Bucket | Limit | Applies to |
+| --- | --- | --- |
+| Per API key | **600 requests a minute** | Each API key on its own. |
+| Per signed-in person | **1,200 requests a minute** | Each person using the dashboard. |
+| Per workspace | **3,000 requests a minute** | Everything in the workspace together: all keys and all people. |
+
+Buckets refill continuously, not once a minute. A key that's used up its 600 gets a new token every 100 ms, so a steady 10 requests a second never hits the limit, while a burst of 600 at once is also fine.
+
+<Note>
+  These limits are about request volume. How many **calls** can run at the same time is a separate limit per workspace; going over it returns `429 capacity_exceeded`. See [Errors](/developers/errors#capacity_exceeded).
+</Note>
+
+## Headers on every response
+
+Every authenticated response tells you where you stand, using the IETF `RateLimit` header fields. The numbers describe whichever of your two buckets is closest to empty.
+
+```http
+HTTP/1.1 200 OK
+RateLimit-Limit: 600
+RateLimit-Remaining: 587
+RateLimit-Reset: 2
+X-Request-Id: req_3f9c2a71b84e4d0a9c5e1b27
+```
+
+| Header | Meaning |
+| --- | --- |
+| `RateLimit-Limit` | The size of the tightest bucket, in requests per minute. |
+| `RateLimit-Remaining` | Whole requests left in it right now. |
+| `RateLimit-Reset` | Seconds until it's completely full again. |
+
+## When you hit the limit
+
+You get `429` with code `rate_limited`, a `Retry-After` header in seconds, and the same `RateLimit-*` headers:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+Retry-After: 1
+RateLimit-Limit: 600
+RateLimit-Remaining: 0
+RateLimit-Reset: 60
+```
+
+```json
+{
+  "type": "https://docs.kallabot.com/errors/rate_limited",
+  "title": "Too many requests",
+  "status": 429,
+  "code": "rate_limited",
+  "retryable": true,
+  "detail": "Too many requests. Retry after 1 second.",
+  "request_id": "req_9a8b7c6d5e4f3a2b1c0d9e8f"
+}
+```
+
+Refused requests don't take a token, so waiting `Retry-After` seconds and retrying always works.
+
+## Staying under the limit
+
+- **Use webhooks instead of polling.** One `call.ended` event replaces dozens of `GET /v1/calls/{id}` requests.
+- **Use `limit=100`** when walking lists, rather than many small pages.
+- **Slow down early.** When `RateLimit-Remaining` gets low, spread requests out instead of waiting for a `429`.
+- **One key per integration.** Each key has its own 600-a-minute bucket, and the workspace bucket is shared by all of them.
+
+<CodeGroup>
+```javascript Node
+async function politeFetch(url, init) {
+  for (;;) {
+    const res = await fetch(url, init);
+    if (res.status !== 429) return res;
+    const wait = Number(res.headers.get("Retry-After") ?? 1);
+    await new Promise((r) => setTimeout(r, wait * 1000));
+  }
+}
+```
+
+```python Python
+import time
+
+def polite(client, method: str, url: str, **kwargs):
+    while True:
+        res = client.request(method, url, **kwargs)
+        if res.status_code != 429:
+            return res
+        time.sleep(int(res.headers.get("Retry-After", "1")))
+```
+</CodeGroup>
+
+The public web chat endpoints your website widget uses have their own limits (per visitor, per widget and per IP address), separate from the buckets above.

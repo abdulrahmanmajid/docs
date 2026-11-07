@@ -1,0 +1,40 @@
+---
+title: "Workflows"
+description: "Connect Kallabot to hundreds of other apps with a drag-and-drop builder, no code needed."
+icon: "workflow"
+---
+
+Workflows let you build "when this happens, do that" automations between Kallabot and the other apps your business uses: Slack, Gmail, HubSpot, Salesforce, Google Sheets, Airtable and hundreds more. For example:
+
+- When a call is booked, post it to your team's Slack channel.
+- When a new lead comes in on WhatsApp, add it to your CRM.
+- When a call ends, email the summary to the branch manager.
+
+## Open the builder
+
+Go to **Workflows** in the app and open the **Builder**. It opens right inside Kallabot, already signed in. (It runs at workflows.kallabot.com.)
+
+The builder is based on [Activepieces](https://www.activepieces.com), an open-source automation tool. Each workflow is a **trigger** (what starts it) followed by **steps** (what it does).
+
+## Start workflows from Kallabot events
+
+The simplest way to start a workflow when something happens in Kallabot is a webhook:
+
+<Steps>
+  <Step title="Create the workflow">
+    In the builder, create a new flow and choose the **Webhook** trigger. Copy the address it gives you.
+  </Step>
+  <Step title="Point a Kallabot webhook at it">
+    In Kallabot, go to **Settings → For developers → Webhooks**, add an endpoint with that address, and choose the events, like **call.analyzed** or **conversation.message.received**. See [Webhooks](/guides/webhooks).
+  </Step>
+  <Step title="Send a test">
+    Click **Send test** in Kallabot. The test event appears in the builder, so you can pick its fields (like the caller's number or the summary) in later steps.
+  </Step>
+  <Step title="Add your steps and publish">
+    Add what should happen, like "Send a Slack message", and switch the flow on.
+  </Step>
+</Steps>
+
+## WhatsApp flows
+
+Under **Workflows → WhatsApp** you'll find your WhatsApp flows: step-by-step forms that open inside a WhatsApp chat, for bookings or sign-ups. Your agent can use them in conversations. See [WhatsApp](/guides/whatsapp).
