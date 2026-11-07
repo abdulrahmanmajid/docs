@@ -309,7 +309,7 @@ Every delivery and every attempt (status code, timing, the first 2 KB of your re
 | `GET /v1/webhooks/deliveries/{delivery_id}` | One delivery with all its attempts. |
 | `POST /v1/webhooks/deliveries/{delivery_id}/retry` | Send one delivery again now. |
 | `POST /v1/webhooks/{endpoint_id}/recover` | Re-send every failed delivery since a time: `{"since": "2026-11-06T00:00:00Z"}`. Up to 1,000 at once. |
-| `POST /v1/webhooks/{endpoint_id}/enable` | Turn a switched-off endpoint back on, with its failure count reset. |
+| `PATCH /v1/webhooks/{endpoint_id}` with `{"status": "active"}` | Turn a switched-off endpoint back on, with its failure count reset (`"disabled"` turns it off). |
 
 After an outage: fix the endpoint, call `enable`, then `recover` from when it started failing.
 

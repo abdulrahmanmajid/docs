@@ -1021,6 +1021,7 @@
           "Agents"
         ],
         "summary": "Update an agent",
+        "description": "Changes the agent's configuration, name, owner or team. A new configuration is saved as a draft version; callers keep hearing the published version until you publish. To change only the WhatsApp greeting and instructions or the knowledge sources, send `whatsapp` and/or `knowledge_ids` instead of a whole `config`: every other setting stays as it is, and when the agent was live with nothing else unpublished and your key has `agent:publish`, the change goes live at once (`published: true`). Send `If-Match` with the `revision` you read and an `Idempotency-Key`; a stale revision is refused.\n\n**Scopes:** `agent:write`",
         "operationId": "updateAgent",
         "parameters": [
           {
@@ -1083,7 +1084,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgentDetail"
+                  "$ref": "#/components/schemas/AgentUpdated"
                 }
               }
             },
@@ -1169,7 +1170,6 @@
             "$ref": "#/components/responses/Conflict"
           }
         },
-        "description": "Changes the agent's configuration, name, owner or team. A new configuration is saved as a draft version; callers keep hearing the published version until you publish. Send `If-Match` with the `revision` you read and an `Idempotency-Key`; a stale revision is refused.\n\n**Scopes:** `agent:write`",
         "security": [
           {
             "apiKey": []
@@ -1340,179 +1340,6 @@
         ],
         "x-required-scopes": [
           "agent:archive"
-        ]
-      }
-    },
-    "/v1/agents/{agent_id}/channel": {
-      "patch": {
-        "tags": [
-          "Agents"
-        ],
-        "summary": "Update an agent's WhatsApp copy",
-        "description": "Replaces only the agent's WhatsApp greeting and instructions and/or its knowledge sources, leaving every other setting as it is. When the agent was live with no other unpublished changes and your key has `agent:publish`, the change goes live at once (`published: true`); otherwise it's saved as a draft. Send `If-Match`; an `Idempotency-Key` is optional.\n\n**Scopes:** `agent:write`",
-        "operationId": "updateAgentChannel",
-        "parameters": [
-          {
-            "name": "agent_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Agent Id"
-            }
-          },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "maxLength": 255
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Idempotency-Key"
-            },
-            "description": "A unique key (a UUID works) for this request. Retrying with the same key returns the first answer instead of running twice."
-          },
-          {
-            "name": "If-Match",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "pattern": "^(W/)?\"?[0-9]+\"?$",
-              "example": "\"7\""
-            },
-            "description": "The revision you read (its `ETag`, an integer in quotes such as `\"7\"`), so a stale write is refused with 412. Required: a write without it is refused with 428."
-          },
-          {
-            "name": "Kallabot-Version",
-            "in": "header",
-            "required": false,
-            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-11-07"
-              ],
-              "example": "2026-11-07"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateChannelRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentChannelDetail"
-                }
-              }
-            },
-            "headers": {
-              "ETag": {
-                "description": "The object's revision in quotes (e.g. `\"7\"`). Send it back as `If-Match` on a write.",
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\"[0-9]+\"$",
-                  "example": "\"7\""
-                }
-              },
-              "RateLimit-Limit": {
-                "description": "Requests allowed per minute for this credential.",
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "RateLimit-Remaining": {
-                "description": "Requests left in the current window.",
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "RateLimit-Reset": {
-                "description": "Seconds until the window is full again.",
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "X-Request-Id": {
-                "description": "Quote this when contacting support.",
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Kallabot-Version": {
-                "description": "The API version that answered this request.",
-                "schema": {
-                  "type": "string",
-                  "example": "2026-11-07"
-                }
-              },
-              "Kallabot-SDK-Warning": {
-                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "422": {
-            "$ref": "#/components/responses/InvalidRequest"
-          },
-          "400": {
-            "$ref": "#/components/responses/UnsupportedApiVersion"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthenticated"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "426": {
-            "$ref": "#/components/responses/SdkVersionUnsupported"
-          },
-          "429": {
-            "$ref": "#/components/responses/RateLimited"
-          },
-          "500": {
-            "$ref": "#/components/responses/InternalError"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "428": {
-            "$ref": "#/components/responses/PreconditionRequired"
-          },
-          "412": {
-            "$ref": "#/components/responses/PreconditionFailed"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          }
-        },
-        "security": [
-          {
-            "apiKey": []
-          }
-        ],
-        "x-required-scopes": [
-          "agent:write"
         ]
       }
     },
@@ -11293,136 +11120,6 @@
         ]
       }
     },
-    "/v1/webhooks/{endpoint_id}/enable": {
-      "post": {
-        "tags": [
-          "Webhooks"
-        ],
-        "summary": "Enable a webhook endpoint",
-        "operationId": "enableWebhookEndpoint",
-        "parameters": [
-          {
-            "name": "endpoint_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Endpoint Id"
-            }
-          },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "maxLength": 255
-            },
-            "description": "A unique key (a UUID works) for this request. Retrying with the same key returns the first answer instead of running twice."
-          },
-          {
-            "name": "Kallabot-Version",
-            "in": "header",
-            "required": false,
-            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "2026-11-07"
-              ],
-              "example": "2026-11-07"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WebhookResponse"
-                }
-              }
-            },
-            "headers": {
-              "RateLimit-Limit": {
-                "description": "Requests allowed per minute for this credential.",
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "RateLimit-Remaining": {
-                "description": "Requests left in the current window.",
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "RateLimit-Reset": {
-                "description": "Seconds until the window is full again.",
-                "schema": {
-                  "type": "integer"
-                }
-              },
-              "X-Request-Id": {
-                "description": "Quote this when contacting support.",
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Kallabot-Version": {
-                "description": "The API version that answered this request.",
-                "schema": {
-                  "type": "string",
-                  "example": "2026-11-07"
-                }
-              },
-              "Kallabot-SDK-Warning": {
-                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "422": {
-            "$ref": "#/components/responses/InvalidRequest"
-          },
-          "400": {
-            "$ref": "#/components/responses/UnsupportedApiVersion"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthenticated"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "426": {
-            "$ref": "#/components/responses/SdkVersionUnsupported"
-          },
-          "429": {
-            "$ref": "#/components/responses/RateLimited"
-          },
-          "500": {
-            "$ref": "#/components/responses/InternalError"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "428": {
-            "$ref": "#/components/responses/PreconditionRequired"
-          }
-        },
-        "description": "Turns a disabled endpoint back on and resets its failure counters. Use the recover endpoint to re-send what it missed.\n\n**Scopes:** `webhook:write`",
-        "security": [
-          {
-            "apiKey": []
-          }
-        ],
-        "x-required-scopes": [
-          "webhook:write"
-        ]
-      }
-    },
     "/v1/webhooks/{endpoint_id}/rotate-secret": {
       "post": {
         "tags": [
@@ -17068,7 +16765,7 @@
           "Billing"
         ],
         "summary": "Get plans and prices",
-        "description": "Returns `{currency, plans, packs, minute_price, seat_price}` in the workspace's currency (AED for a UAE workspace, otherwise USD). Each plan has `prices.month` and `prices.year` (null for Enterprise), each pack an `amount`, `minute_price` an `amount`, and `seat_price` a `month` and `year`. Every `amount` is integer minor units with its `currency`.\n\n**Scopes:** `billing:read`",
+        "description": "Returns `{currency, plans, packs, minute_price, seat_price}` in the workspace's currency (USD unless the workspace chose AED). Each plan has `prices.month` and `prices.year` (null for Enterprise), each pack an `amount`, `minute_price` an `amount`, and `seat_price` a `month` and `year`. Every `amount` is integer minor units with its `currency`.\n\n**Scopes:** `billing:read`",
         "operationId": "getBillingPlans",
         "parameters": [
           {
@@ -17092,6 +16789,146 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CatalogOut"
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests allowed per minute for this credential.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the window is full again.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Quote this when contacting support.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Kallabot-Version": {
+                "description": "The API version that answered this request.",
+                "schema": {
+                  "type": "string",
+                  "example": "2026-11-07"
+                }
+              },
+              "Kallabot-SDK-Warning": {
+                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "400": {
+            "$ref": "#/components/responses/UnsupportedApiVersion"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "426": {
+            "$ref": "#/components/responses/SdkVersionUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-required-scopes": [
+          "billing:read"
+        ]
+      }
+    },
+    "/v1/billing/packs": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "List minutes packs",
+        "description": "Returns the 100, 500 and 2,000-minute packs priced at the workspace's plan rate (minutes x the plan's per-minute price), in the workspace's currency. `amount` is integer minor units.\n\n**Scopes:** `billing:read`",
+        "operationId": "listMinutePacks",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "Kallabot-Version",
+            "in": "header",
+            "required": false,
+            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-11-07"
+              ],
+              "example": "2026-11-07"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackPage"
                 }
               }
             },
@@ -17261,7 +17098,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "Returns the plan, subscription status and interval, seats, trial and period dates, payment state, saved card, auto top-up settings, pool minutes and the next invoice, if there is one.\n\n**Scopes:** `billing:read`",
+        "description": "Returns the plan, subscription status and interval, seats, trial and period dates, payment state, saved card, auto top-up settings, pool minutes and the next invoice, if there is one. `currency` is the billing currency; `currency_locked` is true once the first charge has fixed it.\n\n**Scopes:** `billing:read`",
         "security": [
           {
             "apiKey": []
@@ -18268,6 +18105,385 @@
           }
         },
         "description": "When the pool falls below `threshold_minutes`, the saved card is charged for `amount_minutes`. Turning it on needs a saved card (`409 card_required`). It turns itself off after a hard decline.\n\n**Scopes:** `billing:write`",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-required-scopes": [
+          "billing:write"
+        ]
+      }
+    },
+    "/v1/billing/currency": {
+      "put": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Set billing currency",
+        "description": "Sets the currency the workspace is billed in: `usd` (the default) or `aed`. Returns the billing summary. Sending the current currency changes nothing. After the first charge the currency is fixed, and a different one returns `409 currency_locked`.\n\n**Scopes:** `billing:write`",
+        "operationId": "setBillingCurrency",
+        "parameters": [
+          {
+            "name": "Kallabot-Version",
+            "in": "header",
+            "required": false,
+            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-11-07"
+              ],
+              "example": "2026-11-07"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrencyChoice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryOut"
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests allowed per minute for this credential.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the window is full again.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Quote this when contacting support.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Kallabot-Version": {
+                "description": "The API version that answered this request.",
+                "schema": {
+                  "type": "string",
+                  "example": "2026-11-07"
+                }
+              },
+              "Kallabot-SDK-Warning": {
+                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "400": {
+            "$ref": "#/components/responses/UnsupportedApiVersion"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "426": {
+            "$ref": "#/components/responses/SdkVersionUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-required-scopes": [
+          "billing:write"
+        ]
+      }
+    },
+    "/v1/billing/numbers/quote": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Quote a phone number",
+        "operationId": "quoteNumber",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z]{2}$",
+              "title": "Country"
+            }
+          },
+          {
+            "name": "number_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "local",
+                "mobile",
+                "national",
+                "toll_free"
+              ],
+              "type": "string",
+              "title": "Number Type"
+            }
+          },
+          {
+            "name": "Kallabot-Version",
+            "in": "header",
+            "required": false,
+            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-11-07"
+              ],
+              "example": "2026-11-07"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberQuoteOut"
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests allowed per minute for this credential.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the window is full again.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Quote this when contacting support.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Kallabot-Version": {
+                "description": "The API version that answered this request.",
+                "schema": {
+                  "type": "string",
+                  "example": "2026-11-07"
+                }
+              },
+              "Kallabot-SDK-Warning": {
+                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "400": {
+            "$ref": "#/components/responses/UnsupportedApiVersion"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "426": {
+            "$ref": "#/components/responses/SdkVersionUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "description": "Returns what one more number of this `country` and `number_type` costs each month, before you buy it: `monthly` (integer minor units with `currency`, null when free), `free`, `reason` (`first_number_free`, `monthly_fee` or `unknown_price`), `requires_payment_method` and `twilio_cost` (the carrier's monthly price in US cents). On Brokerage and Enterprise the first number is free; every other number costs the carrier's monthly price plus 30%, billed monthly. Numbers on your own carrier cost nothing here. A key with `number:read` instead of `billing:read` also works.\n\n**Scopes:** `billing:read`",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-required-scopes": [
+          "billing:read"
+        ]
+      }
+    },
+    "/v1/billing/numbers/payment-method": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Add a card for numbers",
+        "description": "Returns a Stripe Checkout URL that saves a card as the workspace's default, so numbers can be billed. Buying a number that would be charged without a card returns `402 payment_method_required`. Send an `Idempotency-Key`.\n\n**Scopes:** `billing:write`",
+        "operationId": "createNumberPaymentMethodSession",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "description": "A unique key (a UUID works) for this request. Retrying with the same key returns the first answer instead of running twice."
+          },
+          {
+            "name": "Kallabot-Version",
+            "in": "header",
+            "required": false,
+            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-11-07"
+              ],
+              "example": "2026-11-07"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NumberCardRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UrlOut"
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests allowed per minute for this credential.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the window is full again.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Quote this when contacting support.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Kallabot-Version": {
+                "description": "The API version that answered this request.",
+                "schema": {
+                  "type": "string",
+                  "example": "2026-11-07"
+                }
+              },
+              "Kallabot-SDK-Warning": {
+                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "400": {
+            "$ref": "#/components/responses/UnsupportedApiVersion"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "426": {
+            "$ref": "#/components/responses/SdkVersionUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "428": {
+            "$ref": "#/components/responses/PreconditionRequired"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
         "security": [
           {
             "apiKey": []
@@ -23739,191 +23955,6 @@
         "title": "AgentCapabilities",
         "description": "What THIS caller may do to THIS row.\n\nReturned per row rather than derived client-side from a role, because the\nanswer depends on ownership and grants as well as role, and two\nimplementations of that logic will eventually disagree."
       },
-      "AgentChannelDetail": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "The agent's id."
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "The agent's display name."
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug",
-            "description": "A stable, URL-safe name, unique in the workspace; survives renames."
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "draft",
-              "active",
-              "suspended",
-              "archived"
-            ],
-            "title": "Status",
-            "description": "`draft` (never published), `active` (live), `suspended` (paused by Kallabot) or `archived`."
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "inbound",
-              "outbound",
-              "both"
-            ],
-            "title": "Direction",
-            "description": "Whether it answers calls, makes them, or both."
-          },
-          "revision": {
-            "type": "integer",
-            "title": "Revision",
-            "description": "Bumped on every change. Send it back as `If-Match` on a write."
-          },
-          "published_version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Published Version",
-            "description": "The version callers hear; null before the first publish."
-          },
-          "draft_version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Draft Version",
-            "description": "The unpublished version being edited, if any."
-          },
-          "has_unpublished_changes": {
-            "type": "boolean",
-            "title": "Has Unpublished Changes",
-            "description": "True when a draft differs from what callers hear."
-          },
-          "owner_user_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Owner User Id",
-            "description": "The person who owns it, if any."
-          },
-          "team_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Team Id",
-            "description": "The team it belongs to, if any."
-          },
-          "tags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Tags",
-            "description": "Free-form labels."
-          },
-          "total_calls": {
-            "type": "integer",
-            "title": "Total Calls",
-            "description": "Calls this agent has handled."
-          },
-          "last_call_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Call At",
-            "description": "When it last handled a call (ISO 8601)."
-          },
-          "created_at": {
-            "type": "string",
-            "title": "Created At",
-            "description": "When it was created (ISO 8601)."
-          },
-          "updated_at": {
-            "type": "string",
-            "title": "Updated At",
-            "description": "When it last changed (ISO 8601)."
-          },
-          "capabilities": {
-            "$ref": "#/components/schemas/AgentCapabilities",
-            "description": "What this key may do to this agent."
-          },
-          "config": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Config",
-            "description": "The agent's configuration (the draft when one exists, else the live one). Secrets are redacted."
-          },
-          "config_hash": {
-            "type": "string",
-            "title": "Config Hash",
-            "description": "A fingerprint of `config`."
-          },
-          "schema_version": {
-            "type": "integer",
-            "title": "Schema Version",
-            "description": "The configuration schema version."
-          },
-          "findings": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationFinding"
-            },
-            "type": "array",
-            "title": "Findings",
-            "description": "Validation findings for `config`."
-          },
-          "published": {
-            "type": "boolean",
-            "title": "Published",
-            "description": "True when this save went live: the agent was published with no other unpublished changes, and the caller may publish. Otherwise it is a draft (or nothing changed)."
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "status",
-          "direction",
-          "revision",
-          "has_unpublished_changes",
-          "total_calls",
-          "created_at",
-          "updated_at",
-          "capabilities",
-          "config",
-          "config_hash",
-          "schema_version",
-          "published"
-        ],
-        "title": "AgentChannelDetail"
-      },
       "AgentDetail": {
         "properties": {
           "id": {
@@ -24512,6 +24543,191 @@
           "capabilities"
         ],
         "title": "AgentSummary"
+      },
+      "AgentUpdated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "The agent's id."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The agent's display name."
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug",
+            "description": "A stable, URL-safe name, unique in the workspace; survives renames."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "suspended",
+              "archived"
+            ],
+            "title": "Status",
+            "description": "`draft` (never published), `active` (live), `suspended` (paused by Kallabot) or `archived`."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "inbound",
+              "outbound",
+              "both"
+            ],
+            "title": "Direction",
+            "description": "Whether it answers calls, makes them, or both."
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "Bumped on every change. Send it back as `If-Match` on a write."
+          },
+          "published_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Version",
+            "description": "The version callers hear; null before the first publish."
+          },
+          "draft_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Version",
+            "description": "The unpublished version being edited, if any."
+          },
+          "has_unpublished_changes": {
+            "type": "boolean",
+            "title": "Has Unpublished Changes",
+            "description": "True when a draft differs from what callers hear."
+          },
+          "owner_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner User Id",
+            "description": "The person who owns it, if any."
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id",
+            "description": "The team it belongs to, if any."
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "Free-form labels."
+          },
+          "total_calls": {
+            "type": "integer",
+            "title": "Total Calls",
+            "description": "Calls this agent has handled."
+          },
+          "last_call_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Call At",
+            "description": "When it last handled a call (ISO 8601)."
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "When it was created (ISO 8601)."
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "description": "When it last changed (ISO 8601)."
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/AgentCapabilities",
+            "description": "What this key may do to this agent."
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config",
+            "description": "The agent's configuration (the draft when one exists, else the live one). Secrets are redacted."
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash",
+            "description": "A fingerprint of `config`."
+          },
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version",
+            "description": "The configuration schema version."
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationFinding"
+            },
+            "type": "array",
+            "title": "Findings",
+            "description": "Validation findings for `config`."
+          },
+          "published": {
+            "type": "boolean",
+            "title": "Published",
+            "description": "True when this save went live by itself: only `whatsapp` and/or `knowledge_ids` changed, the agent was published with no other unpublished changes, and your key has `agent:publish`. Otherwise the change is a draft until you publish.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "direction",
+          "revision",
+          "has_unpublished_changes",
+          "total_calls",
+          "created_at",
+          "updated_at",
+          "capabilities",
+          "config",
+          "config_hash",
+          "schema_version"
+        ],
+        "title": "AgentUpdated"
       },
       "AgentVersionDetail": {
         "properties": {
@@ -28277,6 +28493,9 @@
           "minute_price": {
             "$ref": "#/components/schemas/Money"
           },
+          "byo_minute_price": {
+            "$ref": "#/components/schemas/Money"
+          },
           "seat_price": {
             "$ref": "#/components/schemas/IntervalPrices"
           }
@@ -28287,6 +28506,7 @@
           "plans",
           "packs",
           "minute_price",
+          "byo_minute_price",
           "seat_price"
         ],
         "title": "CatalogOut"
@@ -29253,6 +29473,24 @@
           "name"
         ],
         "title": "CreateWidget"
+      },
+      "CurrencyChoice": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "usd",
+              "aed"
+            ],
+            "title": "Currency"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "currency"
+        ],
+        "title": "CurrencyChoice"
       },
       "CustomerHistory": {
         "properties": {
@@ -32940,6 +33178,27 @@
         ],
         "title": "NumberCapabilities"
       },
+      "NumberCardRequest": {
+        "properties": {
+          "success_url": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Success Url"
+          },
+          "cancel_url": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Cancel Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "success_url",
+          "cancel_url"
+        ],
+        "title": "NumberCardRequest"
+      },
       "NumberCountry": {
         "properties": {
           "country_code": {
@@ -33588,6 +33847,56 @@
         ],
         "title": "NumberOrderPage"
       },
+      "NumberQuoteOut": {
+        "properties": {
+          "monthly": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "free": {
+            "type": "boolean",
+            "title": "Free"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "first_number_free",
+              "monthly_fee",
+              "unknown_price"
+            ],
+            "title": "Reason"
+          },
+          "requires_payment_method": {
+            "type": "boolean",
+            "title": "Requires Payment Method"
+          },
+          "twilio_cost": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "monthly",
+          "free",
+          "reason",
+          "requires_payment_method",
+          "twilio_cost"
+        ],
+        "title": "NumberQuoteOut"
+      },
       "NumberRequest": {
         "properties": {
           "country_code": {
@@ -34168,6 +34477,39 @@
         ],
         "title": "PackOut"
       },
+      "PackPage": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PackOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "next_cursor",
+          "has_more"
+        ],
+        "title": "PackPage"
+      },
       "PersonRef": {
         "properties": {
           "user_id": {
@@ -34312,6 +34654,9 @@
                 "type": "null"
               }
             ]
+          },
+          "minute_price": {
+            "$ref": "#/components/schemas/Money"
           }
         },
         "type": "object",
@@ -34322,7 +34667,8 @@
           "pool_minutes",
           "trial_days",
           "self_serve",
-          "prices"
+          "prices",
+          "minute_price"
         ],
         "title": "PlanOut"
       },
@@ -37177,6 +37523,21 @@
             "type": "string",
             "title": "Currency"
           },
+          "currency_locked": {
+            "type": "boolean",
+            "title": "Currency Locked",
+            "default": false
+          },
+          "minute_price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "byo_minute_price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "has_payment_method": {
+            "type": "boolean",
+            "title": "Has Payment Method"
+          },
           "auto_recharge": {
             "$ref": "#/components/schemas/AutoRechargeOut"
           },
@@ -37206,6 +37567,9 @@
           "payment_state",
           "card",
           "currency",
+          "minute_price",
+          "byo_minute_price",
+          "has_payment_method",
           "auto_recharge",
           "pool",
           "upcoming_invoice"
@@ -40311,14 +40675,7 @@
             ],
             "title": "Change Note",
             "description": "A short note saved with the new version (shown in its history)."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "UpdateAgentRequest"
-      },
-      "UpdateChannelRequest": {
-        "properties": {
+          },
           "whatsapp": {
             "anyOf": [
               {
@@ -40328,7 +40685,7 @@
                 "type": "null"
               }
             ],
-            "description": "Replaces config.metadata.whatsapp wholesale; null or {} clears it. Omit to keep it."
+            "description": "Replaces only the agent's WhatsApp copy (`config.metadata.whatsapp`); null or {} clears it. Every other setting stays as stored. Can't be sent with `config`."
           },
           "knowledge_ids": {
             "anyOf": [
@@ -40344,12 +40701,12 @@
               }
             ],
             "title": "Knowledge Ids",
-            "description": "Replaces config.knowledge.ids, keeping top_k; null or [] attaches none. Omit to keep them."
+            "description": "Replaces only the agent's knowledge sources (`config.knowledge.ids`, keeping `top_k`); null or [] attaches none. Can't be sent with `config`."
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "title": "UpdateChannelRequest"
+        "title": "UpdateAgentRequest"
       },
       "UpdateScheduledCall": {
         "properties": {
@@ -40629,7 +40986,7 @@
               }
             ],
             "title": "Status",
-            "description": "Turn the endpoint off or on."
+            "description": "`disabled` turns the endpoint off and cancels its queued deliveries; `active` turns it back on (also after Kallabot turned it off) and resets its failure count."
           },
           "revision": {
             "type": "integer",

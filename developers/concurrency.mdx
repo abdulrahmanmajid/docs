@@ -57,7 +57,6 @@ The response also carries `ETag: "5"`. Read the resource again, reapply your cha
 | `POST /v1/agents/{agent_id}/publish` | Required |
 | `POST /v1/agents/{agent_id}/versions/{version_id}/revert` | Required |
 | `DELETE /v1/agents/{agent_id}` (archive) | Required |
-| `PATCH /v1/agents/{agent_id}/channel` | Required |
 | `PATCH /v1/tools/{tool_id}`, `DELETE /v1/tools/{tool_id}` | Required |
 | `PATCH /v1/calls/{call_id}` (tags, review, archive) | Required |
 | `POST /v1/calls/{call_id}/cancel` | Optional. Cancelling a call that's already ending shouldn't fail. |
