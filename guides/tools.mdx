@@ -9,20 +9,11 @@ Tools are the things your agent can **do** during a conversation, not just say. 
 ## Built-in tools
 
 <CardGroup cols={2}>
-  <Card title="Google Calendar" icon="calendar-check">
-    Checks your free times and books appointments straight into your calendar.
-  </Card>
-  <Card title="Google Sheets" icon="sheet">
-    Saves a row (a new lead, an order) or looks a row up (stock, prices).
-  </Card>
-  <Card title="HubSpot" icon="contact">
-    Adds callers as contacts in your HubSpot CRM.
+  <Card title="Run your workflows" icon="workflow">
+    Runs a job you built in [Workflows](/guides/workflows), on a call or in a chat.
   </Card>
   <Card title="Send a WhatsApp message" icon="message-circle">
     During a phone call, sends the caller a WhatsApp, like a location pin or a booking confirmation.
-  </Card>
-  <Card title="Send an email" icon="mail">
-    Sends a short email, for example a summary to your team.
   </Card>
   <Card title="Transfer to a person" icon="phone-forwarded">
     Hands a phone call to someone on your team. See the note below.
@@ -35,9 +26,17 @@ Tools are the things your agent can **do** during a conversation, not just say. 
   </Card>
 </CardGroup>
 
-### Connect Google
+### Apps
 
-Calendar and Sheets need a Google account. In the tool, click **Connect Google** and sign in. If your IT team prefers, you can connect a Google service account instead by uploading its key file.
+Google Calendar, Google Sheets, HubSpot, email and hundreds of other apps come from the **Apps** catalogue in the **Tools** step. Pick an app, connect your account and choose what the agent may do with it.
+
+<Note>
+The older Google Calendar, Google Sheets, HubSpot and email cards are no longer offered for new tools. An agent that already has one keeps it, and you can still open its setup.
+</Note>
+
+### Older Google Calendar and Sheets tools
+
+If your agent already has one of the older Calendar or Sheets cards, it needs a Google account. In the tool, click **Connect Google** and sign in. If your IT team prefers, you can connect a Google service account instead by uploading its key file.
 
 For **Calendar**, choose the calendar, how long one appointment is, your bookable hours for each day, and how much notice you need (for example, no bookings in the next two hours).
 
@@ -59,7 +58,7 @@ Each transfer destination has a name ("Reception"), a number, and a sentence abo
 
     You can add a sentence for the agent to say while the tool runs, such as "One moment, let me check that", so callers never sit in silence. Passwords and keys you enter are stored encrypted and never shown again.
 
-    Usually a developer sets this up once. They can find the details in the [API reference](/api-reference/introduction) under **Tools**.
+    Usually a developer sets this up once. They can find the details in [Tools for developers](/developers/tools/overview).
   </Tab>
   <Tab title="MCP server">
     If your software offers an MCP server (a standard way for AI to use a product), paste its address. Kallabot lists the actions it offers and you choose which ones your agent may use. Actions the server marks as destructive (like deleting records) stay off unless you switch them on.
