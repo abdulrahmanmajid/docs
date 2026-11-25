@@ -1,0 +1,86 @@
+---
+title: "MCP servers"
+description: "Connect a remote MCP server to an agent: transports, OAuth sign-in, the tool allow-list, review when the server changes, and how side effects are handled."
+icon: "plug"
+---
+
+A `mcp_server` tool connects an agent to a remote [Model Context Protocol](https://modelcontextprotocol.io) server. Each server tool you allow becomes one function the agent can call. The same [egress rules](/developers/tools/security#egress-rules) apply as for HTTP tools.
+
+## Create a server tool
+
+```json POST /v1/tools
+{
+  "kind": "mcp_server",
+  "name": "crm",
+  "description": "The office CRM: look up and update contacts.",
+  "schema": {
+    "url": "https://mcp.example.com/mcp",
+    "transport": "streamable_http",
+    "auth": { "type": "credential", "credential_id": "cred_…" },
+    "allowed_tools": ["find_contact", "add_note"],
+    "timeout_ms": 10000
+  }
+}
+```
+
+| Field | Notes |
+| --- | --- |
+| `url` | The server's HTTPS address. |
+| `transport` | `streamable_http` (default) or `sse`. |
+| `headers` | Fixed headers. Use a credential for secrets. |
+| `auth` | `{"type": "none"}`, or a credential. For OAuth, connect the server from the dashboard (see below). |
+| `allowed_tools` | The server tools any agent may use. Up to 100 names. |
+| `static` | Fixed arguments merged into every call. They replace what the model sends for the same key. |
+| `timeout_ms` | 100 to 30000. |
+
+To check a server before saving it, call `POST /v1/tools/mcp/probe`.
+
+## Sign in with OAuth
+
+If the server needs sign-in, connect it from the agent's **Tools** step. Kallabot follows the MCP authorization spec:
+
+- It finds the authorization server from the server's protected resource metadata (RFC 9728).
+- It uses OAuth 2.1 with PKCE (`S256`). A server that doesn't support `S256` is refused.
+- It identifies itself with a client ID metadata document, a pre-registered client, or dynamic client registration (RFC 7591), in that order.
+- It sends the `resource` parameter (RFC 8707) and checks the `iss` in the response (RFC 9207).
+
+The token is stored as an `mcp_oauth` [credential](/developers/tools/security#credentials) and refreshed automatically. If the refresh is refused, the server shows **Needs sign-in** and its tools are left out of calls until someone reconnects.
+
+## Choose the tools
+
+There are two lists. A tool must be on both to reach the agent.
+
+1. The server tool's `allowed_tools`: the ceiling for the workspace.
+2. Each agent's `tools[].allowed_tools`: what that agent may use.
+
+A server tool marked `destructiveHint` is off unless you name it. An agent gets at most 24 MCP functions in total.
+
+## Review and re-approval
+
+Kallabot fingerprints the server's tool list: each tool's name, description, input schema and annotations. When you first connect, that list is approved.
+
+If the server later changes its list (a new tool, a changed description or schema), the fingerprint no longer matches and the server needs review. Until someone approves it, its tools are left out of every call. This stops a server from quietly changing what your agent is told to do.
+
+1. `POST /v1/tools/{id}/discover` reads the server's current tools.
+2. Check the list.
+3. `POST /v1/tools/{id}/approve-tools` with `{"hash": "…"}` approves exactly that list. If the server changed again since you looked, the API answers `409` with `discovery_changed` and the `current_hash`.
+
+## Annotations and side effects
+
+Kallabot reads each server tool's annotations: `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`.
+
+A server tool is treated as a side effect when it is not marked `readOnlyHint` and either it is marked `destructiveHint` or the server tool has `side_effect` set. Side-effect tools follow the [idempotency rules](/developers/tools/idempotency).
+
+## Retries
+
+{/* phase0: verify */}
+
+Kallabot never retries a server tool blindly.
+
+- A read-only tool (`readOnlyHint: true`) is retried once on failure.
+- Any tool is retried once if the connection failed before the request was written.
+- Any other failure on a tool that is not read-only returns `indeterminate`. The agent tells the person it will confirm instead of trying again.
+
+## Errors
+
+See [MCP tools](/developers/tools/errors#mcp-tools) on the errors page. Error text from the server reaches the model as `detail`, up to 500 characters.

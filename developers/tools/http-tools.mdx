@@ -1,0 +1,196 @@
+---
+title: "HTTP tools"
+description: "The executor contract for kind api tools: how the request is built, which variables you can use, what the model reads back and how long it waits."
+icon: "globe"
+---
+
+An `api` tool sends one HTTPS request to your endpoint and gives the model a short result. This page is the exact contract. Errors are on [Errors](/developers/tools/errors), and the network rules are on [Security](/developers/tools/security).
+
+## The tool schema
+
+| Field | Notes |
+| --- | --- |
+| `url` | The endpoint. Must be `https://`. |
+| `url_template` | `url` with `{{variables}}`. Wins over `url` when set. |
+| `method` | `GET`, `POST` (default), `PUT`, `PATCH` or `DELETE`. |
+| `headers` | Fixed headers. Values may use `{{…}}`. |
+| `query` | Query parameters, as `{"name": "{{template}}"}`. A list repeats the key. |
+| `body` | A JSON template. |
+| `static` | Fixed arguments. The model never sees them and can't override them. |
+| `parameters` | The JSON Schema the model fills. |
+| `response` | `pick`, `max_chars`, `error_message` and `error_passthrough`. |
+| `speech` | `filler`, `filler_after_ms`, `fillers_by_lang`. |
+| `timeout_ms` | 100 to 30000. Default 8000. |
+| `auth` | `{"type": "none"}` or `{"type": "credential", "credential_id": "…"}`. See [Credentials](/developers/tools/security#credentials). |
+| `run_on`, `async`, `side_effect`, `lookup`, `confirm_first`, `once_per_call` | See [Tools overview](/developers/tools/overview#how-a-tool-runs). |
+
+## Templating
+
+`{{name}}` inserts a value. Spaces inside the braces are allowed. A dotted path reads into an object: `{{customer.phone}}`.
+
+A name resolves, in this order, to:
+
+1. A server variable (see below). Server values always win over anything the model sends.
+2. A key in `static`.
+3. One of the model's arguments.
+
+A missing value is an error the model reads (`missing_variable`). Kallabot never sends an empty string in its place.
+
+### Where templates work
+
+| Place | Rule |
+| --- | --- |
+| Scheme and host | No templates. The host is fixed when you save the tool. |
+| URL path | Each value is percent-encoded as one segment (`/` becomes `%2F`). A value that is empty, `.`, `..`, or contains `/` or `\` is refused with `invalid_argument`. |
+| Query | Values are percent-encoded. |
+| Headers | Inserted as text. Line breaks become spaces. |
+| Body and `query` templates | A string that is exactly `"{{x}}"` keeps `x`'s JSON type (number, boolean, object). Anything else becomes a string. |
+
+You can't set these headers: `authorization`, `connection`, `content-length`, `cookie`, `host`, `idempotency-key`, `keep-alive`, `proxy-authenticate`, `proxy-authorization`, `te`, `trailer`, `transfer-encoding`, `upgrade`. Use a [credential](/developers/tools/security#credentials) for authentication.
+
+### Server variables
+
+| Variable | Value |
+| --- | --- |
+| `call.id` | The call's public id. |
+| `call.from`, `call.to` | The caller's and the called number. |
+| `call.direction` | `inbound` or `outbound`. |
+| `vars.*` | Variables passed when the call or chat started. |
+| `agent.id`, `agent.timezone` | The agent's id and time zone. |
+| `channel` | `phone`, `web`, `whatsapp`, `instagram`, `messenger` or `web_chat`. |
+| `contact.*` | What Kallabot knows about the person, such as `contact.phone`. |
+| `call.summary`, `call.transcript`, `call.outcome`, `call.duration_seconds` | Only in `call_end` tools. |
+
+### Arguments
+
+- Only arguments declared in `parameters.properties` are used. Others are dropped, unless the schema sets `additionalProperties`.
+- Arguments are checked against `parameters` before anything is sent. A mismatch returns `invalid_arguments`.
+- An argument that names a `static` key is refused with `override_refused`.
+- Local `$ref` references are inlined before the schema goes to the model. `anyOf` is kept. An unresolvable `$ref` is refused when you save the tool. {/* phase0: verify */}
+
+### Without a body or query template
+
+The arguments not used in the URL, with `static` merged in, go as the query string for `GET` and `DELETE`, and as a JSON body for other methods.
+
+The request body is always JSON (`Content-Type: application/json`).
+
+## The response
+
+`response` controls what the model reads.
+
+| Field | Notes |
+| --- | --- |
+| `pick` | A dotted path, or a list of paths, to keep. A number indexes an array: `slots.0.time`. A list returns `{"path": value}`. A missing path gives `null`. |
+| `max_chars` | 100 to 20000. Default 4000. Voice calls cap it at 1500 and chats at 4000, whichever is lower. A longer result is cut and ends with `…[truncated]`. |
+| `error_message` | Up to 300 characters, told to the model when the call fails. |
+| `error_passthrough` | Default `true`. On a failure, the model also gets a short, cleaned `detail` from your response. Set `false` to send only the error code. {/* phase0: verify */} |
+
+The raw response may be at most **256 KB**. A bigger one fails with `response_too_large`. `gzip` and `deflate` are accepted and inflated with a bound.
+
+### Content types
+
+A `2xx` response always succeeds. {/* phase0: verify */}
+
+| Response | What the model gets |
+| --- | --- |
+| Empty body | `"data": null`. |
+| `application/json`, `*+json`, or a body that looks like JSON | The parsed JSON. |
+| `text/*` and other text | The text. |
+| Binary | A summary: `{"content_type": "…", "bytes": n}`. |
+
+A non-`2xx` response fails with `upstream_rejected` and its `status`. On `401`, the error is `needs_auth`.
+
+### What the model reads
+
+On success:
+
+```json
+{ "ok": true, "status": 200, "data": { "slots": ["10:00", "14:30"] } }
+```
+
+On failure: {/* phase0: verify */}
+
+```json
+{
+  "ok": false,
+  "status": 422,
+  "error": "upstream_rejected",
+  "detail": "Slot 10:00 is no longer available",
+  "message": "The booking system said no. Offer another time."
+}
+```
+
+`detail` is at most 600 characters. Control characters are removed, credential values are masked and token-like strings (bearer tokens, JWTs, API keys, long hex or base64 runs, `password=` values) become `[redacted]`. `message` is your `error_message`, when set.
+
+## Timeouts
+
+- `timeout_ms` defaults to 8000 ms and is capped at 30000 ms. Connecting has at most 3 seconds.
+- An agent's `overrides.timeout_ms` replaces it for that agent, up to 30000 ms. {/* phase0: verify */}
+- `lookup` tools have a shorter deadline: 5 seconds on calls, 6 seconds in chats.
+- A timeout returns `timeout`. On a `side_effect` tool, a timeout after the request was sent returns `indeterminate`. See [Idempotency](/developers/tools/idempotency).
+
+## Example: book a viewing
+
+A tool that books a property viewing. The agent collects a name and a time; the caller's number and the agent's id come from the server.
+
+```json POST /v1/tools
+{
+  "kind": "api",
+  "name": "book_viewing",
+  "description": "Book a viewing once the person has agreed a time. Read the time back first.",
+  "schema": {
+    "url_template": "https://api.example.com/listings/{{listing_id}}/viewings",
+    "method": "POST",
+    "headers": { "X-Source": "kallabot" },
+    "body": {
+      "name": "{{name}}",
+      "phone": "{{contact.phone}}",
+      "starts_at": "{{starts_at}}",
+      "party_size": "{{party_size}}",
+      "agent": "{{agent.id}}",
+      "branch": "{{branch}}"
+    },
+    "static": { "branch": "marina" },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": { "type": "string", "description": "The listing's reference, like DXB-1042." },
+        "name": { "type": "string", "description": "The person's full name." },
+        "starts_at": { "type": "string", "description": "ISO 8601 time with offset." },
+        "party_size": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["listing_id", "name", "starts_at"]
+    },
+    "auth": { "type": "credential", "credential_id": "cred_7a1f…" },
+    "response": { "pick": ["booking.id", "booking.starts_at"], "error_message": "Say you couldn't book it and offer a call back." },
+    "side_effect": true,
+    "confirm_first": true,
+    "timeout_ms": 10000
+  }
+}
+```
+
+When the model calls `book_viewing` with `{"listing_id": "DXB-1042", "name": "Sara Khan", "starts_at": "2026-12-02T10:00:00+04:00", "party_size": 2}`, your endpoint receives:
+
+```http
+POST /listings/DXB-1042/viewings HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+Authorization: Bearer ••••
+Idempotency-Key: 9f2c…e41a
+X-Source: kallabot
+
+{"name":"Sara Khan","phone":"+971501234567","starts_at":"2026-12-02T10:00:00+04:00","party_size":2,"agent":"…","branch":"marina"}
+```
+
+`party_size` stays a number because the template is exactly `"{{party_size}}"`. If the model leaves out `party_size`, the call fails with `missing_variable` before anything is sent. Reply with:
+
+```json 201 Created
+{ "booking": { "id": "bk_481", "starts_at": "2026-12-02T10:00:00+04:00", "notes": "…" } }
+```
+
+and the model reads:
+
+```json
+{ "ok": true, "status": 201, "data": { "booking.id": "bk_481", "booking.starts_at": "2026-12-02T10:00:00+04:00" } }
+```

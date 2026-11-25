@@ -1,0 +1,151 @@
+---
+title: "Tools overview"
+description: "Give an agent functions it can call on a call or in a chat: your HTTP API, an MCP server or an app action. Create a tool once, attach it to any agent."
+icon: "wrench"
+---
+
+A tool is a function the agent can call while it talks. You save the tool once in the workspace, then attach it to as many agents as you like. Kallabot runs every call through the same executor on phone calls, web calls, chats and the dashboard's **Test** button.
+
+<CardGroup cols={2}>
+  <Card title="HTTP tools" icon="globe" href="/developers/tools/http-tools">
+    Templating, server variables, responses and timeouts.
+  </Card>
+  <Card title="Errors" icon="triangle-alert" href="/developers/tools/errors">
+    Every error code the agent can read.
+  </Card>
+  <Card title="Security" icon="shield" href="/developers/tools/security">
+    Egress rules, credentials and securing your endpoint.
+  </Card>
+  <Card title="Idempotency" icon="repeat" href="/developers/tools/idempotency">
+    The `Idempotency-Key` header and results that are not known.
+  </Card>
+  <Card title="MCP servers" icon="plug" href="/developers/tools/mcp">
+    Connect a remote MCP server and choose its tools.
+  </Card>
+  <Card title="Set up in the dashboard" icon="mouse-pointer-click" href="/guides/tools">
+    No code: add tools in the agent's **Tools** step.
+  </Card>
+</CardGroup>
+
+## Kinds
+
+| `kind` | What it runs |
+| --- | --- |
+| `api` | An HTTPS request to your endpoint. See [HTTP tools](/developers/tools/http-tools). |
+| `mcp_server` | A remote MCP server. Each allowed server tool becomes one function. See [MCP servers](/developers/tools/mcp). |
+| `google_sheets` | A row lookup or write on a connected Google Sheet. |
+| `piece_action` | An app action run through [Workflows](/guides/workflows), picked from the **Apps** catalogue. |
+
+Built-in tools (transfer, web search, knowledge search, WhatsApp message and others) are not saved tools. You switch them on in the agent's configuration. See [Agents](/developers/agents).
+
+## Create a tool
+
+<CodeGroup>
+```bash curl
+curl https://api.kallabot.com/v1/tools \
+  -H "Authorization: Bearer $KALLABOT_API_KEY" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{
+    "kind": "api",
+    "name": "check_slots",
+    "description": "Find free viewing slots on a date. Use it before offering a time.",
+    "schema": {
+      "url": "https://api.example.com/slots/{{date}}",
+      "method": "GET",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "description": "The day, as YYYY-MM-DD." }
+        },
+        "required": ["date"]
+      },
+      "response": { "pick": "slots", "max_chars": 1200 },
+      "lookup": true
+    }
+  }'
+```
+</CodeGroup>
+
+`name` is the function name the model calls (1 to 80 characters). `description` tells the model when to use it (1 to 500 characters). Write it as an instruction: what the tool does and when to call it.
+
+## Attach a tool to an agent
+
+Reference saved tools in the agent's `tools` list. A tool runs on every channel unless you limit it.
+
+```json
+{
+  "tools": [
+    { "tool_id": "3c2b1a0f-9e8d-4c7b-a6f5-e4d3c2b1a0f9" },
+    {
+      "tool_id": "8d7c6b5a-4f3e-4d2c-9b1a-0f9e8d7c6b5a",
+      "channels": ["phone", "web"],
+      "overrides": { "filler": "One moment, I'm booking that.", "timeout_ms": 15000 }
+    }
+  ]
+}
+```
+
+| Field | Notes |
+| --- | --- |
+| `tool_id` | The saved tool's `id`. |
+| `channels` | Where the tool is offered: `phone`, `web`, `whatsapp`, `instagram`, `messenger`, `web_chat`. Leave it out for all. |
+| `allowed_tools` | For an `mcp_server` tool: the server tools this agent may call. |
+| `overrides.filler` | A line the agent says while this tool runs, for this agent only. |
+| `overrides.timeout_ms` | This agent's timeout for the tool, up to the 30000 ms cap. It can raise or lower the tool's own `timeout_ms`. {/* phase0: verify */} |
+
+## When a tool runs
+
+`run_on` sets when a tool runs.
+
+| `run_on` | Behaviour |
+| --- | --- |
+| `conversation` (default) | The model calls it when the conversation needs it. |
+| `call_start` | Runs once as a phone or web call starts, before the agent's first turn. The result is given to the agent as context. It has the call's variables (`{{contact.phone}}`, `{{call.direction}}` and so on) and each parameter's `default`. |
+| `call_end` | Runs once after the call. It also has `{{call.summary}}`, `{{call.transcript}}`, `{{call.outcome}}`, `{{call.duration_seconds}}` and `{{call.id}}`. |
+
+`call_start` and `call_end` tools are never offered to the model. A required parameter with no `default` keeps them from running. A `call_start` tool has about 1.2 seconds before the agent starts talking without it.
+
+## How a tool runs
+
+Three flags change how the conversation behaves while a tool runs.
+
+| Flag | Meaning |
+| --- | --- |
+| `side_effect` | The tool books, saves or sends something. It must never run twice. Kallabot sends an [`Idempotency-Key`](/developers/tools/idempotency) header and never retries it blindly. |
+| `lookup` | A read-only lookup. The agent says a short line first, keeps talking while it runs, and drops a result the person no longer wants. A tool can't be both `lookup` and `side_effect`. Lookups have a shorter deadline: 5 seconds on calls, 6 seconds in chats. |
+| `async` | The conversation goes on while the tool runs. |
+
+Two more flags apply to `conversation` tools only:
+
+- `confirm_first`: the agent tells the person what it is about to do and waits for a yes.
+- `once_per_call`: the tool runs at most once per call. A second request returns `already_done_this_call`. A call that failed before sending (for example, bad arguments) does not use up the one run.
+
+### Fillers
+
+`speech.filler` is a line the agent says if the tool takes longer than `speech.filler_after_ms` (default 700 ms). `speech.fillers_by_lang` sets one per language.
+
+<Warning>
+A configured filler is not spoken on `async`, `side_effect` or `lookup` tools. These run while the conversation goes on, so the agent says it is still working on it instead.
+</Warning>
+
+## See what a tool did
+
+Every run is recorded with its arguments, result, status and duration.
+
+- `GET /v1/tools/{id}/invocations` lists one tool's runs.
+- `GET /v1/calls/{call_id}/tool-invocations` lists a call's runs. Arguments and results need the `call:content` scope.
+- The [`tool.called`](/developers/events#tools) webhook event reports each run.
+
+`status` is one of `claimed`, `running`, `ok`, `error`, `timeout`, `cancelled` or `indeterminate`.
+
+## Test a tool
+
+`POST /v1/tools/{id}/test` runs a saved tool with arguments you give. `POST /v1/tools/test` runs a draft before you save it. Both send a real request through the same executor a live call uses, and both need an `Idempotency-Key`. Test requests do not send an `Idempotency-Key` to your endpoint.
+
+## Scopes
+
+| Scope | Allows |
+| --- | --- |
+| `tool:read` | List tools, read one, list its invocations. |
+| `tool:write` | Create, update, delete, test, discover and approve tools. |
+| `credential:use` | Use a stored credential with a new host, test a draft that carries a credential or secret, and set a credential's `allowed_hosts`. Owners and admins only. See [Security](/developers/tools/security#credential-use). {/* phase0: verify */} |

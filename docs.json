@@ -139,7 +139,19 @@
               "developers/calls",
               "developers/web-calls",
               "developers/inbox",
-              "developers/web-chat"
+              "developers/web-chat",
+              {
+                "group": "Tools",
+                "icon": "wrench",
+                "pages": [
+                  "developers/tools/overview",
+                  "developers/tools/http-tools",
+                  "developers/tools/errors",
+                  "developers/tools/security",
+                  "developers/tools/idempotency",
+                  "developers/tools/mcp"
+                ]
+              }
             ]
           },
           {

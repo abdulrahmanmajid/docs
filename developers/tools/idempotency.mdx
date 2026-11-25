@@ -1,0 +1,67 @@
+---
+title: "Tool idempotency"
+description: "How Kallabot keeps a booking, payment or message from happening twice, and what your endpoint should do with the Idempotency-Key header."
+icon: "repeat"
+---
+
+Models repeat themselves, networks drop and people say "yes" twice. A tool that books, saves or sends must still act only once. Mark it `"side_effect": true` and Kallabot does three things: it sends an `Idempotency-Key`, it records each action in a per-call ledger, and it never retries blindly.
+
+This page is about requests Kallabot sends to **your** endpoint. For the `Idempotency-Key` you send to the Kallabot API, see [Idempotency](/developers/idempotency).
+
+## The Idempotency-Key header
+
+Every request from a `side_effect` tool carries:
+
+```http
+Idempotency-Key: 3b8f0c2e9d41a7…
+```
+
+- It is a 64-character hex string.
+- It is derived from the call (or chat), the tool and the exact arguments. The same tool called with the same arguments in the same call gets the same key. Different arguments get a different key. {/* phase0: verify */}
+- It is sent only by `side_effect` tools. Other tools, and test runs from the dashboard or `POST /v1/tools/{id}/test`, send none.
+- You can't set or override it in `headers`.
+
+## The per-call ledger
+
+Kallabot records each action before it sends the request.
+
+- If the model asks for the same action again (same tool, same arguments) in the same call, Kallabot does not send a second request. The model gets the first outcome, or an error saying it is already in progress or unknown. {/* phase0: verify */}
+- `once_per_call` goes further: the tool runs at most once per call, whatever the arguments. A second request returns `already_done_this_call` (`already_done_this_chat` in a chat).
+- A run that failed before sending (bad arguments, a missing variable) does not count.
+- An action that started but never settled returns `outcome_unknown` and is not sent again.
+
+## Results that are not known
+
+If a `side_effect` request times out or the connection drops after it was sent, Kallabot can't know whether your endpoint acted. It does not retry. The model gets: {/* phase0: verify */}
+
+```json
+{
+  "ok": false,
+  "status": null,
+  "error": "indeterminate",
+  "detail": "The request may have gone through. Do not retry; tell the person you'll confirm.",
+  "idempotency_key": "3b8f0c2e9d41a7…"
+}
+```
+
+The agent tells the person it will confirm, rather than booking again. The invocation is recorded with `status: "indeterminate"`, so you can find it in `GET /v1/calls/{call_id}/tool-invocations` and match it to your own records by the key.
+
+## What your endpoint should do
+
+<Steps>
+  <Step title="Store the key with the result">
+    When a request with an `Idempotency-Key` succeeds, save the key and the response you sent. Keep it for at least a day.
+  </Step>
+  <Step title="Return the stored result for a repeat">
+    If the same key arrives again, don't act again. Return the response you stored, with the same status.
+  </Step>
+  <Step title="Handle a repeat that is still running">
+    If the first request with that key is still being processed, answer `409` and don't start a second one.
+  </Step>
+  <Step title="Make the action atomic">
+    Save the key in the same transaction as the booking or payment, so a crash can't leave one without the other.
+  </Step>
+  <Step title="Reply quickly">
+    Answer within the tool's timeout. A slow `side_effect` endpoint makes `indeterminate` results more likely. If the work is slow, accept it, return an id, and finish in the background.
+  </Step>
+</Steps>
