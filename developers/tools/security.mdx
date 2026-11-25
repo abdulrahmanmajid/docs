@@ -27,8 +27,6 @@ A refused request fails with `network_error` and nothing is sent. See [Errors](/
 
 Store secrets as credentials, never as plain header values. A credential is encrypted at rest, is never returned by the API (only a hint), and is masked as `••••` plus its last four characters in tests, logs and invocation records. The model never sees it.
 
-{/* phase0: verify (allowed_hosts on create) */}
-
 <CodeGroup>
 ```bash curl
 curl https://api.kallabot.com/v1/tool-credentials \
@@ -62,29 +60,30 @@ Use it in a tool with `"auth": {"type": "credential", "credential_id": "…"}`.
 
 ### Host binding
 
-{/* phase0: verify */}
-
 Each credential has `allowed_hosts`: the only hosts it may be sent to. Kallabot checks it on every request, just before sending. If the tool's host is not on the list, the tool fails with `credential_host_not_allowed` and **nothing is sent**. This stops a changed tool URL from carrying your secret to another server.
 
 - An entry is an exact hostname (`api.example.com`), or `*.example.com`, which matches subdomains only, not `example.com` itself.
 - No IP addresses, no ports and no bare `*`. At most 10 entries.
 - A credential with an empty list is unbound and is refused everywhere until it is bound.
 - When someone with `credential:use` attaches an unbound credential to a tool, it is bound to that tool's host.
+- Attaching a bound credential to a tool whose host is not on the list fails with `422` and `credential_host_not_allowed`.
+- An MCP OAuth sign-in is bound to the server's host when it is created.
+- Credentials that existed before host binding were bound to the hosts of the tools that used them. A credential no tool used is unbound.
 - OAuth token refresh goes to the credential's own token endpoint and is not checked against the list.
 
 Set the list with `PATCH /v1/tool-credentials/{id}` and `{"allowed_hosts": ["api.example.com"]}`.
 
 ### The credential:use scope
 
-{/* phase0: verify */}
-
 Using a stored secret with a new destination needs the `credential:use` scope. Only the **owner** and **admin** roles hold it. It is required to:
 
-- create or update a tool that sets or keeps a credential while changing the URL's host;
-- test a draft (`POST /v1/tools/test`) whose `auth` references a credential or carries a secret;
-- create or rotate a credential, or change its `allowed_hosts`.
+- create or rotate a credential, or change its `allowed_hosts`;
+- attach an unbound credential to a tool (this binds it);
+- update a tool that changes its host while it uses a credential;
+- save a tool with a pasted secret;
+- test a draft (`POST /v1/tools/test`) or probe an MCP server (`POST /v1/tools/mcp/probe`) with any secret.
 
-Other tool edits need only `tool:write`. Without the scope, the API answers `403` with `insufficient_scope`.
+Attaching an already-bound credential to a tool on a bound host, and other tool edits, need only `tool:write`. The scope is never available when Kallabot staff act inside your workspace. Without the scope, the API answers `403` with `insufficient_scope`.
 
 ## Securing your endpoint
 
@@ -95,7 +94,7 @@ The request comes from the public internet. Treat it like any other client.
     Require a key or token on your endpoint and store it as a Kallabot credential bound to your host. Don't put secrets in `headers`, `query` or the URL: those are saved in the tool's schema.
   </Step>
   <Step title="Don't allow-list Kallabot's IP">
-    Kallabot's outgoing IP address is not static and may change without notice. Authenticate requests instead.
+    Kallabot does not publish a fixed list of outgoing IP addresses. Authenticate requests with a credential instead of an IP allow-list.
   </Step>
   <Step title="Honour the Idempotency-Key">
     `side_effect` tools send an `Idempotency-Key` header. Store it and return the first result for a repeat. See [Idempotency](/developers/tools/idempotency).
@@ -107,6 +106,6 @@ The request comes from the public internet. Treat it like any other client.
     Reply within the tool's timeout with a small JSON body. Use `pick` to keep only what the agent needs.
   </Step>
   <Step title="Return useful errors">
-    On a failure, return a `4xx` with a short JSON `error` or `message`. The agent reads a cleaned version as `detail` and can tell the person what went wrong. Never put secrets in error bodies. {/* phase0: verify */}
+    On a failure, return a `4xx` with a short JSON `error` or `message`. The agent reads a cleaned version as `detail` and can tell the person what went wrong. Never put secrets in error bodies.
   </Step>
 </Steps>

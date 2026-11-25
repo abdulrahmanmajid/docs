@@ -73,13 +73,11 @@ A server tool is treated as a side effect when it is not marked `readOnlyHint` a
 
 ## Retries
 
-{/* phase0: verify */}
-
 Kallabot never retries a server tool blindly.
 
-- A read-only tool (`readOnlyHint: true`) is retried once on failure.
-- Any tool is retried once if the connection failed before the request was written.
-- Any other failure on a tool that is not read-only returns `indeterminate`. The agent tells the person it will confirm instead of trying again.
+- A read-only tool (`readOnlyHint: true`) may be retried once.
+- Any tool may be retried once if the request was never written (no session yet, or the stream was already closed).
+- A tool that is not read-only is never retried after the request was written. If the connection closes or times out with no answer, it returns `indeterminate`. The agent tells the person it will confirm instead of trying again.
 
 ## Errors
 

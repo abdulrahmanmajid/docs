@@ -10,7 +10,7 @@ When a tool fails, the model gets `"ok": false` and an `error` code. It never ge
 { "ok": false, "status": 503, "error": "upstream_rejected", "detail": "Service unavailable", "message": "Say the booking system is down and offer a call back." }
 ```
 
-`status` is your endpoint's HTTP status, or `null` if nothing came back. `message` is the tool's `response.error_message`. `detail` is a short, cleaned extract of your response; see [The response](/developers/tools/http-tools#the-response). {/* phase0: verify */}
+`status` is your endpoint's HTTP status, or `null` if nothing came back. `message` is the tool's `response.error_message`. `detail` is a short, cleaned extract of your response; see [The response](/developers/tools/http-tools#the-response).
 
 These are tool results, not API errors. API errors (a bad request to `/v1/tools`) use the normal [error format](/developers/errors).
 
@@ -24,7 +24,7 @@ Nothing reached your endpoint. On a `once_per_call` tool, these don't use up the
 | `missing_variable` | A `{{…}}` in the template has no value: an argument the model left out, a missing `static` key, or an unknown server variable. |
 | `invalid_argument` | A value for a URL path segment is empty, `.`, `..`, or contains `/` or `\`. |
 | `override_refused` | The model sent an argument that names a `static` key. |
-| `invalid_tool_definition` | The saved schema can't be used, for example a `$ref` that can't be resolved. {/* phase0: verify */} |
+| `invalid_tool_definition` | The saved schema can't be used, for example a `$ref` that can't be resolved. |
 | `already_done_this_call` | A `once_per_call` tool was asked again on the same call. |
 | `already_done_this_chat` | The same, in a chat. |
 | `tool_limit` | A chat reached its limit of tool runs. |
@@ -34,7 +34,7 @@ Nothing reached your endpoint. On a `once_per_call` tool, these don't use up the
 
 | `error` | Cause |
 | --- | --- |
-| `credential_host_not_allowed` | The tool's host is not in the credential's `allowed_hosts`. Nothing is sent. See [Host binding](/developers/tools/security#host-binding). {/* phase0: verify */} |
+| `credential_host_not_allowed` | The tool's host is not in the credential's `allowed_hosts`. Nothing is sent. See [Host binding](/developers/tools/security#host-binding). |
 | `credential_invalid` | The credential has no secret, a forbidden header name, no query name, or the tool points at a credential that doesn't exist. |
 | `tool_credential_invalid` | The credential could not be applied. |
 | `credential_revoked` | The credential was revoked or deleted. |
@@ -48,7 +48,7 @@ Nothing reached your endpoint. On a `once_per_call` tool, these don't use up the
 | `network_error` | DNS failed, the address is not public, the host's DNS changed to a private address, the connection failed, or the URL is not allowed. See [Egress rules](/developers/tools/security#egress-rules). |
 | `redirect_not_allowed` | Your endpoint answered with a `3xx`. Tools never follow redirects. |
 | `timeout` | No complete response within the tool's timeout. |
-| `indeterminate` | A `side_effect` tool timed out or lost its connection after the request was sent. It may have gone through. See [Idempotency](/developers/tools/idempotency). {/* phase0: verify */} |
+| `indeterminate` | A `side_effect` tool timed out or lost its connection after the request was sent. It may have gone through. The result has no `message`. (A timeout while connecting sends nothing and is `network_error`.) See [Idempotency](/developers/tools/idempotency). |
 | `outcome_unknown` | An earlier run of the same action started but never finished, so Kallabot won't send it again. |
 
 ## Your response
@@ -64,7 +64,7 @@ Nothing reached your endpoint. On a `once_per_call` tool, these don't use up the
 | `invalid_text` | A text body is not valid UTF-8. |
 | `tool_failed` | Anything else. |
 
-A `2xx` response never fails on its content type, and a non-`2xx` response is `upstream_rejected` (`needs_auth` for `401`), whatever its type. {/* phase0: verify */}
+A `2xx` response never fails on its content type, and a non-`2xx` response is `upstream_rejected` (`needs_auth` for `401`), whatever its type.
 
 ## MCP tools
 
@@ -73,8 +73,8 @@ A `2xx` response never fails on its content type, and a non-`2xx` response is `u
 | `needs_auth` | The server answered `401`, or `403` with a `WWW-Authenticate` header. Reconnect the server. |
 | `not_connected` | Kallabot could not reach the server. |
 | `mcp_input_required` | The server asked for input the agent can't give. |
-| `tool_error` | The server ran the tool and reported an error. Its text is in `detail` (up to 500 characters). |
-| `indeterminate` | A tool that is not read-only failed after the request was sent. It is not retried. {/* phase0: verify */} |
+| `tool_error` | The server ran the tool and reported an error, or answered with a JSON-RPC error. Its text is in `detail` (up to 500 characters). |
+| `indeterminate` | A tool that is not read-only lost its connection or timed out with no answer. It is not retried. |
 
 A server that needs sign-in, is unreachable, has not been discovered or needs [review](/developers/tools/mcp#review-and-re-approval) is left out of the call. The agent doesn't see its tools.
 

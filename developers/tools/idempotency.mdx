@@ -17,7 +17,8 @@ Idempotency-Key: 3b8f0c2e9d41a7…
 ```
 
 - It is a 64-character hex string.
-- It is derived from the call (or chat), the tool and the exact arguments. The same tool called with the same arguments in the same call gets the same key. Different arguments get a different key. {/* phase0: verify */}
+- It is derived from the call (or chat), the tool (for an MCP tool, the server tool too) and the arguments as canonical JSON. The same tool called with the same arguments in the same call gets the same key. Different arguments get a different key.
+- After a definite failure, a new attempt with the same arguments gets a new key, so a corrected request can go through.
 - It is sent only by `side_effect` tools. Other tools, and test runs from the dashboard or `POST /v1/tools/{id}/test`, send none.
 - You can't set or override it in `headers`.
 
@@ -25,14 +26,16 @@ Idempotency-Key: 3b8f0c2e9d41a7…
 
 Kallabot records each action before it sends the request.
 
-- If the model asks for the same action again (same tool, same arguments) in the same call, Kallabot does not send a second request. The model gets the first outcome, or an error saying it is already in progress or unknown. {/* phase0: verify */}
+- If the model asks for the same action again (same tool, same arguments) in the same call, Kallabot does not send a second request. The model gets the stored result with the note "Already done earlier in this call with the same details; not sent again.", or the `indeterminate` result if the first outcome is unknown.
+- In a chat, a repeat of a side-effect call whose outcome is unknown is held for 1 hour.
+- Side-effect built-ins (WhatsApp message, transfer, email, Google Sheets and Calendar) are deduplicated the same way.
 - `once_per_call` goes further: the tool runs at most once per call, whatever the arguments. A second request returns `already_done_this_call` (`already_done_this_chat` in a chat).
 - A run that failed before sending (bad arguments, a missing variable) does not count.
 - An action that started but never settled returns `outcome_unknown` and is not sent again.
 
 ## Results that are not known
 
-If a `side_effect` request times out or the connection drops after it was sent, Kallabot can't know whether your endpoint acted. It does not retry. The model gets: {/* phase0: verify */}
+If a `side_effect` request times out or the connection drops after it was sent, Kallabot can't know whether your endpoint acted. It does not retry. The model gets:
 
 ```json
 {

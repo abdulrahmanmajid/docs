@@ -91,7 +91,7 @@ Reference saved tools in the agent's `tools` list. A tool runs on every channel 
 | `channels` | Where the tool is offered: `phone`, `web`, `whatsapp`, `instagram`, `messenger`, `web_chat`. Leave it out for all. |
 | `allowed_tools` | For an `mcp_server` tool: the server tools this agent may call. |
 | `overrides.filler` | A line the agent says while this tool runs, for this agent only. |
-| `overrides.timeout_ms` | This agent's timeout for the tool, up to the 30000 ms cap. It can raise or lower the tool's own `timeout_ms`. {/* phase0: verify */} |
+| `overrides.timeout_ms` | This agent's timeout for the tool, up to the 30000 ms cap. It can raise or lower the tool's own `timeout_ms`. On phone and web calls, every tool is also capped at 10000 ms. |
 
 ## When a tool runs
 
@@ -148,4 +148,4 @@ Every run is recorded with its arguments, result, status and duration.
 | --- | --- |
 | `tool:read` | List tools, read one, list its invocations. |
 | `tool:write` | Create, update, delete, test, discover and approve tools. |
-| `credential:use` | Use a stored credential with a new host, test a draft that carries a credential or secret, and set a credential's `allowed_hosts`. Owners and admins only. See [Security](/developers/tools/security#the-credential-use-scope). {/* phase0: verify */} |
+| `credential:use` | Create or rotate a credential, change its `allowed_hosts`, bind an unbound credential to a tool, test a draft or probe an MCP server with a secret, and change a tool's host while it uses a credential. Owners and admins only. See [Security](/developers/tools/security#the-credential-use-scope). |

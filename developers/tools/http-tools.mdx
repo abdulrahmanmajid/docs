@@ -66,7 +66,7 @@ You can't set these headers: `authorization`, `connection`, `content-length`, `c
 - Only arguments declared in `parameters.properties` are used. Others are dropped, unless the schema sets `additionalProperties`.
 - Arguments are checked against `parameters` before anything is sent. A mismatch returns `invalid_arguments`.
 - An argument that names a `static` key is refused with `override_refused`.
-- Local `$ref` references are inlined before the schema goes to the model. `anyOf` is kept. An unresolvable `$ref` is refused when you save the tool. {/* phase0: verify */}
+- Local `$ref` references are inlined before the schema goes to the model. `anyOf` is kept. A tool with a broken or external `$ref` is left out of the call, and running it returns `invalid_tool_definition`.
 
 ### Without a body or query template
 
@@ -83,13 +83,13 @@ The request body is always JSON (`Content-Type: application/json`).
 | `pick` | A dotted path, or a list of paths, to keep. A number indexes an array: `slots.0.time`. A list returns `{"path": value}`. A missing path gives `null`. |
 | `max_chars` | 100 to 20000. Default 4000. Voice calls cap it at 1500 and chats at 4000, whichever is lower. A longer result is cut and ends with `…[truncated]`. |
 | `error_message` | Up to 300 characters, told to the model when the call fails. |
-| `error_passthrough` | Default `true`. On a failure, the model also gets a short, cleaned `detail` from your response. Set `false` to send only the error code. {/* phase0: verify */} |
+| `error_passthrough` | Default `true`. On a failure, the model also gets a short, cleaned `detail` from your response. Set `false` to send only the error code. |
 
 The raw response may be at most **256 KB**. A bigger one fails with `response_too_large`. `gzip` and `deflate` are accepted and inflated with a bound.
 
 ### Content types
 
-A `2xx` response always succeeds. {/* phase0: verify */}
+A `2xx` response always succeeds.
 
 | Response | What the model gets |
 | --- | --- |
@@ -98,7 +98,7 @@ A `2xx` response always succeeds. {/* phase0: verify */}
 | `text/*` and other text | The text. |
 | Binary | A summary: `{"content_type": "…", "bytes": n}`. |
 
-A non-`2xx` response fails with `upstream_rejected` and its `status`. On `401`, the error is `needs_auth`.
+A non-`2xx` response fails with `upstream_rejected` and its `status`, whatever its content type, including JSON that doesn't parse. On `401`, the error is `needs_auth`.
 
 ### What the model reads
 
@@ -108,7 +108,7 @@ On success:
 { "ok": true, "status": 200, "data": { "slots": ["10:00", "14:30"] } }
 ```
 
-On failure: {/* phase0: verify */}
+On failure:
 
 ```json
 {
@@ -120,14 +120,15 @@ On failure: {/* phase0: verify */}
 }
 ```
 
-`detail` is at most 600 characters. Control characters are removed, credential values are masked and token-like strings (bearer tokens, JWTs, API keys, long hex or base64 runs, `password=` values) become `[redacted]`. `message` is your `error_message`, when set.
+`detail` is at most 600 characters. Control characters are removed, credential values are masked and token-like strings (bearer tokens, JWTs, API keys, long hex or base64 runs, `password=` values) become `[redacted]`. `message` is your `error_message`, when set. With `"error_passthrough": false`, the result has no `detail`.
 
 ## Timeouts
 
 - `timeout_ms` defaults to 8000 ms and is capped at 30000 ms. Connecting has at most 3 seconds.
-- An agent's `overrides.timeout_ms` replaces it for that agent, up to 30000 ms. {/* phase0: verify */}
+- An agent's `overrides.timeout_ms` replaces it for that agent and can raise it up to 30000 ms.
+- On phone and web calls, every tool is also capped at 10000 ms.
 - `lookup` tools have a shorter deadline: 5 seconds on calls, 6 seconds in chats.
-- A timeout returns `timeout`. On a `side_effect` tool, a timeout after the request was sent returns `indeterminate`. See [Idempotency](/developers/tools/idempotency).
+- A timeout returns `timeout`. On a `side_effect` tool, a timeout or dropped connection after the request was sent returns `indeterminate`. A connect timeout sends nothing and returns `network_error`. See [Idempotency](/developers/tools/idempotency).
 
 ## Example: book a viewing
 
