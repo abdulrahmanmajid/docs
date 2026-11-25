@@ -28784,6 +28784,16 @@
             "title": "Timeout Ms",
             "default": 8000
           },
+          "retry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolRetry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "blocking": {
             "type": "boolean",
             "title": "Blocking",
@@ -43504,6 +43514,37 @@
         ],
         "title": "ThreadWindow"
       },
+      "ToolAssign": {
+        "properties": {
+          "var": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_\\-]{1,64}$",
+            "title": "Var",
+            "description": "Saved as `vars.<var>`; later tools use `{{vars.<var>}}` in their URL, query or body."
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Path",
+            "description": "Dotted path in the response, e.g. 'booking.id'."
+          },
+          "hide": {
+            "type": "boolean",
+            "title": "Hide",
+            "description": "Keep the value out of what the agent reads (tokens, internal ids).",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "var",
+          "path"
+        ],
+        "title": "ToolAssign",
+        "description": "Save one value of a successful response for later tools in the same call or reply."
+      },
       "ToolAuth": {
         "properties": {
           "type": {
@@ -44623,12 +44664,70 @@
             ],
             "title": "Error Passthrough",
             "description": "When a call fails, the agent also reads the API's own reason (`detail`: up to 600 characters, with tokens, keys and passwords removed). Default true; false gives it only the error code."
+          },
+          "assign": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ToolAssign"
+                },
+                "type": "array",
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assign",
+            "description": "Values to save from a successful response as `vars.*`, for later tools in this call or reply (for example a lookup's customer id, used by a booking tool as `{{vars.customer_id}}`)."
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "ToolResponseSettings",
         "description": "What the model reads of a response."
+      },
+      "ToolRetry": {
+        "properties": {
+          "max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max",
+            "description": "Retries after the first try. Default 1 for GET tools without side effects and 0 for every other tool; a tool that books, saves or sends (`side_effect`) resends with the same Idempotency-Key when you raise it. A connection that never opened sent nothing and is retried once either way."
+          },
+          "on": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "5xx",
+                    "429",
+                    "network"
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On",
+            "description": "What is retried: `5xx` (500, 502, 503, 504), `429` (honours Retry-After up to 10 s), `network` (no connection). Default all three."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ToolRetry",
+        "description": "When a failed call is sent again, within the tool's own timeout."
       },
       "ToolSpeech": {
         "properties": {

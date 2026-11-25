@@ -84,6 +84,7 @@ The request body is always JSON (`Content-Type: application/json`).
 | `max_chars` | 100 to 20000. Default 4000. Voice calls cap it at 1500 and chats at 4000, whichever is lower. A longer result is cut and ends with `…[truncated]`. |
 | `error_message` | Up to 300 characters, told to the model when the call fails. |
 | `error_passthrough` | Default `true`. On a failure, the model also gets a short, cleaned `detail` from your response. Set `false` to send only the error code. |
+| `assign` | Up to 10 values to save from a successful response for later tools. See [Pass values between tools](#pass-values-between-tools). |
 
 The raw response may be at most **256 KB**. A bigger one fails with `response_too_large`. `gzip` and `deflate` are accepted and inflated with a bound.
 
@@ -121,6 +122,47 @@ On failure:
 ```
 
 `detail` is at most 600 characters. Control characters are removed, credential values are masked and token-like strings (bearer tokens, JWTs, API keys, long hex or base64 runs, `password=` values) become `[redacted]`. `message` is your `error_message`, when set. With `"error_passthrough": false`, the result has no `detail`.
+
+### Pass values between tools
+
+`response.assign` saves values from a successful response as `vars.<name>`. Later tools in the same call (or the same chat reply) use them as `{{vars.<name>}}` in their URL, query or body.
+
+```json
+"response": {
+  "assign": [
+    { "var": "customer_id", "path": "customer.id" },
+    { "var": "session", "path": "token", "hide": true }
+  ]
+}
+```
+
+A booking tool can then send `"body": { "customer": "{{vars.customer_id}}" }` without the model copying the id.
+
+- `path` is a dotted path, like `pick`. A missing path, a failed call or a value over 2,000 characters saves nothing.
+- `hide: true` keeps the value out of what the model reads and out of the raw preview. Use it for session tokens and internal ids.
+- The model is told which values were saved: `"saved": ["vars.customer_id"]`.
+- A tool that uses `{{vars.x}}` before anything saved it fails with `missing_variable`.
+
+## Retries
+
+Kallabot retries a failed request only when doing so is safe. Retries stay inside the tool's timeout.
+
+| Tool | Default |
+| --- | --- |
+| `GET` without `side_effect` | 1 retry on `5xx` (500, 502, 503, 504), `429`, or no connection. |
+| Anything else (`POST`, `PUT`, `PATCH`, `DELETE`, or `side_effect`) | No retry after the request may have been sent. |
+| Any tool | A connection that never opened sent nothing, so it is retried once. |
+
+Set `retry` to change it:
+
+```json
+"retry": { "max": 2, "on": ["5xx", "429"] }
+```
+
+- `max` is 0 to 3. `on` lists `5xx`, `429` and `network`; the default is all three.
+- `429` waits for `Retry-After` when it is 10 seconds or less. A longer wait is not retried.
+- `4xx` other than `429` is never retried.
+- A `side_effect` tool with `max` above 0 resends with the **same** `Idempotency-Key`, so your endpoint can drop the duplicate. Only raise it if your endpoint honours the key.
 
 ## Timeouts
 
