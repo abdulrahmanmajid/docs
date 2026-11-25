@@ -24998,6 +24998,275 @@
         ]
       }
     },
+    "/v1/knowledge/sources/{source_id}/version": {
+      "put": {
+        "tags": [
+          "Knowledge"
+        ],
+        "summary": "Set a knowledge source's version",
+        "operationId": "setKnowledgeSourceVersion",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "Kallabot-Version",
+            "in": "header",
+            "required": false,
+            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-11-07"
+              ],
+              "example": "2026-11-07"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceVersionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedSource"
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests allowed per minute for this credential.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the window is full again.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Quote this when contacting support.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Kallabot-Version": {
+                "description": "The API version that answered this request.",
+                "schema": {
+                  "type": "string",
+                  "example": "2026-11-07"
+                }
+              },
+              "Kallabot-SDK-Warning": {
+                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "400": {
+            "$ref": "#/components/responses/UnsupportedApiVersion"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "426": {
+            "$ref": "#/components/responses/SdkVersionUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "description": "Sets the date a document takes effect and the older source it replaces. Agents are told each source's date and follow the later one when two disagree; a replaced source stops answering once this one is ready. A date earlier than the replaced source's is kept but flagged as a warning.\n\n**Scopes:** `knowledge:write`",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-required-scopes": [
+          "knowledge:write"
+        ]
+      }
+    },
+    "/v1/knowledge/sources/{source_id}/pages/{page_number}": {
+      "put": {
+        "tags": [
+          "Knowledge"
+        ],
+        "summary": "Describe a picture page",
+        "operationId": "setKnowledgeSourcePageNote",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "page_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Page Number"
+            }
+          },
+          {
+            "name": "Kallabot-Version",
+            "in": "header",
+            "required": false,
+            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-11-07"
+              ],
+              "example": "2026-11-07"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PageNoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatedSource"
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests allowed per minute for this credential.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the window is full again.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Quote this when contacting support.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Kallabot-Version": {
+                "description": "The API version that answered this request.",
+                "schema": {
+                  "type": "string",
+                  "example": "2026-11-07"
+                }
+              },
+              "Kallabot-SDK-Warning": {
+                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "400": {
+            "$ref": "#/components/responses/UnsupportedApiVersion"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "426": {
+            "$ref": "#/components/responses/SdkVersionUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "description": "Adds the owner's words for a page flagged as mostly pictures (warning `pages_pictures`) or scanned. They join the source's text, labelled with the page, and the source is indexed again.\n\n**Scopes:** `knowledge:write`",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-required-scopes": [
+          "knowledge:write"
+        ]
+      }
+    },
     "/v1/knowledge/sources/{source_id}/resync": {
       "post": {
         "tags": [
@@ -35473,6 +35742,36 @@
               }
             ],
             "description": "A catalog that is a WhatsApp number's own list (its studio's \"What \u2026 offers\"): the agent answering that number uses it without attaching it."
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Date",
+            "description": "The date the document takes effect (YYYY-MM-DD), read from it or set by the owner; null means its upload date is used."
+          },
+          "replaces_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaces Id",
+            "description": "The older source this one replaces."
+          },
+          "retired": {
+            "type": "boolean",
+            "title": "Retired",
+            "description": "A newer source replaces this one, so agents no longer answer from it.",
+            "default": false
           }
         },
         "type": "object",
@@ -35680,6 +35979,36 @@
               }
             ],
             "description": "A catalog that is a WhatsApp number's own list (its studio's \"What \u2026 offers\"): the agent answering that number uses it without attaching it."
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Date",
+            "description": "The date the document takes effect (YYYY-MM-DD), read from it or set by the owner; null means its upload date is used."
+          },
+          "replaces_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaces Id",
+            "description": "The older source this one replaces."
+          },
+          "retired": {
+            "type": "boolean",
+            "title": "Retired",
+            "description": "A newer source replaces this one, so agents no longer answer from it.",
+            "default": false
           },
           "text": {
             "type": "string",
@@ -38589,6 +38918,22 @@
           "has_more"
         ],
         "title": "PackPage"
+      },
+      "PageNoteRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "PageNoteRequest",
+        "description": "What is on a page we flagged as mostly pictures, in the owner's words."
       },
       "PersonRef": {
         "properties": {
@@ -41889,6 +42234,38 @@
         "type": "object",
         "title": "SonioxContext",
         "description": "Domain context. The single largest accuracy lever Soniox exposes.\n\nTelling the model what the call is about, and which words to expect, fixes\nthe class of error where a name or product comes back as a similar-sounding\ncommon word. Capped at 8,000 tokens by the provider."
+      },
+      "SourceVersionRequest": {
+        "properties": {
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Date",
+            "description": "The date the document takes effect (null keeps the one read from it, else its upload date)."
+          },
+          "replaces_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaces Id",
+            "description": "The older source this one replaces; it stops answering once this one is ready. Null: replaces nothing."
+          }
+        },
+        "type": "object",
+        "title": "SourceVersionRequest",
+        "description": "A document's version: the date it takes effect and the older source it replaces."
       },
       "StartPortIn": {
         "properties": {
