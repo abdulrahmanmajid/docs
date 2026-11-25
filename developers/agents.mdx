@@ -162,7 +162,7 @@ The full schema, with every field and its limits, is in the [API reference](/api
     | `knowledge.ids` | Knowledge sources to answer from. Add them in the dashboard or with [`POST /v1/knowledge/sources`](/developers/knowledge). |
     | `knowledge.mode` | `auto` (default) puts small libraries straight into the agent's instructions and searches big ones each turn. `prompt` or `search` forces one. |
     | `knowledge.channels` | Per source, which channels it answers on (`phone`, `web`, `whatsapp`, `instagram`, `messenger`, `web_chat`). |
-    | `tools` | Saved tools by reference: `{"tool_id": "…"}`. Create them first with `POST /v1/tools`. Optional `channels`, `allowed_tools` (for an MCP server) and `overrides` (`filler`, `timeout_ms`). |
+    | `tools` | Saved tools by reference: `{"tool_id": "…"}`. Create them first with `POST /v1/tools`. Optional `channels`, `allowed_tools` (for an MCP server) and `overrides` (`filler`, `timeout_ms`). See [Tools](/developers/tools/overview). |
     | `builtins.calendar` | Check free times and book on a connected Google Calendar. Takes `google_connection_id`, `calendar_id`, `duration_min`, opening `hours` (Monday to Sunday) and `min_notice_min`. |
     | `builtins.sheets` | Look up rows in a connected Google Sheet. |
     | `builtins.knowledge_search` | Let the agent search knowledge on demand. |

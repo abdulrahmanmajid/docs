@@ -144,16 +144,31 @@ Subscribe to exact types, to a wildcard such as `call.*`, or to `*`. Payloads ma
   "channel": "phone",
   "call_id": "call_5f0a1c9e2b7d4a8e3c6f1b0d",
   "conversation_id": null,
+  "invocation_id": "7e6d5c4b-3a29-4180-9f7e-6d5c4b3a2918",
   "kind": "api",
   "tool_id": "3c2b1a0f-9e8d-4c7b-a6f5-e4d3c2b1a0f9",
+  "builtin": null,
   "remote_name": "book_viewing",
+  "function_name": "book_viewing",
+  "status": "ok",
   "ok": true,
   "error_code": null,
   "duration_ms": 412
 }
 ```
 
-`kind` is `api`, `mcp_server`, `google_sheets` or a built-in. On a chat, `conversation_id` is set instead of `call_id`.
+| Field | Notes |
+| --- | --- |
+| `invocation_id` | The run. Matches `id` in `GET /v1/calls/{call_id}/tool-invocations`. |
+| `kind` | `api`, `mcp`, `sheets`, `piece` or `builtin`. |
+| `tool_id` | The saved tool, or `null` for a built-in. |
+| `builtin` | The built-in tool's name, or `null`. |
+| `remote_name` | The tool's name on the other side, such as the MCP server's tool name. |
+| `function_name` | The function name the model called. |
+| `status` | `ok`, `error`, `timeout`, `cancelled` or `indeterminate`. |
+| `error_code` | `null` on success, otherwise `tool_error`, `timeout`, `needs_auth`, `not_connected` or `http_status`. See [Tool errors](/developers/tools/errors#in-webhooks-and-invocations). |
+
+On a chat, `conversation_id` is set instead of `call_id`, and the event is sent as soon as each run finishes. On a phone or web call, all of the call's `tool.called` events are sent together when the call ends, not live.
 
 ## Conversations
 
