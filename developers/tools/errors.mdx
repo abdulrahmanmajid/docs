@@ -50,6 +50,7 @@ Nothing reached your endpoint. On a `once_per_call` tool, these don't use up the
 | `timeout` | No complete response within the tool's timeout. |
 | `indeterminate` | A `side_effect` tool timed out or lost its connection after the request was sent. It may have gone through. The result has no `message`. (A timeout while connecting sends nothing and is `network_error`.) See [Idempotency](/developers/tools/idempotency). |
 | `outcome_unknown` | An earlier run of the same action started but never finished, so Kallabot won't send it again. |
+| `tool_unavailable` | Your host failed 5 times within 60 seconds (no connection, no answer, or `5xx` after [retries](/developers/tools/http-tools#retries)), so for the next 30 seconds its tools answer at once without sending anything. Then one request is let through; any answer below `500` ends it. A `4xx` never counts, because your service answered. |
 
 ## Your response
 
