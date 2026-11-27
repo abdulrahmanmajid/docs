@@ -26452,6 +26452,124 @@
         ]
       }
     },
+    "/v1/knowledge/catalog/extract": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "summary": "Read items from a document",
+        "description": "Reads a document already in your knowledge (a menu or price list) and returns the items it lists, with prices, categories and sizes, for you to check before adding them. Nothing is saved.\n\n**Scopes:** `knowledge:write`",
+        "operationId": "extractCatalogItems",
+        "parameters": [
+          {
+            "name": "Kallabot-Version",
+            "in": "header",
+            "required": false,
+            "description": "The API version to answer as, a date (`YYYY-MM-DD`). Leave it out for the current version (`2026-11-07`). An unknown version is refused with 400 `unsupported_api_version`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-11-07"
+              ],
+              "example": "2026-11-07"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuExtracted"
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests allowed per minute for this credential.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the window is full again.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Quote this when contacting support.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Kallabot-Version": {
+                "description": "The API version that answered this request.",
+                "schema": {
+                  "type": "string",
+                  "example": "2026-11-07"
+                }
+              },
+              "Kallabot-SDK-Warning": {
+                "description": "Sent when the SDK release that made the request is deprecated: what to upgrade to. The SDKs log it once.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "400": {
+            "$ref": "#/components/responses/UnsupportedApiVersion"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "426": {
+            "$ref": "#/components/responses/SdkVersionUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "x-required-scopes": [
+          "knowledge:write"
+        ]
+      }
+    },
     "/v1/knowledge/catalog/import": {
       "post": {
         "tags": [
@@ -27423,6 +27541,12 @@
             "$ref": "#/components/schemas/AgentCapabilities",
             "description": "What this key may do to this agent."
           },
+          "branch_count": {
+            "type": "integer",
+            "title": "Branch Count",
+            "description": "How many branches this agent's own configuration lists; 0 for a normal agent. An agent with branches answers chats only.",
+            "default": 0
+          },
           "config": {
             "additionalProperties": true,
             "type": "object",
@@ -27713,6 +27837,68 @@
               }
             ]
           },
+          "caller_voice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallerVoiceConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the agent hears the caller's tone and voice on calls. Left out: every switch on."
+          },
+          "branches": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BranchesConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Several branches inside this agent (WhatsApp, Instagram, Messenger): the customer picks one, and the agent answers with that branch's instructions, knowledge and tools. Empty `items` is an ordinary agent. On a call there is no branch question: the agent answers from its own instructions."
+          },
+          "pathway": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pathway",
+            "description": "The steps this agent follows (format 1): `start`, `nodes` (say, conversation, question, menu, branch, tool, transfer, handoff, end), `edges` (each with a `when`), `variables`, `settings`, `persona_prompt` and `channels`, the channels it is followed on (whatsapp, instagram, messenger today; on every other channel the agent talks freely from its instructions). Absent: an agent that talks freely everywhere. Problems come back as findings under `/pathway`."
+          },
+          "voice_notes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceNotesConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "WhatsApp voice notes: how the agent answers a customer's voice note. Absent = read only."
+          },
+          "lessons": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Lesson"
+                },
+                "type": "array",
+                "maxItems": 15
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lessons",
+            "description": "Corrections the team saved from Test (\"Improve this reply\"), up to 15. Chat replies list the ones that apply in a \"Lessons from the team\" section; calls list up to 10 of those marked `calls` or `both` (agent scope only). Absent or empty: no lessons."
+          },
           "persona": {
             "anyOf": [
               {
@@ -27870,6 +28056,12 @@
           "capabilities": {
             "$ref": "#/components/schemas/AgentCapabilities",
             "description": "What this key may do to this agent."
+          },
+          "branch_count": {
+            "type": "integer",
+            "title": "Branch Count",
+            "description": "How many branches this agent's own configuration lists; 0 for a normal agent. An agent with branches answers chats only.",
+            "default": 0
           }
         },
         "type": "object",
@@ -28022,6 +28214,12 @@
           "capabilities": {
             "$ref": "#/components/schemas/AgentCapabilities",
             "description": "What this key may do to this agent."
+          },
+          "branch_count": {
+            "type": "integer",
+            "title": "Branch Count",
+            "description": "How many branches this agent's own configuration lists; 0 for a normal agent. An agent with branches answers chats only.",
+            "default": 0
           },
           "config": {
             "additionalProperties": true,
@@ -29420,6 +29618,171 @@
           "counts"
         ],
         "title": "BookingPage"
+      },
+      "BranchGreetingMedia": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "image",
+              "document"
+            ],
+            "title": "Kind"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "https link to the file (the compiler checks it like the agent's own)."
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "url"
+        ],
+        "title": "BranchGreetingMedia",
+        "description": "The file a branch's first message goes out with (an image or a PDF), as the agent's own\nchat first message carries one (`metadata.whatsapp.greeting_media`)."
+      },
+      "BranchItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$",
+            "title": "Id",
+            "description": "Stable slug; unique within the list. WhatsApp row id is `branch:<id>`."
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "What the customer sees (1-24 characters, WhatsApp's row title limit)."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional second line (up to 72 characters)."
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "description": "This branch's instructions, added after the agent's own (which apply to every branch). May be empty in a draft; a branch without any can't be published.",
+            "default": ""
+          },
+          "knowledge": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KnowledgeConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Replaces the agent's knowledge for this branch when it lists at least one source."
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolConfig"
+            },
+            "type": "array",
+            "title": "Tools",
+            "description": "This branch's tools. Always replaces the agent's own."
+          },
+          "builtins": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuiltinsConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Replaces the agent's built-in abilities for this branch when set."
+          },
+          "web_search": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebSearchConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Replaces the agent's web search for this branch when set."
+          },
+          "greeting": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 700
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Greeting",
+            "description": "This branch's first message: sent word for word, with no model call, when the customer picks the branch (up to 700 characters, like the agent's chat first message). Empty: the agent greets for the branch."
+          },
+          "greeting_media": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BranchGreetingMedia"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "One file (image or document) sent with the branch's first message."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "BranchItem",
+        "description": "One branch of a multi-branch agent: a label the customer picks, and what the\nagent does once they have: this branch's own instructions, knowledge and tools.\nIdentity, persona, style, model, language and channel connections are the agent's."
+      },
+      "BranchesConfig": {
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "description": "The question shown above the picker (1-1024 characters).",
+            "default": "Which branch would you like?"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BranchItem"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Items",
+            "description": "Up to 10 branches. Empty or no block: an ordinary single-location agent."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "BranchesConfig",
+        "description": "Several locations behind one number: the agent asks which branch, then answers with\nthat branch's instructions, knowledge and tools (WhatsApp, Instagram, Messenger).\nA multi-branch agent answers chats only."
       },
       "BuiltinsConfig": {
         "properties": {
@@ -31599,6 +31962,68 @@
           "has_more"
         ],
         "title": "CallerNumberPage"
+      },
+      "CallerVoiceConfig": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Default true. Off: none of the below, and no caller audio is analysed.",
+            "default": true
+          },
+          "mood": {
+            "type": "boolean",
+            "title": "Mood",
+            "description": "Default true. Adjust to how the caller sounds: shorter and owning the problem when they sound frustrated or angry, one step at a time when confused, warmer when happy, and a quick check when a yes sounded unsure or sarcastic.",
+            "default": true
+          },
+          "voice": {
+            "type": "boolean",
+            "title": "Voice",
+            "description": "Default true. Use the caller's voice (male or female, accent) only for grammar and polite address in languages that mark gender, and for pace and clarity.",
+            "default": true
+          },
+          "language": {
+            "type": "boolean",
+            "title": "Language",
+            "description": "Default true. Switch to the language the caller is speaking when the voice makes it clear.",
+            "default": true
+          },
+          "surroundings": {
+            "type": "boolean",
+            "title": "Surroundings",
+            "description": "Default true. Notice a new person on the line (re-introduce briefly) or a noisy place (short replies, read back details).",
+            "default": true
+          },
+          "interruptions": {
+            "type": "boolean",
+            "title": "Interruptions",
+            "description": "Default true. Tell a quick \"mm-hm\" from a real interruption, and pick up where the agent stopped after one.",
+            "default": true
+          },
+          "pickup": {
+            "type": "boolean",
+            "title": "Pickup",
+            "description": "Default true. Outbound calls: hang up on a phone menu, hold music or another AI, and leave the voicemail message on an answering machine.",
+            "default": true
+          },
+          "lead_score": {
+            "type": "boolean",
+            "title": "Lead Score",
+            "description": "Default true. Score how interested the caller sounded, shown on the call.",
+            "default": true
+          },
+          "call_review": {
+            "type": "boolean",
+            "title": "Call Review",
+            "description": "Default true. After a recorded call, rate how natural the agent sounded.",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CallerVoiceConfig",
+        "description": "Calls only: how the caller sounds, heard from their audio (tone, voice, place), not their words.\n\nEvery switch defaults to on. With `enabled` off no caller audio leaves for\nthis analysis at all, whatever the others say. The agent never names what\nit heard (\"you sound upset\" is never said), and gender and accent never\nchange offers, prices or recommendations."
       },
       "CancelScheduledCall": {
         "properties": {
@@ -33788,6 +34213,104 @@
           "key"
         ],
         "title": "ExtractField"
+      },
+      "ExtractRequest": {
+        "properties": {
+          "knowledge_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Knowledge Id",
+            "description": "A document in this workspace's knowledge."
+          },
+          "business_type": {
+            "type": "string",
+            "enum": [
+              "restaurant",
+              "retail",
+              "services",
+              "salon",
+              "car_dealer",
+              "hotel",
+              "other"
+            ],
+            "title": "Business Type",
+            "default": "other"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 8,
+            "title": "Currency",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "knowledge_id"
+        ],
+        "title": "ExtractRequest"
+      },
+      "ExtractVariant": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "price"
+        ],
+        "title": "ExtractVariant"
+      },
+      "ExtractedItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price",
+            "description": "Null when the document shows no single price."
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractVariant"
+            },
+            "type": "array",
+            "title": "Variants",
+            "description": "Prices by size or portion."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ExtractedItem"
       },
       "GenerateRequest": {
         "properties": {
@@ -36500,6 +37023,106 @@
         "type": "object",
         "title": "Label"
       },
+      "Lesson": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+            "title": "Id",
+            "description": "Stable slug or uuid; unique in the list."
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "What it should have said or done (1-500 characters)."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "branch"
+            ],
+            "title": "Scope",
+            "description": "agent: every reply. branch: only replies written for `branch_id`.",
+            "default": "agent"
+          },
+          "branch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch Id",
+            "description": "The branch a `branch` lesson belongs to; null for `agent`."
+          },
+          "used_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "chats",
+                  "calls",
+                  "both"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used On",
+            "description": "Where it is used: chats (every text channel), calls (phone and browser calls, `agent` scope only) or both. Left out, it is used on chats only."
+          },
+          "created_at": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Created At",
+            "description": "ISO 8601 time it was saved."
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LessonSource"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The exchange it was taught from, for the owner's list."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "created_at"
+        ],
+        "title": "Lesson",
+        "description": "One correction from the team (\"Improve this reply\" in Test): what the agent should have said or done."
+      },
+      "LessonSource": {
+        "properties": {
+          "customer": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Customer",
+            "default": ""
+          },
+          "reply": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Reply",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LessonSource",
+        "description": "The exchange a lesson was taught from: what the customer wrote and what the agent answered."
+      },
       "Limits": {
         "properties": {
           "messages_per_visitor_hour": {
@@ -37198,6 +37821,34 @@
         },
         "type": "object",
         "title": "MemoryConfig"
+      },
+      "MenuExtracted": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractedItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "source_name": {
+            "type": "string",
+            "title": "Source Name",
+            "description": "The document the items were read from."
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "description": "True when the document was longer than what was read."
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "source_name",
+          "truncated"
+        ],
+        "title": "MenuExtracted"
       },
       "MinuteRequestCreated": {
         "properties": {
@@ -39316,6 +39967,12 @@
             ],
             "title": "Direction",
             "description": "Whether it answers calls, makes them, or both."
+          },
+          "branch_count": {
+            "type": "integer",
+            "title": "Branch Count",
+            "description": "How many branches this agent lists; 0 for a normal agent.",
+            "default": 0
           }
         },
         "type": "object",
@@ -46282,6 +46939,35 @@
               }
             ],
             "description": "Replaces only the agent's web search (`config.web_search`); null switches it off. Can't be sent with `config`."
+          },
+          "lessons": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Lesson"
+                },
+                "type": "array",
+                "maxItems": 15
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lessons",
+            "description": "Replaces only the agent's lessons (`config.lessons`, up to 15: the team's corrections from Test); null or [] removes them. Saved as a draft, never published by itself. Can't be sent with `config`."
+          },
+          "pathway": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pathway",
+            "description": "Replaces only the steps the agent follows (`config.pathway`, see `AgentSpec.pathway`); null removes them, and the agent talks freely again. Saved as a draft, never published by itself: a pathway still being built may hold problems (findings under `/pathway`), and publishing refuses them. Can't be sent with `config`."
           }
         },
         "additionalProperties": false,
@@ -46832,6 +47518,79 @@
           "message"
         ],
         "title": "ValidationFinding"
+      },
+      "VoiceNotesConfig": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "read",
+              "reply_english",
+              "reply_their_language"
+            ],
+            "title": "Mode",
+            "description": "read (default): replies in text. reply_english: a voice note is answered with a voice note in English. reply_their_language: answered with a voice note in the language the customer speaks. A typed message always gets a typed reply.",
+            "default": "read"
+          },
+          "background": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "office",
+                  "call-center",
+                  "restaurant",
+                  "saloon",
+                  "waiting-room",
+                  "room",
+                  "cafe",
+                  "kitchen",
+                  "street",
+                  "shop",
+                  "home",
+                  "rain"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Background",
+            "description": "A quiet background sound under each voice note (the same beds calls use), so it sounds recorded by a person somewhere real. None: the voice alone."
+          },
+          "background_volume": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.3,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Background Volume",
+            "description": "Default 0.08. Above ~0.15 it competes with the voice."
+          },
+          "mic": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mic",
+            "description": "How much the voice note sounds caught on a phone's microphone: 0 or none is studio clear, 100 an everyday voice note (narrower sound, a little room and hiss), still easy to understand."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VoiceNotesConfig",
+        "description": "What a WhatsApp agent does when a customer sends a voice note. It always hears voice notes and\nsees photos; this only decides how it answers. Applies to every branch of a multi-branch agent."
       },
       "VoicemailConfig": {
         "properties": {
